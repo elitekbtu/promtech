@@ -3,6 +3,7 @@
 ## Purpose
 
 **PromTech** is a full-stack application featuring AI-powered capabilities including:
+
 - User authentication with face ID verification
 - Agentic RAG (Retrieval-Augmented Generation) system for intelligent query processing
 - Real-time chat interface with Google Gemini integration
@@ -13,6 +14,7 @@
 ## Tech Stack
 
 ### Backend
+
 - **FastAPI** 0.104+ — Modern async Python web framework
 - **Python 3.10+** — Core language
 - **SQLAlchemy** — ORM for database operations
@@ -20,6 +22,7 @@
 - **Pydantic** 2.5+ — Data validation and schemas
 
 ### AI & Machine Learning
+
 - **Google Gemini** (via langchain-google-genai) — Primary LLM
 - **LangChain** 0.1+ — LLM application framework
 - **LangGraph** 0.0.20+ — Multi-agent orchestration system
@@ -30,6 +33,7 @@
 - **Tavily** 0.3+ — Web search API integration
 
 ### Frontend
+
 - **Expo** ~54.0 — React Native framework
 - **React Native** 0.81.4 — Mobile/web cross-platform
 - **React** 19.1.0 — UI library
@@ -40,12 +44,14 @@
 - **Expo Camera** 16.0+ — Camera access for Face ID
 
 ### Infrastructure
+
 - **Docker** & **Docker Compose** — Containerization
 - **Uvicorn** — ASGI server
 - **PostgreSQL** — Relational database
 - **Git** — Version control
 
 ### Supporting Libraries
+
 - **passlib[bcrypt]** & **bcrypt** 4.0.1 — Password hashing
 - **python-multipart** — File upload support
 - **python-dotenv** — Environment variable management
@@ -59,6 +65,7 @@
 ### Code Style
 
 **Backend (Python):**
+
 - PEP 8 style guide for Python code
 - Snake_case for variables, functions, and modules
 - PascalCase for classes
@@ -68,6 +75,7 @@
 - Maximum line length: 88 characters (Black formatter standard)
 
 **Frontend (TypeScript/React Native):**
+
 - ESLint with expo configuration
 - camelCase for variables and functions
 - PascalCase for components and types
@@ -78,6 +86,7 @@
 ### Architecture Patterns
 
 **Backend:**
+
 - **Modular Monolith** architecture with feature-based organization
 - Separation into distinct modules: `auth`, `faceid`, `rag_agent`
 - **Service Layer Pattern**: Business logic in service files, routers only handle HTTP
@@ -86,6 +95,7 @@
 - **Repository Pattern** (implicit): Database access through SQLAlchemy ORM
 
 **Structure:**
+
 ```
 backend/
 ├── main.py              # FastAPI app entry point
@@ -102,6 +112,7 @@ backend/
 ```
 
 **Frontend:**
+
 - **File-based routing** with Expo Router
 - **Context API** for cross-cutting concerns (LiveAPIContext)
 - **Custom hooks** for business logic (use-live-api.ts, use-rag-tools.ts)
@@ -109,6 +120,7 @@ backend/
 - **Separation of concerns**: API client, audio processing, UI components
 
 **RAG System:**
+
 - **Agentic architecture** using LangGraph
 - **Orchestrator pattern**: Coordinates supervisor and specialist agents
 - **Tool-based agents**: Vector search, web search tools
@@ -119,6 +131,7 @@ backend/
 **Current State:** Testing infrastructure not yet implemented.
 
 **Recommended Approach:**
+
 - **Backend**: pytest with FastAPI TestClient
   - Unit tests for services
   - Integration tests for API endpoints
@@ -133,6 +146,7 @@ backend/
 ### Git Workflow
 
 **Branch Strategy:**
+
 - `main` — Production-ready code
 - Feature branches from `main`
 - Commit message format: Conventional Commits (recommended)
@@ -143,12 +157,14 @@ backend/
   - `test:` for tests
 
 **Deployment:**
+
 - Docker Compose for local development
 - Environment variables via `.env` file (see `env.example`)
 
 ## Domain Context
 
 ### Face ID Verification
+
 - **DeepFace** library with **Facenet512** model (512-dimensional embeddings)
 - **RetinaFace** detector for robust face detection
 - **Cosine similarity** for face matching
@@ -156,6 +172,7 @@ backend/
 - Threshold-based verification with confidence scores
 
 ### Agentic RAG System
+
 - **Supervisor Agent**: Routes queries to appropriate specialist agents
 - **Specialist Agents**: Handle specific query types
 - **Tools**: Vector search (FAISS/ChromaDB), web search (Tavily)
@@ -164,6 +181,7 @@ backend/
 - **Confidence Scoring**: Provides reliability metrics for responses
 
 ### Authentication
+
 - Email/password based authentication
 - Password hashing with bcrypt
 - Role-based access control: `admin` vs `user`
@@ -171,6 +189,7 @@ backend/
 - Soft deletion support (deleted_at field)
 
 ### Multi-modal AI Interactions
+
 - **Text chat**: Standard query-response
 - **Live audio**: Real-time voice interaction with Gemini
 - **Screen capture**: Context-aware AI with screen sharing
@@ -179,6 +198,7 @@ backend/
 ## Important Constraints
 
 ### Technical
+
 - **Python 3.10+** required for backend
 - **Node.js 18+** recommended for frontend
 - **PostgreSQL 14+** required
@@ -187,18 +207,21 @@ backend/
 - RAG system requires API keys: `GEMINI_API_KEY`, `TAVILY_API_KEY`
 
 ### Performance
+
 - Face verification processes all user avatars (scales linearly with users)
 - Vector search performance depends on FAISS/ChromaDB index size
 - Max agent iterations: 5 (configurable in orchestrator)
 - Max response length: 2000 characters
 
 ### Security
+
 - Passwords: 8-72 characters (bcrypt limitation)
 - Face embeddings stored server-side only
 - CORS enabled for all origins (development mode)
 - No JWT implementation yet (simple session-based)
 
 ### Business/Domain
+
 - Currently branded as "Zamanbank API" but transitioning to PromTech
 - Face ID designed for 1:N matching (one face against all users)
 - RAG system includes source citations and confidence scores
@@ -206,35 +229,38 @@ backend/
 ## External Dependencies
 
 ### Required Services
+
 - **Google Gemini API** — Primary LLM for chat and RAG
   - Requires: `GEMINI_API_KEY`, `GEMINI_MODEL`
   - Used for: Query processing, response generation, intent classification
-  
 - **Tavily API** (Optional) — Web search integration
   - Requires: `TAVILY_API_KEY`
   - Used for: Real-time web search in RAG system
-  
 - **PostgreSQL Database** — Data persistence
   - Requires: `DATABASE_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
   - Managed via Docker Compose
 
 ### Python Package Dependencies
+
 - Deep learning models downloaded on first run:
   - Facenet512 model (DeepFace)
   - RetinaFace detector weights
   - TensorFlow backend models
 
 ### Frontend Dependencies
+
 - **Expo SDK** — Mobile development framework
 - **Google Gemini API** — Direct client-side integration
 - Camera permissions required for Face ID features
 
 ### Development Tools
+
 - **Docker** — Containerization
 - **Docker Compose** — Multi-container orchestration
 - **.env file** — Environment configuration (see `env.example`)
 
 ### API Endpoints Summary
+
 - `POST /api/auth/register` — User registration with avatar
 - `POST /api/auth/login` — Email/password login
 - `POST /api/faceid/verify` — Face verification
@@ -242,11 +268,13 @@ backend/
 - `GET /api/health` — Health check
 
 ### File Storage
+
 - User avatars stored locally in backend
 - Path configurable via `FILE_STORAGE_PATH` and `FILE_STORAGE_BASE_URL`
 - S3-compatible storage can be integrated later
 
 ### Documentation
+
 - **Swagger UI**: `http://localhost:8000/docs`
 - **ReDoc**: `http://localhost:8000/redoc`
 - Auto-generated from FastAPI/Pydantic schemas
