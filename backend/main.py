@@ -30,15 +30,9 @@ async def health():
 
 app.include_router(router)
 app.include_router(auth_router, prefix="/api/auth")
-app.include_router(account_router, prefix="/api")
-app.include_router(transaction_router, prefix="/api")
-app.include_router(product_router, prefix="/api")
-app.include_router(cart_router, prefix="/api")
 app.include_router(faceid_router, prefix="/api/faceid", tags=["Face Verification"])
 app.include_router(rag_router, tags=["RAG"])
 app.include_router(rag_live_query_router, tags=["RAG Live Query"])
-app.include_router(predict_router, prefix="/api")
-app.include_router(rag_transaction_router)
 
 
 @app.on_event("startup")
