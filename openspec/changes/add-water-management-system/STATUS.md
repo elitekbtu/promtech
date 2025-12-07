@@ -357,12 +357,13 @@ env.example
 **Token Structure:**
 
 - Frontend expects `UserRead` response, not `Token` object
+
 ```json
 {
-  "sub": "123",  // user_id
+  "sub": "123", // user_id
   "email": "user@example.com",
-  "role": "guest",  // or "expert"
-  "exp": 1234567890  // Unix timestamp (7 days from issue)
+  "role": "guest", // or "expert"
+  "exp": 1234567890 // Unix timestamp (7 days from issue)
 }
 ```
 
@@ -370,7 +371,7 @@ env.example
 
 - `SECRET_KEY`: JWT signing secret (configured in `.env`)
 - Algorithm: HS256
-- Expiration: 7 days (ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7)
+- Expiration: 7 days (ACCESS_TOKEN_EXPIRE_MINUTES = 60 _ 24 _ 7)
 
 ### Role System (Active):
 
@@ -430,6 +431,7 @@ env.example (updated)
 ### Features Implemented:
 
 #### PDF Upload & Storage:
+
 ```python
 POST /api/passports/{object_id}/upload
 - Validates PDF format
@@ -439,6 +441,7 @@ POST /api/passports/{object_id}/upload
 ```
 
 #### Text Extraction:
+
 - **Library:** pypdf (PdfReader)
 - **Method:** Extract from all pages
 - **Parsing:** Keyword-based section detection
@@ -449,6 +452,7 @@ POST /api/passports/{object_id}/upload
   - Recommendations (рекомендации)
 
 #### Storage Model:
+
 ```python
 PassportText:
 - full_text: Complete extracted text
@@ -460,6 +464,7 @@ PassportText:
 ```
 
 #### Text Retrieval:
+
 ```python
 GET /api/passports/{object_id}/text
 - Returns extracted text with sections
@@ -468,6 +473,7 @@ GET /api/passports/{object_id}/text
 ```
 
 #### Deletion:
+
 ```python
 DELETE /api/passports/{object_id}
 - Removes PDF file from disk
@@ -479,21 +485,25 @@ DELETE /api/passports/{object_id}
 ### Configuration:
 
 **Environment Variables:**
+
 - `PASSPORT_STORAGE_PATH` - Where PDFs are saved (default: uploads/passports)
 - `PASSPORT_BASE_URL` - URL path for accessing PDFs (default: /uploads/passports)
 
 **File Naming:**
+
 - Pattern: `object_{id}_passport.pdf`
 - Example: `object_1_passport.pdf`
 
 ### Text Parsing Strategy:
 
 **Current Implementation:**
+
 - Simple keyword-based section detection
 - Supports Russian and English keywords
 - Falls back to full_text if sections not found
 
 **Future Enhancements (Optional):**
+
 - Use NLP for better section detection
 - Regex patterns for specific formats
 - Table extraction
@@ -502,6 +512,7 @@ DELETE /api/passports/{object_id}
 ### TODO Notes:
 
 ⚠️ **Authentication:** Endpoints have TODO comments for JWT authentication
+
 - Upload should require expert role
 - Delete should require expert role
 - Text retrieval can be accessible to authenticated users

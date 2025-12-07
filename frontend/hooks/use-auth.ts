@@ -12,29 +12,29 @@ import { getUserData, getUserRole, isAuthenticated, isExpertUser, UserData } fro
  * @returns User data, loading state, and refresh function
  */
 export function useUser() {
-  const [user, setUser] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+    const [user, setUser] = useState<UserData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
-  const refresh = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const userData = await getUserData();
-      setUser(userData);
-    } catch (err) {
-      console.error('Error fetching user data:', err);
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const refresh = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const userData = await getUserData();
+            setUser(userData);
+        } catch (err) {
+            console.error('Error fetching user data:', err);
+            setError(err as Error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  useEffect(() => {
-    refresh();
-  }, []);
+    useEffect(() => {
+        refresh();
+    }, []);
 
-  return { user, loading, error, refresh };
+    return { user, loading, error, refresh };
 }
 
 /**
@@ -42,26 +42,26 @@ export function useUser() {
  * @returns Authentication status and loading state
  */
 export function useAuth() {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+    const [authenticated, setAuthenticated] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const isAuth = await isAuthenticated();
-        setAuthenticated(isAuth);
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-        setAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const isAuth = await isAuthenticated();
+                setAuthenticated(isAuth);
+            } catch (error) {
+                console.error('Error checking authentication:', error);
+                setAuthenticated(false);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    checkAuth();
-  }, []);
+        checkAuth();
+    }, []);
 
-  return { authenticated, loading };
+    return { authenticated, loading };
 }
 
 /**
@@ -69,29 +69,29 @@ export function useAuth() {
  * @returns User role, loading state, and helper functions
  */
 export function useUserRole() {
-  const [role, setRole] = useState<'guest' | 'expert' | null>(null);
-  const [loading, setLoading] = useState(true);
+    const [role, setRole] = useState<'guest' | 'expert' | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchRole = async () => {
-      try {
-        const userRole = await getUserRole();
-        setRole(userRole);
-      } catch (error) {
-        console.error('Error fetching user role:', error);
-        setRole(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+        const fetchRole = async () => {
+            try {
+                const userRole = await getUserRole();
+                setRole(userRole);
+            } catch (error) {
+                console.error('Error fetching user role:', error);
+                setRole(null);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    fetchRole();
-  }, []);
+        fetchRole();
+    }, []);
 
-  const isGuest = role === 'guest';
-  const isExpert = role === 'expert';
+    const isGuest = role === 'guest';
+    const isExpert = role === 'expert';
 
-  return { role, isGuest, isExpert, loading };
+    return { role, isGuest, isExpert, loading };
 }
 
 /**
@@ -99,26 +99,26 @@ export function useUserRole() {
  * @returns Expert status and loading state
  */
 export function useIsExpert() {
-  const [isExpert, setIsExpert] = useState(false);
-  const [loading, setLoading] = useState(true);
+    const [isExpert, setIsExpert] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const checkExpert = async () => {
-      try {
-        const expert = await isExpertUser();
-        setIsExpert(expert);
-      } catch (error) {
-        console.error('Error checking expert status:', error);
-        setIsExpert(false);
-      } finally {
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+        const checkExpert = async () => {
+            try {
+                const expert = await isExpertUser();
+                setIsExpert(expert);
+            } catch (error) {
+                console.error('Error checking expert status:', error);
+                setIsExpert(false);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    checkExpert();
-  }, []);
+        checkExpert();
+    }, []);
 
-  return { isExpert, loading };
+    return { isExpert, loading };
 }
 
 /**
@@ -129,17 +129,17 @@ export function useIsExpert() {
  * @returns Whether user has the required role
  */
 export function useRequireRole(requiredRole: 'guest' | 'expert') {
-  const { role, loading } = useUserRole();
+    const { role, loading } = useUserRole();
 
-  if (loading) return false;
+    if (loading) return false;
 
-  if (requiredRole === 'guest') {
-    // Both guest and expert can access guest content
-    return role === 'guest' || role === 'expert';
-  }
+    if (requiredRole === 'guest') {
+        // Both guest and expert can access guest content
+        return role === 'guest' || role === 'expert';
+    }
 
-  // Only expert can access expert content
-  return role === 'expert';
+    // Only expert can access expert content
+    return role === 'expert';
 }
 
 /**
@@ -147,17 +147,17 @@ export function useRequireRole(requiredRole: 'guest' | 'expert') {
  * Useful for screens that need to react to auth changes
  */
 export function useAuthState() {
-  const { user, loading: userLoading, refresh } = useUser();
-  const { authenticated, loading: authLoading } = useAuth();
+    const { user, loading: userLoading, refresh } = useUser();
+    const { authenticated, loading: authLoading } = useAuth();
 
-  const loading = userLoading || authLoading;
+    const loading = userLoading || authLoading;
 
-  return {
-    user,
-    authenticated,
-    loading,
-    refresh,
-    isExpert: user?.role === 'expert',
-    isGuest: user?.role === 'guest',
-  };
+    return {
+        user,
+        authenticated,
+        loading,
+        refresh,
+        isExpert: user?.role === 'expert',
+        isGuest: user?.role === 'guest',
+    };
 }

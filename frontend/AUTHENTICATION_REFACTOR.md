@@ -22,6 +22,7 @@ Added via `npm install expo-secure-store axios`:
 **Purpose**: Secure storage and retrieval of JWT tokens and user data
 
 **Key Functions**:
+
 ```typescript
 - saveAuthToken(token: string): Promise<void>
 - getAuthToken(): Promise<string | null>
@@ -35,8 +36,9 @@ Added via `npm install expo-secure-store axios`:
 ```
 
 **Usage Example**:
+
 ```typescript
-import { saveAuthResponse, getUserData } from '@/lib/auth';
+import { saveAuthResponse, getUserData } from "@/lib/auth";
 
 // After login
 await saveAuthResponse(tokenResponse);
@@ -53,31 +55,35 @@ console.log(user.role); // 'guest' or 'expert'
 **Purpose**: Axios instance configured for automatic JWT token injection and 401 handling
 
 **Features**:
+
 - ✅ Automatically adds `Authorization: Bearer <token>` to all requests
 - ✅ Handles 401 errors (expired tokens) → clears auth and redirects to login
 - ✅ Handles 403 errors (insufficient permissions)
 - ✅ Development logging for debugging
 
 **Usage Example**:
+
 ```typescript
-import apiClient from '@/lib/axios-client';
+import apiClient from "@/lib/axios-client";
 
 // Token automatically included in headers
-const response = await apiClient.get('/api/objects');
+const response = await apiClient.get("/api/objects");
 ```
 
 **Request Interceptor**:
+
 ```typescript
 // Automatically adds JWT token from SecureStore
 config.headers.Authorization = `Bearer ${token}`;
 ```
 
 **Response Interceptor**:
+
 ```typescript
 // Handles 401 (token expired)
 if (status === 401) {
   await clearAuth();
-  router.replace('/login');
+  router.replace("/login");
 }
 ```
 
@@ -88,18 +94,20 @@ if (status === 401) {
 **Purpose**: Typed API functions for all backend endpoints
 
 **Services**:
+
 - `WaterObjectsAPI`: CRUD operations for water objects
 - `PrioritiesAPI`: Expert-only priority endpoints
 - `PassportsAPI`: Passport PDF upload/retrieval
 
 **Usage Example**:
+
 ```typescript
-import { WaterObjectsAPI, PrioritiesAPI } from '@/lib/api-services';
+import { WaterObjectsAPI, PrioritiesAPI } from "@/lib/api-services";
 
 // Get water objects (guest or expert)
 const objects = await WaterObjectsAPI.getList({
-  region: 'Almaty',
-  limit: 20
+  region: "Almaty",
+  limit: 20,
 });
 
 // Get priorities (expert only - will 403 if guest)
@@ -115,55 +123,58 @@ const stats = await PrioritiesAPI.getStatistics();
 **Hooks**:
 
 #### `useUser()`
+
 ```typescript
 const { user, loading, error, refresh } = useUser();
 // Returns current user data with role
 ```
 
 #### `useAuth()`
+
 ```typescript
 const { authenticated, loading } = useAuth();
 // Returns authentication status
 ```
 
 #### `useUserRole()`
+
 ```typescript
 const { role, isGuest, isExpert, loading } = useUserRole();
 // Returns user role and helpers
 ```
 
 #### `useIsExpert()`
+
 ```typescript
 const { isExpert, loading } = useIsExpert();
 // Returns true if user is expert
 ```
 
 #### `useRequireRole(role)`
+
 ```typescript
-const canEdit = useRequireRole('expert');
+const canEdit = useRequireRole("expert");
 // Returns true if user has required role
 ```
 
 #### `useAuthState()`
+
 ```typescript
 const { user, authenticated, loading, isExpert } = useAuthState();
 // All-in-one auth state hook
 ```
 
 **Usage Example**:
+
 ```typescript
-import { useUserRole } from '@/hooks/use-auth';
+import { useUserRole } from "@/hooks/use-auth";
 
 function MyComponent() {
   const { isExpert, loading } = useUserRole();
-  
+
   if (loading) return <ActivityIndicator />;
-  
-  return (
-    <>
-      {isExpert && <Button title="Upload Passport" />}
-    </>
-  );
+
+  return <>{isExpert && <Button title="Upload Passport" />}</>;
 }
 ```
 
@@ -174,6 +185,7 @@ function MyComponent() {
 ### `app/login.tsx`
 
 **Changes**:
+
 1. ✅ Updated imports to use new auth utilities
 2. ✅ Updated `UserData` type to include `role` field
 3. ✅ Updated `FaceVerificationResult` to expect `TokenResponse`
@@ -182,6 +194,7 @@ function MyComponent() {
 6. ✅ Updated register handler to extract `TokenResponse`
 
 **Key Changes**:
+
 ```typescript
 // OLD: Expecting UserData
 const userData: UserData = await loginResponse.json();
@@ -190,7 +203,7 @@ await saveUserSession(userData);
 // NEW: Expecting TokenResponse
 const tokenData: TokenResponse = await loginResponse.json();
 await saveAuthResponse(tokenData);
-console.log('Role:', tokenData.user.role);
+console.log("Role:", tokenData.user.role);
 ```
 
 ---
@@ -200,6 +213,7 @@ console.log('Role:', tokenData.user.role);
 ### Authentication Flow
 
 1. **Login/Register**:
+
    ```
    User credentials → Backend → TokenResponse {
      access_token: "eyJ...",
@@ -209,6 +223,7 @@ console.log('Role:', tokenData.user.role);
    ```
 
 2. **Store Token**:
+
    ```
    TokenResponse → saveAuthResponse() → SecureStore
    - access_token saved to 'jwt_access_token'
@@ -216,8 +231,9 @@ console.log('Role:', tokenData.user.role);
    ```
 
 3. **API Requests**:
+
    ```
-   apiClient.get('/api/objects') 
+   apiClient.get('/api/objects')
    → Request Interceptor adds: Authorization: Bearer <token>
    → Backend validates JWT
    → Returns role-based response
@@ -238,28 +254,28 @@ console.log('Role:', tokenData.user.role);
 ### Making Authenticated Requests
 
 ```typescript
-import apiClient from '@/lib/axios-client';
-import { WaterObjectsAPI } from '@/lib/api-services';
+import apiClient from "@/lib/axios-client";
+import { WaterObjectsAPI } from "@/lib/api-services";
 
 // Option 1: Use service layer (recommended)
 const objects = await WaterObjectsAPI.getList();
 
 // Option 2: Direct axios call
-const response = await apiClient.get('/api/objects');
+const response = await apiClient.get("/api/objects");
 ```
 
 ### Role-Based UI
 
 ```typescript
-import { useUserRole } from '@/hooks/use-auth';
+import { useUserRole } from "@/hooks/use-auth";
 
 function Dashboard() {
   const { isExpert, loading } = useUserRole();
-  
+
   return (
     <View>
       <Text>Water Objects</Text>
-      
+
       {/* Expert-only features */}
       {isExpert && (
         <>
@@ -275,17 +291,17 @@ function Dashboard() {
 ### Checking Authentication
 
 ```typescript
-import { isAuthenticated, clearAuth } from '@/lib/auth';
-import { router } from 'expo-router';
+import { isAuthenticated, clearAuth } from "@/lib/auth";
+import { router } from "expo-router";
 
 async function handleLogout() {
   await clearAuth();
-  router.replace('/login');
+  router.replace("/login");
 }
 
 async function checkAuth() {
   if (!(await isAuthenticated())) {
-    router.replace('/login');
+    router.replace("/login");
   }
 }
 ```
@@ -294,16 +310,18 @@ async function checkAuth() {
 
 ## 🔒 Security Notes
 
-1. **Secure Storage**: 
+1. **Secure Storage**:
+
    - iOS: Uses Keychain
    - Android: Uses KeyStore with AES encryption
    - Web: Falls back to localStorage (less secure)
 
-2. **Token Expiration**: 
+2. **Token Expiration**:
+
    - Backend sets 7-day expiration
    - Automatically handled by axios interceptor
 
-3. **HTTPS Required**: 
+3. **HTTPS Required**:
    - Always use HTTPS in production
    - Tokens transmitted in Authorization header
 
@@ -320,7 +338,7 @@ return {"success": True, "verified": True, "user": {...}}
 # Required (correct)
 token = create_access_token(user.id, user.email, user.role)
 return {
-    "success": True, 
+    "success": True,
     "verified": True,
     "token": {
         "access_token": token,
