@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRouter
+from fastapi.staticfiles import StaticFiles
+import os
 
 from database import Base, engine
 from faceid.router import router as faceid_router
@@ -42,6 +44,11 @@ app.include_router(passports_router, prefix="/api")
 app.include_router(faceid_router, prefix="/api/faceid", tags=["Face Verification"])
 app.include_router(rag_router, tags=["RAG"])
 app.include_router(rag_live_query_router, tags=["RAG Live Query"])
+
+# Mount static files for passports
+# Ensure the directory exists
+os.makedirs("uploads/passports", exist_ok=True)
+app.mount("/passports", StaticFiles(directory="uploads/passports"), name="passports")
 
 
 @app.on_event("startup")

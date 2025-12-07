@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Platform, Dimensions } from 'react-native';
 import { useState, useEffect, useRef, useMemo } from 'react';
+import Markdown from 'react-native-markdown-display';
 import { useLiveAPIWithRAG } from '@/hooks/use-live-api-with-rag';
 import Constants from 'expo-constants';
 import { AudioRecorder } from '@/lib/audio-recorder';
@@ -539,9 +540,15 @@ RULES:
               key={msg.id} 
               style={[styles.messageBubble, msg.sender === 'user' ? styles.userBubble : styles.aiBubble]}
             >
-              <Text style={[styles.messageText, msg.sender === 'user' && styles.userMessageText]}>
-                {msg.text}
-              </Text>
+              {msg.sender === 'user' ? (
+                <Text style={[styles.messageText, styles.userMessageText]}>
+                  {msg.text}
+                </Text>
+              ) : (
+                <Markdown style={markdownStyles}>
+                  {msg.text}
+                </Markdown>
+              )}
             </View>
           ))
         )}
@@ -924,5 +931,63 @@ const styles = StyleSheet.create({
   },
   controlButtonTextActive: {
     color: GidroAtlasColors.white,
+  },
+});
+
+const markdownStyles = StyleSheet.create({
+  body: {
+    fontSize: 16,
+    color: GidroAtlasColors.gray[800],
+    lineHeight: 24,
+  },
+  strong: {
+    fontWeight: 'bold',
+    color: GidroAtlasColors.gray[900],
+  },
+  heading1: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: GidroAtlasColors.persianGreen,
+    marginVertical: 8,
+  },
+  heading2: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: GidroAtlasColors.persianGreen,
+    marginVertical: 6,
+  },
+  list_item: {
+    marginVertical: 2,
+  },
+  bullet_list: {
+    marginVertical: 4,
+  },
+  link: {
+    color: GidroAtlasColors.persianGreen,
+    textDecorationLine: 'underline',
+  },
+  code_inline: {
+    backgroundColor: GidroAtlasColors.gray[100],
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+  },
+  code_block: {
+    backgroundColor: GidroAtlasColors.gray[100],
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 8,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+  },
+  fence: {
+    backgroundColor: GidroAtlasColors.gray[100],
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 8,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
   },
 });

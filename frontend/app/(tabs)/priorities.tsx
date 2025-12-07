@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import Markdown from 'react-native-markdown-display';
 import { GidroAtlasColors } from '@/constants/theme';
 import { prioritiesAPI, ragAPI } from '@/lib/api-services';
 import type { PriorityTableItem, PriorityStatistics, PriorityFilters, PriorityLevel } from '@/lib/gidroatlas-types';
@@ -193,9 +194,9 @@ export default function PrioritiesScreen() {
                   <Ionicons name="bulb" size={18} color={GidroAtlasColors.persianGreen} />
                   <Text style={styles.explanationTitle}>AI Priority Explanation</Text>
                 </View>
-                <Text style={styles.explanationText}>
+                <Markdown style={markdownStyles}>
                   {explanations[item.id] || 'No explanation available'}
-                </Text>
+                </Markdown>
               </View>
             )}
           </View>
@@ -562,5 +563,59 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: GidroAtlasColors.gray[400],
     marginTop: 4,
+  },
+});
+
+const markdownStyles = StyleSheet.create({
+  body: {
+    fontSize: 14,
+    color: GidroAtlasColors.gray[700],
+    lineHeight: 22,
+  },
+  strong: {
+    fontWeight: 'bold',
+    color: GidroAtlasColors.gray[900],
+  },
+  heading1: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: GidroAtlasColors.persianGreen,
+    marginVertical: 8,
+  },
+  heading2: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: GidroAtlasColors.persianGreen,
+    marginVertical: 6,
+  },
+  list_item: {
+    marginVertical: 2,
+  },
+  bullet_list: {
+    marginVertical: 4,
+  },
+  code_inline: {
+    backgroundColor: GidroAtlasColors.gray[100],
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 12,
+  },
+  code_block: {
+    backgroundColor: GidroAtlasColors.gray[100],
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 8,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 12,
+  },
+  fence: {
+    backgroundColor: GidroAtlasColors.gray[100],
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 8,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 12,
   },
 });

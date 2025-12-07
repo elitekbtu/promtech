@@ -9,11 +9,14 @@ import {
   TextInput,
   Platform,
   RefreshControl,
+  Linking,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { GidroAtlasColors } from '@/constants/theme';
 import { waterObjectsAPI } from '@/lib/api-services';
+import { config } from '@/lib/config';
 import type { WaterObject, WaterObjectFilters, ResourceType } from '@/lib/gidroatlas-types';
 import { AuroraBackground } from '@/components/ui/aurora-background';
 
@@ -116,9 +119,38 @@ export default function WaterObjectsScreen() {
     <TouchableOpacity
       key={item.id}
       style={styles.card}
-      onPress={() => {
-        // Navigate to object detail (could be implemented later)
-        console.log('Selected object:', item.id);
+      onPress={async () => {
+        if (item.pdf_url) {
+          try {
+            // Construct full URL if it's relative
+            const fullUrl = item.pdf_url.startsWith('http') 
+              ? item.pdf_url 
+              : `${config.backendURL}${item.pdf_url.startsWith('/') ? '' : '/'}${item.pdf_url}`;
+
+            // On web, simply open in new tab
+            if (Platform.OS === 'web') {
+              window.open(fullUrl, '_blank');
+              return;
+            }
+
+            // On mobile, check if we can open it
+            const supported = await Linking.canOpenURL(fullUrl);
+            if (supported) {
+              await Linking.openURL(fullUrl);
+            } else {
+              Alert.alert('Error', 'Cannot open this passport file.');
+            }
+          } catch (err) {
+            console.error('Error opening PDF:', err);
+            Alert.alert('Error', 'Failed to open passport.');
+          }
+        } else {
+          if (Platform.OS === 'web') {
+            alert('There is no passport available for this water object.');
+          } else {
+            Alert.alert('No Passport', 'There is no passport available for this water object.');
+          }
+        }
       }}
     >
       <View style={styles.cardHeader}>
