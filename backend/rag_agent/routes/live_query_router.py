@@ -79,9 +79,10 @@ async def live_query(request: LiveQueryRequest):
         if tool_name == "vector_search":
             try:
                 vector_tool = get_vector_search_tool()
+                # Используем больше результатов для лучшего покрытия файлов
                 response_text = vector_tool.search(
                     query=query,
-                    k=3,
+                    k=5,  # Увеличено для лучшего покрытия
                     use_reranking=True,
                     use_hyde=True,
                     use_hybrid=True

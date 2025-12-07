@@ -95,35 +95,53 @@ class VectorSearchTool:
             )
         
         try:
-            # Use advanced RAG search with all features
+            # Use advanced RAG search with ALL best practices
             results = self.vector_store_manager.search_documents(
                 query, 
                 k=k, 
                 use_reranking=use_reranking,
                 use_hyde=use_hyde,
-                use_hybrid=use_hybrid
+                use_hybrid=use_hybrid,
+                use_multi_query=True,      # Multi-query retrieval (best practice)
+                ensure_diversity=True,      # Source diversity (best practice)
+                merge_context=True         # Context merging (best practice)
             )
             
             if not results:
                 return f"❌ No relevant documents found for query: '{query}'\n\nTry:\n- Rephrasing your question\n- Using different keywords\n- Asking about available topics"
             
-            # Check quality based on scores
+            # Улучшенная оценка качества результатов
             has_rerank = 'rerank_score' in results[0] if results else False
             
             if has_rerank:
-                # Use combined score for quality assessment
-                best_score = results[0].get('combined_score', 0)
-                quality_warning = "" if best_score > 0.5 else "⚠️ Results may have limited relevance. Consider rephrasing.\n\n"
+                # Используем rerank_score как основной индикатор
+                best_rerank = results[0].get('rerank_score', 0)
+                best_combined = results[0].get('combined_score', 0)
+                
+                # Более умные пороги: если rerank >= 6 или combined >= 0.4, считаем хорошим
+                if best_rerank >= 6 or best_combined >= 0.4:
+                    quality_warning = ""
+                elif best_rerank >= 4 or best_combined >= 0.3:
+                    quality_warning = "💡 Results found, but may need refinement. Try being more specific.\n\n"
+                else:
+                    quality_warning = "⚠️ Results have limited relevance. Try rephrasing or using different keywords.\n\n"
             else:
-                # Use similarity score for quality assessment
+                # Используем similarity score (distance: меньше = лучше)
                 best_score = results[0].get('similarity_score', 1.0)
-                quality_warning = "" if best_score < similarity_threshold else "⚠️ Results may have limited relevance. Consider rephrasing.\n\n"
+                # Для distance: < 0.5 = отлично, < 0.7 = хорошо, < 1.0 = нормально
+                if best_score < 0.5:
+                    quality_warning = ""
+                elif best_score < 0.7:
+                    quality_warning = "💡 Results found, but may need refinement.\n\n"
+                else:
+                    quality_warning = "⚠️ Results may have limited relevance. Consider rephrasing.\n\n"
             
             # Format results with enhanced metadata
             formatted_results = [quality_warning] if quality_warning else []
             
             for i, result in enumerate(results, 1):
-                content = result['content']
+                # Используем enhanced_content если есть (с parent context)
+                content = result.get('enhanced_content') or result['content']
                 metadata = result['metadata']
                 sim_score = result['similarity_score']
                 
@@ -133,65 +151,96 @@ class VectorSearchTool:
                 document_type = metadata.get('document_type', 'text')
                 is_pdf = document_type == 'pdf'
                 
+                # Check for merged chunks (contextual compression)
+                merged_count = result.get('merged_chunks', 0)
+                has_parent_context = 'parent_context' in result
+                
                 # Clean filename
                 if isinstance(source, str) and '/' in source:
                     filename = source.split('/')[-1]
                 
-                # Quality indicators
+                # Улучшенные индикаторы качества с более реалистичными порогами
                 if has_rerank:
-                    # Use combined/rerank score
+                    # Используем rerank_score как основной индикатор
                     combined_score = result.get('combined_score', 0)
                     rerank_score = result.get('rerank_score', 0)
                     
-                    if combined_score > 0.7 or rerank_score >= 8:
+                    # Более реалистичные пороги: rerank >= 7 = отлично, >= 5 = хорошо, >= 3 = нормально
+                    if rerank_score >= 7.5 or (combined_score > 0.65 and rerank_score >= 6):
                         confidence_emoji = "🟢"
                         confidence_level = "Excellent"
-                    elif combined_score > 0.5 or rerank_score >= 6:
+                    elif rerank_score >= 5.5 or (combined_score > 0.45 and rerank_score >= 4):
                         confidence_emoji = "🟡"
                         confidence_level = "Good"
-                    elif combined_score > 0.3 or rerank_score >= 4:
+                    elif rerank_score >= 3.5 or combined_score > 0.3:
                         confidence_emoji = "🟠"
                         confidence_level = "Fair"
                     else:
                         confidence_emoji = "🔴"
                         confidence_level = "Low"
                     
-                    score_display = f"Relevance: {rerank_score:.1f}/10, Similarity: {sim_score:.3f}"
+                    score_display = f"Relevance: {rerank_score:.1f}/10, Combined: {combined_score:.2f}"
                 else:
-                    # Use similarity score (FAISS distance: lower = better)
-                    if sim_score < 0.2:
+                    # Используем similarity score (FAISS distance: меньше = лучше)
+                    # Более реалистичные пороги для distance
+                    if sim_score < 0.3:
                         confidence_emoji = "🟢"
                         confidence_level = "Excellent"
-                    elif sim_score < 0.4:
+                    elif sim_score < 0.5:
                         confidence_emoji = "🟡"
                         confidence_level = "Good"
-                    elif sim_score < 0.6:
+                    elif sim_score < 0.8:
                         confidence_emoji = "🟠"
                         confidence_level = "Fair"
                     else:
                         confidence_emoji = "🔴"
                         confidence_level = "Low"
                     
-                    score_display = f"Similarity: {sim_score:.3f}"
+                    # Показываем similarity как процент (инвертируем distance)
+                    similarity_percent = max(0, min(100, (1 - min(sim_score, 1.0)) * 100))
+                    score_display = f"Similarity: {similarity_percent:.0f}% (distance: {sim_score:.3f})"
                 
                 doc_type_indicator = "📄 PDF" if is_pdf else "📝 Text"
                 
-                # Show more content for better context
-                content_preview = content[:500] if len(content) > 500 else content
+                # Check for merged chunks and parent context
+                merged_count = result.get('merged_chunks', 0)
+                has_parent_context = 'parent_context' in result
                 
-                formatted_results.append(
-                    f"{confidence_emoji} **Result {i}** ({confidence_level}) {doc_type_indicator}\n"
-                    f"📁 Source: {filename}\n"
-                    f"📊 {score_display}\n"
-                    f"📖 Content:\n{content_preview}{'...' if len(content) > 500 else ''}\n"
-                    f"{'─' * 80}\n"
-                )
+                # Show more content for better context (увеличено для merged chunks)
+                content_length = 800 if merged_count > 1 or has_parent_context else 500
+                content_preview = content[:content_length] if len(content) > content_length else content
+                
+                # Build result entry
+                result_lines = [
+                    f"{confidence_emoji} **Result {i}** ({confidence_level}) {doc_type_indicator}",
+                    f"📁 Source: {filename}"
+                ]
+                
+                if merged_count > 1:
+                    result_lines.append(f"🔗 Merged {merged_count} related chunks for comprehensive context")
+                if has_parent_context:
+                    result_lines.append(f"📚 Includes parent document context")
+                
+                result_lines.extend([
+                    f"📊 {score_display}",
+                    f"📖 Content:\n{content_preview}{'...' if len(content) > content_length else ''}",
+                    f"{'─' * 80}"
+                ])
+                
+                formatted_results.append("\n".join(result_lines) + "\n")
             
             result_text = "\n".join(formatted_results)
             
-            # Add helpful footer with reranking status
+            # Add helpful footer with statistics
             rerank_status = " (with AI reranking)" if has_rerank else ""
-            result_text += f"\n✅ Found {len(results)} relevant result(s){rerank_status}.\n"
+            unique_sources = len(set(r.get('metadata', {}).get('source_file', '') for r in results))
+            merged_count = sum(1 for r in results if r.get('merged_chunks', 0) > 1)
+            
+            footer = f"\n✅ Found {len(results)} relevant result(s) from {unique_sources} document(s){rerank_status}."
+            if merged_count > 0:
+                footer += f"\n🔗 {merged_count} result(s) include merged context from multiple chunks."
+            
+            result_text += footer + "\n"
             
             return result_text
             
