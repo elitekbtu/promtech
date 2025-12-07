@@ -52,13 +52,13 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
           console.log("[useLiveAPI] 🔄 Resuming suspended audio context");
           await audioCtx.resume();
         }
-        
+
         audioStreamerRef.current = new AudioStreamer(audioCtx);
         await audioStreamerRef.current
           .addWorklet<any>("vumeter-out", VolMeterWorket, (ev: any) => {
             setVolume(ev.data.volume);
           });
-        
+
         console.log("[useLiveAPI] ✅ Audio streamer initialized");
       });
     }
@@ -91,7 +91,7 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
           console.log("[useLiveAPI] 🔄 Resuming audio context for playback");
           await audioCtx.resume();
         }
-        
+
         audioStreamerRef.current.addPCM16(new Uint8Array(data));
         console.log("[useLiveAPI] ✅ Audio added to streamer");
       } else {
@@ -131,7 +131,7 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
     setConnected(false);
   }, [setConnected, client]);
 
-  return {
+  return useMemo(() => ({
     client,
     config,
     setConfig,
@@ -141,5 +141,5 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
     connect,
     disconnect,
     volume,
-  };
+  }), [client, config, setConfig, model, setModel, connected, connect, disconnect, volume]);
 }

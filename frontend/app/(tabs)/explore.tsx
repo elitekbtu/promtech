@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 16,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+    paddingBottom: 120,
     borderTopWidth: 1,
     borderTopColor: GidroAtlasColors.gray[200],
     gap: 12,

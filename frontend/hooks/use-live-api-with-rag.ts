@@ -38,6 +38,7 @@ interface LiveQueryResponse {
  */
 export function useLiveAPIWithRAG(options: LiveClientOptions): UseLiveAPIWithRAGResults {
   const liveAPI = useLiveAPI(options);
+  const { client, setConfig } = liveAPI;
   const [ragToolsEnabled, setRAGToolsEnabled] = useState(true);
   const [ragToolsHealthy, setRAGToolsHealthy] = useState(false);
   const lastConfigRef = useRef<string | null>(null);
@@ -52,7 +53,7 @@ export function useLiveAPIWithRAG(options: LiveClientOptions): UseLiveAPIWithRAG
       try {
         const url = `${config.backendURL}${config.endpoints.rag.live.supervisorStatus}`;
         console.log('[RAG] 🔍 Health check:', url);
-        
+
         const response = await fetch(url, {
           method: 'GET',
           headers: {
@@ -62,8 +63,8 @@ export function useLiveAPIWithRAG(options: LiveClientOptions): UseLiveAPIWithRAG
 
         if (response.ok) {
           const data = await response.json();
-          const isHealthy = data.status === 'operational' && 
-                          data.supervisor_agent?.initialized === true;
+          const isHealthy = data.status === 'operational' &&
+            data.supervisor_agent?.initialized === true;
           setRAGToolsHealthy(isHealthy);
           console.log('[RAG] Health check:', isHealthy ? '✅ Healthy' : '⚠️ Unhealthy', {
             status: data.status,
@@ -97,14 +98,14 @@ export function useLiveAPIWithRAG(options: LiveClientOptions): UseLiveAPIWithRAG
   const setConfigWithRAG = useCallback((newConfig: LiveConnectConfig) => {
     // Create a stable config string to prevent infinite loops
     const configString = JSON.stringify(newConfig);
-    
+
     // Save the config for later re-application when health check completes
     lastConfigValueRef.current = newConfig;
-    
+
     if (lastConfigRef.current === configString) {
       return;
     }
-    
+
     lastConfigRef.current = configString;
 
     if (ragToolsEnabled && ragToolsHealthy) {
@@ -146,23 +147,23 @@ export function useLiveAPIWithRAG(options: LiveClientOptions): UseLiveAPIWithRAG
           }
         ]
       };
-      liveAPI.setConfig(ragConfig);
+      setConfig(ragConfig);
       console.log('[RAG] ✅ Config updated with RAG tools');
     } else {
-      liveAPI.setConfig(newConfig);
+      setConfig(newConfig);
       console.log('[RAG] ⚠️ Config updated without RAG tools (health check pending)');
     }
-  }, [liveAPI, ragToolsEnabled, ragToolsHealthy]);
+  }, [setConfig, ragToolsEnabled, ragToolsHealthy]);
 
   // Re-apply config when health check completes and tools become healthy
   useEffect(() => {
     if (ragToolsEnabled && ragToolsHealthy && lastConfigValueRef.current) {
       const savedConfig = lastConfigValueRef.current;
       console.log('[RAG] 🔄 Re-applying config with RAG tools after health check');
-      
+
       // Reset lastConfigRef to force re-application
       lastConfigRef.current = null;
-      
+
       // Re-apply with RAG tools
       const ragConfig: LiveConnectConfig = {
         ...savedConfig,
@@ -201,12 +202,12 @@ export function useLiveAPIWithRAG(options: LiveClientOptions): UseLiveAPIWithRAG
           }
         ]
       };
-      
-      liveAPI.setConfig(ragConfig);
+
+      setConfig(ragConfig);
       lastConfigRef.current = JSON.stringify(savedConfig);
       console.log('[RAG] ✅ Config re-applied with RAG tools');
     }
-  }, [ragToolsHealthy, ragToolsEnabled, liveAPI]);
+  }, [ragToolsHealthy, ragToolsEnabled, setConfig]);
 
   // Handle tool calls from Gemini
   useEffect(() => {
@@ -234,9 +235,9 @@ export function useLiveAPIWithRAG(options: LiveClientOptions): UseLiveAPIWithRAG
 
       for (const fc of functionCalls) {
         const { name, args, id } = fc;
-        
+
         console.log('[RAG] 📋 Processing function call:', { id, name, hasArgs: !!args });
-        
+
         // Validate tool call
         if (!name || !args || typeof args.query !== 'string' || !args.query.trim()) {
           console.warn('[RAG] ⚠️ Invalid tool call:', { name, hasQuery: !!args?.query, queryType: typeof args?.query });
@@ -327,7 +328,7 @@ export function useLiveAPIWithRAG(options: LiveClientOptions): UseLiveAPIWithRAG
       if (functionResponses.length > 0) {
         console.log('[RAG] 📤 Sending', functionResponses.length, 'tool response(s) to Gemini');
         console.log('[RAG] 📋 Function responses:', JSON.stringify(functionResponses, null, 2));
-        liveAPI.client.sendToolResponse({ functionResponses });
+        client.sendToolResponse({ functionResponses });
         console.log('[RAG] ✅ Tool responses sent successfully');
       } else {
         console.warn('[RAG] ⚠️ No function responses to send');
@@ -335,12 +336,12 @@ export function useLiveAPIWithRAG(options: LiveClientOptions): UseLiveAPIWithRAG
     };
 
     // Listen for tool calls
-    liveAPI.client.on('toolcall', onToolCall);
+    client.on('toolcall', onToolCall);
 
     return () => {
-      liveAPI.client.off('toolcall', onToolCall);
+      client.off('toolcall', onToolCall);
     };
-  }, [liveAPI.client, ragToolsEnabled, ragToolsHealthy]);
+  }, [client, ragToolsEnabled, ragToolsHealthy]);
 
   return {
     ...liveAPI,

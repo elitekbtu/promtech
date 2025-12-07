@@ -896,6 +896,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'space-around', 
     padding: 24, 
+    paddingBottom: 120, // Add padding for DockMorph
     backgroundColor: GidroAtlasColors.white, 
     borderTopWidth: 1, 
     borderTopColor: GidroAtlasColors.gray[200],

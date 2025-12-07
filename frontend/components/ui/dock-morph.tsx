@@ -99,16 +99,16 @@ function DockItem({ item, isActive, isHovered, onHoverIn, onHoverOut }: DockItem
   const bubbleOpacity = useSharedValue(0);
 
   React.useEffect(() => {
-    if (isHovered) {
-      scale.value = withSpring(1.1, { damping: 12, stiffness: 200 });
-      bubbleScale.value = withSpring(1.4, { damping: 15, stiffness: 180 });
-      bubbleOpacity.value = withTiming(1, { duration: 200 });
+    if (isHovered || isActive) {
+      scale.value = withSpring(isActive ? 1.05 : 1.1, { damping: 12, stiffness: 200 });
+      bubbleScale.value = withSpring(isActive ? 1.2 : 1.4, { damping: 15, stiffness: 180 });
+      bubbleOpacity.value = withTiming(isActive ? 0.1 : 1, { duration: 200 });
     } else {
       scale.value = withSpring(1, { damping: 12, stiffness: 200 });
       bubbleScale.value = withTiming(0.6, { duration: 150 });
       bubbleOpacity.value = withTiming(0, { duration: 150 });
     }
-  }, [isHovered]);
+  }, [isHovered, isActive]);
 
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -169,9 +169,9 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   dock: {
-    borderRadius: 28,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderRadius: 32,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -179,20 +179,30 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   glassBackground: {
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
   },
   solidBackground: {
     backgroundColor: GidroAtlasColors.white,
     borderWidth: 1,
     borderColor: GidroAtlasColors.gray[200],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
   },
   itemsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 4,
+    gap: 12,
+    paddingHorizontal: 8,
   },
   itemWrapper: {
     position: 'relative',
@@ -210,10 +220,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 4,
+    zIndex: 0,
   },
   itemButton: {
     position: 'relative',
     zIndex: 10,
+    padding: 4,
   },
   iconContainer: {
     width: 48,
@@ -222,14 +234,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   activeIconContainer: {
     backgroundColor: GidroAtlasColors.persianGreen,
     shadowColor: GidroAtlasColors.persianGreen,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
+    transform: [{ scale: 1.1 }],
   },
   badge: {
     position: 'absolute',
