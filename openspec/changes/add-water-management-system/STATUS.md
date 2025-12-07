@@ -1,16 +1,17 @@
 # GidroAtlas Implementation Status
 
 **Last Updated:** December 7, 2025  
-**Status:** 🚧 In Progress (Phase 2/13 Complete)
+**Status:** 🚧 In Progress (Phase 3/13 Complete)
 
 ## 📊 Overall Progress
 
 - ✅ **Phase 1:** Database Models & Schema - **COMPLETE** (5/5 tasks)
 - ✅ **Phase 2:** Core Business Logic - **COMPLETE** (6/6 tasks)
-- 🔄 **Phase 3:** API Endpoints - Water Objects - **NEXT** (0/7 tasks)
-- ⏳ **Phases 4-13:** Not started (71 tasks remaining)
+- ✅ **Phase 3:** API Endpoints - Water Objects - **COMPLETE** (7/7 tasks)
+- 🔄 **Phase 4:** API Endpoints - Priorities - **NEXT** (0/5 tasks)
+- ⏳ **Phases 5-13:** Not started (64 tasks remaining)
 
-**Total:** 11/82 tasks complete (13.4%)
+**Total:** 18/82 tasks complete (22.0%)
 
 ---
 
@@ -148,25 +149,72 @@ Levels:
 
 ---
 
-## 🔄 Phase 3: API Endpoints - Water Objects (NEXT)
+## ✅ Phase 3: API Endpoints - Water Objects
+
+### Tasks Completed:
+
+1. ✅ Created `backend/services/objects/router.py` with APIRouter
+2. ✅ Implemented GET `/api/objects` with filtering/sorting/pagination
+3. ✅ Role-based responses (guest vs expert visibility)
+4. ✅ Implemented GET `/api/objects/{id}` with role-based details
+5. ✅ Implemented GET `/api/objects/{id}/passport` for metadata
+6. ✅ Implemented POST/PUT/DELETE endpoints (expert-only)
+7. ✅ Implemented GET `/api/objects/regions/list` helper endpoint
+
+### Deliverables:
+
+```
+backend/services/objects/
+└── router.py (280+ lines)
+    ├── APIRouter with prefix="/objects"
+    ├── get_current_user_role() dependency
+    ├── require_expert() dependency
+    ├── GET /objects (list with filters)
+    ├── GET /objects/{id} (details)
+    ├── POST /objects (create - expert only)
+    ├── PUT /objects/{id} (update - expert only)
+    ├── DELETE /objects/{id} (soft delete - expert only)
+    ├── GET /objects/{id}/passport (metadata)
+    └── GET /objects/regions/list (helper)
+
+backend/main.py (updated)
+├── Import objects_router
+├── Register router: app.include_router(objects_router, prefix="/api")
+└── Updated app title to "GidroAtlas API"
+```
+
+### API Features:
+
+#### Role-Based Access:
+- **Guest users:** See basic water object info (no priority data)
+- **Expert users:** See full details including priority scores/levels
+- **Expert-only endpoints:** Create, update, delete operations
+
+#### Filtering System (11 parameters):
+- region, resource_type, water_type, fauna
+- min/max technical_condition, min/max priority (expert only)
+- priority_level (expert only), passport_date_from/to
+
+#### Pagination & Sorting:
+- limit: 1-100 items per page (default 100)
+- offset, sort_by (any field), sort_order (asc/desc)
+
+#### Response Codes:
+- `200 OK`, `201 Created`, `204 No Content`
+- `403 Forbidden` (guest → expert endpoint)
+- `404 Not Found` (object doesn't exist)
+
+---
+
+## 🔄 Phase 4: API Endpoints - Priorities (NEXT)
 
 ### Planned Tasks:
 
-1. ⏳ Create router.py
-2. ⏳ Implement GET /objects endpoint
-3. ⏳ Add role-based filtering
-4. ⏳ Implement GET /objects/{id}
-5. ⏳ Implement GET /objects/{id}/passport
-6. ✅ Pydantic schemas (already done)
-7. ✅ Service layer (already done)
-
-### Target Endpoints:
-
-```
-GET  /objects              - List/filter water objects
-GET  /objects/{id}         - Get object details
-GET  /objects/{id}/passport - Get passport metadata
-```
+1. ⏳ Create `backend/services/priorities/router.py`
+2. ⏳ Implement `GET /api/priorities/table` (expert-only)
+3. ⏳ Implement filtering/sorting for priority dashboard
+4. ⏳ Create priority statistics endpoint
+5. ⏳ Create Pydantic schemas for priority responses
 
 ---
 

@@ -19,23 +19,23 @@
 
 ## 3. API Endpoints - Water Objects
 
-- [ ] 3.1 Create `backend/services/objects/router.py` with endpoint structure
-- [ ] 3.2 Implement `GET /objects` with query params for filtering/sorting/pagination
-- [ ] 3.3 Implement role-based response (exclude priority fields for guests)
-- [ ] 3.4 Implement `GET /objects/{id}` with role-based field filtering
-- [ ] 3.5 Implement `GET /objects/{id}/passport` for passport metadata
-- [ ] 3.6 Create Pydantic schemas for requests/responses in `schemas.py`
-- [ ] 3.7 Add service layer business logic in `service.py`
+- [x] 3.1 Create `backend/services/objects/router.py` with endpoint structure
+- [x] 3.2 Implement `GET /objects` with query params for filtering/sorting/pagination
+- [x] 3.3 Implement role-based response (exclude priority fields for guests)
+- [x] 3.4 Implement `GET /objects/{id}` with role-based field filtering
+- [x] 3.5 Implement `GET /objects/{id}/passport` for passport metadata
+- [x] 3.6 Create Pydantic schemas for requests/responses in `schemas.py`
+- [x] 3.7 Add service layer business logic in `service.py`
 
-## 4. API Endpoints - Priorities
+## Phase 4: API Endpoints - Priorities
 
 - [ ] 4.1 Create `backend/services/priorities/router.py`
-- [ ] 4.2 Implement `GET /priorities/table` with expert-only protection
+- [ ] 4.2 Implement `GET /api/priorities/table` with expert-only protection
 - [ ] 4.3 Implement filtering/sorting specific to priority dashboard
-- [ ] 4.4 Create `require_expert()` dependency for endpoint protection
+- [ ] 4.4 Create priority statistics endpoint (count by level)
 - [ ] 4.5 Create Pydantic schemas for priority responses
 
-## 5. Authentication Updates
+## Phase 5: Authentication Updates
 
 - [ ] 5.1 Update `backend/services/auth/schemas.py` role enum to `guest`/`expert`
 - [ ] 5.2 Modify login endpoint to return JWT with new role field
@@ -87,8 +87,8 @@
 - [ ] 10.1 Add `FILE_STORAGE_PATH` to .env.example
 - [ ] 10.2 Add `FILE_STORAGE_BASE_URL` to .env.example
 - [ ] 10.3 Update `backend/database.py` if needed for new models
-- [ ] 10.4 Update `backend/main.py` app title to "GidroAtlas API"
-- [ ] 10.5 Register all new routers in main.py
+- [x] 10.4 Update `backend/main.py` app title to "GidroAtlas API"
+- [x] 10.5 Register all new routers in main.py
 - [ ] 10.6 Update CORS settings if needed
 
 ## 11. Testing & Validation
