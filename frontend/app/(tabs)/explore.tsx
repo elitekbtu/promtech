@@ -19,7 +19,7 @@ import { config } from '@/lib/config';
 
 // AI Character Configuration
 const AI_CHARACTER_NAME = "GidroAtlas";
-const WELCOME_MESSAGE = "I'm GidroAtlas. Your AI assistant for water resource management.";
+const WELCOME_MESSAGE = "Я GidroAtlas. Ваш AI-ассистент по управлению водными ресурсами.";
 
 interface ChatMessage {
   id: number;
@@ -168,10 +168,10 @@ export default function ExploreScreen() {
   }, [chatState.messages]);
 
   const fixedPrompts = [
-    "What is the current status of Balkhash lake?",
-    "Show me high risk water objects.",
-    "How do I register a new water passport?",
-    "What are the latest hydrological alerts?",
+    "Каков текущий статус озера Балхаш?",
+    "Покажи водные объекты высокого риска.",
+    "Как зарегистрировать новый водный паспорт?",
+    "Какие последние гидрологические предупреждения?",
   ];
 
   const startNewChat = useCallback(() => {
@@ -199,10 +199,10 @@ export default function ExploreScreen() {
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>
-              Chat with {AI_CHARACTER_NAME}
+              Чат с {AI_CHARACTER_NAME}
             </Text>
             <Text style={styles.headerSubtitle}>
-              Your Water Management Assistant
+              Ваш ассистент по водным ресурсам
             </Text>
           </View>
           {chatState.messages.length > 1 && (
@@ -211,7 +211,7 @@ export default function ExploreScreen() {
               onPress={startNewChat}
             >
               <Ionicons name="add-circle-outline" size={20} color={GidroAtlasColors.persianGreen} />
-              <Text style={styles.newChatButtonText}>New Chat</Text>
+              <Text style={styles.newChatButtonText}>Новый чат</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -226,7 +226,7 @@ export default function ExploreScreen() {
           <View style={styles.statusBadge}>
             <View style={styles.statusDot} />
             <Text style={styles.statusText}>
-              Ready
+              Готов
             </Text>
           </View>
         </View>
@@ -298,7 +298,7 @@ export default function ExploreScreen() {
                       <View style={styles.metadataRow}>
                         <Ionicons name="library-outline" size={12} color={GidroAtlasColors.gray[600]} />
                         <Text style={styles.sourcesCount}>
-                          {msg.sources.length} source{msg.sources.length > 1 ? 's' : ''}
+                          {msg.sources.length} источник{msg.sources.length > 1 ? 'ов' : ''}
                         </Text>
                       </View>
                     )}
@@ -319,7 +319,7 @@ export default function ExploreScreen() {
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={GidroAtlasColors.persianGreen} />
               <Text style={styles.loadingText}>
-                {AI_CHARACTER_NAME} is thinking...
+                {AI_CHARACTER_NAME} думает...
               </Text>
             </View>
           )}
@@ -328,7 +328,7 @@ export default function ExploreScreen() {
           {chatState.messages.length === 1 && !chatState.loading && (
             <View style={styles.promptsContainer}>
               <Text style={styles.promptsTitle}>
-                Quick starters:
+                Быстрый старт:
               </Text>
               {fixedPrompts.map((prompt, index) => (
                 <TouchableOpacity

@@ -29,17 +29,17 @@ export default function TabLayout() {
   const dockItems = [
     {
       icon: 'home' as const,
-      label: 'Home',
+      label: 'Главная',
       onPress: () => router.push('/(tabs)/'),
     },
     {
       icon: 'compass' as const,
-      label: 'Explore',
+      label: 'Обзор',
       onPress: () => router.push('/(tabs)/explore'),
     },
     {
       icon: 'chatbubble-ellipses' as const,
-      label: 'Chat',
+      label: 'Чат',
       onPress: () => router.push('/(tabs)/live-chat'),
     },
   ];
@@ -62,6 +62,8 @@ export default function TabLayout() {
         <Tabs.Screen name="index" />
         <Tabs.Screen name="explore" />
         <Tabs.Screen name="live-chat" />
+        <Tabs.Screen name="water-objects" />
+        <Tabs.Screen name="priorities" />
       </Tabs>
       
       {/* Custom DockMorph Navigation */}

@@ -41,17 +41,17 @@ export default function HomeScreen() {
   function handleLogout() {
     // On web, Alert.alert doesn't work, so use confirm
     if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to logout?')) {
+      if (window.confirm('Вы уверены, что хотите выйти?')) {
         performLogout();
       }
     } else {
       Alert.alert(
-        'Logout',
-        'Are you sure you want to logout?',
+        'Выход',
+        'Вы уверены, что хотите выйти?',
         [
-          { text: 'Cancel', style: 'cancel' },
+          { text: 'Отмена', style: 'cancel' },
           { 
-            text: 'Logout', 
+            text: 'Выйти', 
             style: 'destructive',
             onPress: () => performLogout()
           }
@@ -65,28 +65,28 @@ export default function HomeScreen() {
       title: 'Live Chat',
       description: 'Real-time AI conversations',
       icon: 'chatbubbles',
-      href: '/live-chat' as const,
+      href: '/(tabs)/live-chat' as const,
       bgColor: GidroAtlasColors.cloud
     },
     {
-      title: 'Wallet',
-      description: 'Manage your transactions',
-      icon: 'wallet',
-      href: '/transactions' as const,
+      title: 'Water Objects',
+      description: 'View all water objects',
+      icon: 'water',
+      href: '/(tabs)/water-objects' as const,
       bgColor: GidroAtlasColors.cloud
     },
     {
-      title: 'Financial Analysis',
-      description: 'AI-powered insights',
-      icon: 'analytics',
-      href: '/financial-analysis' as const,
+      title: 'Priority Table',
+      description: 'Expert priority analysis',
+      icon: 'stats-chart',
+      href: '/(tabs)/priorities' as const,
       bgColor: GidroAtlasColors.cloud
     },
     {
-      title: 'Explore',
-      description: 'Discover new features',
-      icon: 'compass',
-      href: '/explore' as const,
+      title: 'AI Search',
+      description: 'Ask questions about water resources',
+      icon: 'search',
+      href: '/(tabs)/explore' as const,
       bgColor: GidroAtlasColors.cloud
     }
   ];
@@ -102,7 +102,7 @@ export default function HomeScreen() {
       {/* Logout Button - Top Right */}
       {user && (
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>Выйти</Text>
         </TouchableOpacity>
       )}
 
@@ -118,10 +118,10 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.appName}>GidroAtlas</Text>
           <Text style={styles.welcomeText}>
-            Welcome, {user ? `${user.name} ${user.surname}` : 'Beknur Ualikhanuly'}
+            Добро пожаловать, {user ? `${user.name} ${user.surname}` : 'Пользователь'}
           </Text>
           <Text style={styles.subtitleText}>
-            Your AI-powered platform for innovation
+            Ваша AI-платформа для управления водными ресурсами
           </Text>
         </View>
 
@@ -129,7 +129,7 @@ export default function HomeScreen() {
         <View style={styles.content}>
           {/* Quick Actions */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Quick Actions</Text>
+            <Text style={styles.sectionLabel}>Быстрые действия</Text>
             <View style={styles.quickActions}>
               {features.map((feature, index) => (
                 <Link key={index} href={feature.href} asChild>

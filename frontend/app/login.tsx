@@ -80,8 +80,8 @@ export default function LoginScreen() {
         token_type: 'bearer',
         user: {
           id: 0,
-          name: 'Guest',
-          surname: 'User',
+          name: 'Гость',
+          surname: '',
           email: 'guest@gidroatlas.kz',
           phone: '',
           role: 'guest',
@@ -95,7 +95,7 @@ export default function LoginScreen() {
       router.replace('/(tabs)');
     } catch (error) {
       console.error('Error during guest login:', error);
-      Alert.alert('Error', 'Could not login as guest');
+      Alert.alert('Ошибка', 'Не удалось войти как гость');
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +103,7 @@ export default function LoginScreen() {
 
   async function handleFaceVerify() {
     if (!capturedPhoto) {
-      Alert.alert('Error', 'Please capture a photo first');
+      Alert.alert('Ошибка', 'Сначала сделайте фото');
       return;
     }
 
@@ -134,13 +134,13 @@ export default function LoginScreen() {
         await saveUserSession(result.token);
         router.replace('/(tabs)');
       } else if (result.success && !result.verified) {
-        Alert.alert('❌ Face Not Recognized', result.message || 'No matching face found.');
+        Alert.alert('❌ Лицо не распознано', result.message || 'Совпадение не найдено.');
       } else {
-        Alert.alert('❌ Login Failed', result.message || 'Face verification failed.');
+        Alert.alert('❌ Ошибка входа', result.message || 'Не удалось проверить лицо.');
       }
     } catch (error: any) {
       console.error('Error during face verification:', error);
-      Alert.alert('🔌 Connection Error', 'Could not connect to the server.');
+      Alert.alert('🔌 Ошибка соединения', 'Не удалось подключиться к серверу.');
     } finally {
       setIsLoading(false);
     }
@@ -148,12 +148,12 @@ export default function LoginScreen() {
 
   async function handleEmailPasswordLogin() {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('❌ Validation Error', 'Please enter both email and password');
+      Alert.alert('❌ Ошибка валидации', 'Введите email и пароль');
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('❌ Invalid Email', 'Please enter a valid email address');
+      Alert.alert('❌ Неверный email', 'Введите корректный email адрес');
       return;
     }
 
@@ -175,11 +175,11 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
       } else {
         const errorData = await loginResponse.json();
-        Alert.alert('❌ Login Failed', errorData.detail || 'Login failed');
+        Alert.alert('❌ Ошибка входа', errorData.detail || 'Не удалось войти');
       }
     } catch (error) {
       console.error('Error during login:', error);
-      Alert.alert('🔌 Connection Error', 'Could not connect to the server.');
+      Alert.alert('🔌 Ошибка соединения', 'Не удалось подключиться к серверу.');
     } finally {
       setIsLoading(false);
     }
@@ -187,17 +187,17 @@ export default function LoginScreen() {
 
   async function handleRegister() {
     if (!name.trim() || !surname.trim() || !email.trim() || !phone.trim() || !password.trim()) {
-      Alert.alert('❌ Validation Error', 'Please fill in all required fields');
+      Alert.alert('❌ Ошибка валидации', 'Заполните все обязательные поля');
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('❌ Invalid Email', 'Please enter a valid email address');
+      Alert.alert('❌ Неверный email', 'Введите корректный email адрес');
       return;
     }
 
     if (!capturedPhoto) {
-      Alert.alert('❌ Photo Required', 'Please capture your face photo for Face ID registration');
+      Alert.alert('❌ Требуется фото', 'Сделайте фото лица для регистрации Face ID');
       return;
     }
 
@@ -228,11 +228,11 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
       } else {
         const errorData = await registerResponse.json();
-        Alert.alert('❌ Registration Failed', errorData.detail || 'Registration failed');
+        Alert.alert('❌ Ошибка регистрации', errorData.detail || 'Не удалось зарегистрироваться');
       }
     } catch (error) {
       console.error('Error during registration:', error);
-      Alert.alert('🔌 Connection Error', 'Could not connect to the server.');
+      Alert.alert('🔌 Ошибка соединения', 'Не удалось подключиться к серверу.');
     } finally {
       setIsLoading(false);
     }
@@ -260,13 +260,13 @@ export default function LoginScreen() {
           </AnimatedText>
           
           <AnimatedText variant="subtitle" delay={300} style={styles.tagline}>
-            Select your role
+            Выберите роль
           </AnimatedText>
 
           {/* Animated Buttons */}
           <View style={styles.buttonContainer}>
             <AnimatedButton
-              title="Enter as Guest"
+              title="Войти как гость"
               icon="person-outline"
               variant="default"
               delay={500}
@@ -275,7 +275,7 @@ export default function LoginScreen() {
             />
 
             <AnimatedButton
-              title="Enter as Expert"
+              title="Войти как эксперт"
               icon="briefcase-outline"
               variant="dark"
               delay={650}
@@ -322,13 +322,13 @@ export default function LoginScreen() {
             </AnimatedContainer>
             
             <AnimatedText variant="title" delay={150} style={styles.authTitle}>
-              {mode === 'login' ? 'Welcome back' : 'Create account'}
+              {mode === 'login' ? 'Добро пожаловать' : 'Создать аккаунт'}
             </AnimatedText>
             
             <AnimatedText variant="subtitle" delay={200} style={styles.authSubtitle}>
               {mode === 'login' 
-                ? 'Sign in to continue to GidroAtlas' 
-                : 'Join GidroAtlas as an expert'}
+                ? 'Войдите для продолжения работы в GidroAtlas' 
+                : 'Присоединитесь к GidroAtlas как эксперт'}
             </AnimatedText>
 
             {/* Face ID Button - Primary Auth */}
@@ -343,7 +343,7 @@ export default function LoginScreen() {
                       disabled={isLoading}
                     >
                       <Ionicons name="refresh-outline" size={20} color={GidroAtlasColors.persianGreen} />
-                      <Text style={styles.retakeText}>Retake</Text>
+                      <Text style={styles.retakeText}>Переснять</Text>
                     </TouchableOpacity>
                     
                     {mode === 'login' && (
@@ -357,7 +357,7 @@ export default function LoginScreen() {
                         ) : (
                           <>
                             <Ionicons name="scan-outline" size={20} color={GidroAtlasColors.white} />
-                            <Text style={styles.faceLoginButtonText}>Verify Face ID</Text>
+                            <Text style={styles.faceLoginButtonText}>Проверить Face ID</Text>
                           </>
                         )}
                       </TouchableOpacity>
@@ -375,10 +375,10 @@ export default function LoginScreen() {
                   </View>
                   <View style={styles.faceIdTextContainer}>
                     <Text style={styles.faceIdButtonTitle}>
-                      {mode === 'login' ? 'Sign in with Face ID' : 'Capture Face ID'}
+                      {mode === 'login' ? 'Войти через Face ID' : 'Сделать фото для Face ID'}
                     </Text>
                     <Text style={styles.faceIdButtonSubtitle}>
-                      {mode === 'login' ? 'Quick and secure authentication' : 'Required for expert verification'}
+                      {mode === 'login' ? 'Быстрая и безопасная аутентификация' : 'Требуется для верификации эксперта'}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={24} color={GidroAtlasColors.gray[400]} />
@@ -390,7 +390,7 @@ export default function LoginScreen() {
             {mode === 'login' && (
               <AnimatedContainer delay={400} style={styles.dividerContainer}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or continue with email</Text>
+                <Text style={styles.dividerText}>или войдите через email</Text>
                 <View style={styles.dividerLine} />
               </AnimatedContainer>
             )}
@@ -402,7 +402,7 @@ export default function LoginScreen() {
                   <Ionicons name="mail-outline" size={20} color={GidroAtlasColors.gray[400]} style={styles.inputIcon} />
                   <TextInput
                     style={styles.modernInput}
-                    placeholder="Email address"
+                    placeholder="Email адрес"
                     placeholderTextColor={GidroAtlasColors.gray[400]}
                     value={email}
                     onChangeText={setEmail}
@@ -416,7 +416,7 @@ export default function LoginScreen() {
                   <Ionicons name="lock-closed-outline" size={20} color={GidroAtlasColors.gray[400]} style={styles.inputIcon} />
                   <TextInput
                     style={styles.modernInput}
-                    placeholder="Password"
+                    placeholder="Пароль"
                     placeholderTextColor={GidroAtlasColors.gray[400]}
                     value={password}
                     onChangeText={setPassword}
@@ -433,7 +433,7 @@ export default function LoginScreen() {
                   {isLoading ? (
                     <ActivityIndicator color={GidroAtlasColors.black} />
                   ) : (
-                    <Text style={styles.submitButtonText}>Sign in</Text>
+                    <Text style={styles.submitButtonText}>Войти</Text>
                   )}
                 </TouchableOpacity>
               </AnimatedContainer>
@@ -446,7 +446,7 @@ export default function LoginScreen() {
                   <View style={[styles.inputContainer, styles.halfInput]}>
                     <TextInput
                       style={styles.modernInput}
-                      placeholder="First name"
+                      placeholder="Имя"
                       placeholderTextColor={GidroAtlasColors.gray[400]}
                       value={name}
                       onChangeText={setName}
@@ -458,7 +458,7 @@ export default function LoginScreen() {
                   <View style={[styles.inputContainer, styles.halfInput]}>
                     <TextInput
                       style={styles.modernInput}
-                      placeholder="Last name"
+                      placeholder="Фамилия"
                       placeholderTextColor={GidroAtlasColors.gray[400]}
                       value={surname}
                       onChangeText={setSurname}
@@ -472,7 +472,7 @@ export default function LoginScreen() {
                   <Ionicons name="mail-outline" size={20} color={GidroAtlasColors.gray[400]} style={styles.inputIcon} />
                   <TextInput
                     style={styles.modernInput}
-                    placeholder="Email address"
+                    placeholder="Email адрес"
                     placeholderTextColor={GidroAtlasColors.gray[400]}
                     value={email}
                     onChangeText={setEmail}
@@ -486,7 +486,7 @@ export default function LoginScreen() {
                   <Ionicons name="call-outline" size={20} color={GidroAtlasColors.gray[400]} style={styles.inputIcon} />
                   <TextInput
                     style={styles.modernInput}
-                    placeholder="Phone number"
+                    placeholder="Номер телефона"
                     placeholderTextColor={GidroAtlasColors.gray[400]}
                     value={phone}
                     onChangeText={setPhone}
@@ -499,7 +499,7 @@ export default function LoginScreen() {
                   <Ionicons name="lock-closed-outline" size={20} color={GidroAtlasColors.gray[400]} style={styles.inputIcon} />
                   <TextInput
                     style={styles.modernInput}
-                    placeholder="Password (min 8 characters)"
+                    placeholder="Пароль (мин. 8 символов)"
                     placeholderTextColor={GidroAtlasColors.gray[400]}
                     value={password}
                     onChangeText={setPassword}
@@ -516,13 +516,13 @@ export default function LoginScreen() {
                   {isLoading ? (
                     <ActivityIndicator color={GidroAtlasColors.black} />
                   ) : (
-                    <Text style={styles.submitButtonText}>Create Account</Text>
+                    <Text style={styles.submitButtonText}>Создать аккаунт</Text>
                   )}
                 </TouchableOpacity>
                 
                 {!capturedPhoto && (
                   <Text style={styles.faceIdRequiredText}>
-                    * Face ID capture is required for registration
+                    * Для регистрации требуется фото для Face ID
                   </Text>
                 )}
               </AnimatedContainer>
@@ -532,12 +532,12 @@ export default function LoginScreen() {
             <AnimatedContainer delay={600} style={styles.switchModeContainer}>
               <Text style={styles.switchModeText}>
                 {mode === 'login' 
-                  ? "Don't have an account? " 
-                  : 'Already have an account? '}
+                  ? "Нет аккаунта? " 
+                  : 'Уже есть аккаунт? '}
               </Text>
               <TouchableOpacity onPress={switchMode} disabled={isLoading}>
                 <Text style={styles.switchModeLink}>
-                  {mode === 'login' ? 'Sign up' : 'Sign in'}
+                  {mode === 'login' ? 'Зарегистрироваться' : 'Войти'}
                 </Text>
               </TouchableOpacity>
             </AnimatedContainer>
