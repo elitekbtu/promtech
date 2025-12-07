@@ -27,10 +27,8 @@ This change implements the complete water management domain specified in the tec
 - **ADDED**: `/objects/{id}/passport` - Access passport metadata and documents
 - **ADDED**: `/priorities/table` - Expert-only prioritization dashboard
 - **MODIFIED**: `/api/auth/login` - Return role-based tokens with `guest`/`expert` roles
-- **MODIFIED**: `/api/rag/query` - Adapt to water management domain (search water objects, passport analysis)
-- **ADDED**: `/ai/chat` - Water management specific chat with context about objects and regions
-- **ADDED**: `/ai/objects/{id}/explain-priority` - AI explanation of priority scores
-- **ADDED**: `/ai/search` - Natural language search across water objects and passports
+- **MODIFIED**: `/api/rag/query` - Adapt existing RAG endpoint to water management domain (search water objects, passport analysis, priority explanations)
+- **ADDED**: `/api/rag/explain-priority/{object_id}` - Specialized endpoint for AI priority explanation (convenience wrapper over RAG query)
 
 ### Role-Based Access Control
 
@@ -76,13 +74,14 @@ This change implements the complete water management domain specified in the tec
 - `backend/models/user.py` - Modify role enum
 - `backend/main.py` - Update app title and route registration
 - `backend/services/auth/` - Update role validation logic
-- `backend/rag_agent/tools/` - Add water-specific tools
-- `backend/rag_agent/config/orchestrator.py` - Configure domain prompts
+- `backend/rag_agent/tools/` - Add water-specific tools (water_search, passport_retrieval, priority_explainer)
+- `backend/rag_agent/config/orchestrator.py` - Configure water domain prompts
+- `backend/rag_agent/routes/router.py` - Add priority explanation endpoint
+- `backend/rag_agent/utils/vector_store.py` - Modify to index passport documents
 - New modules:
   - `backend/services/objects/` - Water object CRUD and filtering
   - `backend/services/priorities/` - Priority calculation and dashboard
   - `backend/services/passports/` - Document management
-  - `backend/services/ai/` - Domain-specific AI endpoints
 - New scripts:
   - `backend/scripts/import_osm_water.py` - Data seeding
 

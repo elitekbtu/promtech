@@ -27,7 +27,7 @@ Organized into 13 phases:
 5. Authentication Updates (5 tasks)
 6. Passport Management (6 tasks)
 7. RAG System Customization (6 tasks)
-8. AI Endpoints (7 tasks)
+8. RAG Endpoint Enhancements (7 tasks)
 9. Data Seeding & Import (7 tasks)
 10. Configuration & Environment (6 tasks)
 11. Testing & Validation (8 tasks)
@@ -98,11 +98,11 @@ Comprehensive design document covering:
 - Context management
 - Source citation
 
-#### `ai-endpoints/spec.md`
+#### `rag-enhancements/spec.md`
 
-- Chat endpoint for water queries
-- Priority explanation (expert-only)
-- Natural language search
+- MODIFIED `/api/rag/query` endpoint for water queries
+- ADDED `/api/rag/explain-priority/{object_id}` convenience endpoint (expert-only)
+- Enhanced QueryRequest/QueryResponse schemas
 - Domain-specific formatting
 - Error handling
 - Response caching
@@ -164,9 +164,8 @@ openspec archive add-water-management-system --yes
 - `GET /objects/{id}` - Object details
 - `GET /objects/{id}/passport` - Passport metadata
 - `GET /priorities/table` - Expert dashboard
-- `POST /ai/chat` - Water management chat
-- `POST /ai/objects/{id}/explain-priority` - Priority AI
-- `POST /ai/search` - Semantic search
+- `POST /api/rag/query` - MODIFIED for water management queries
+- `POST /api/rag/explain-priority/{object_id}` - Priority explanation (expert-only)
 
 **Role System:**
 

@@ -59,15 +59,15 @@ backend/
 │   ├── auth/ (modified)
 │   ├── objects/ (new) - Water object CRUD
 │   ├── priorities/ (new) - Priority dashboard
-│   ├── passports/ (new) - Document management
-│   └── ai/ (new) - Domain AI endpoints
-└── rag_agent/ (modified) - Water domain tools
+│   └── passports/ (new) - Document management
+└── rag_agent/ (modified) - Water domain tools + enhanced query endpoint
 ```
 
 **Alternatives Considered**:
 
 - Single `water_management/` module: Too monolithic, harder to navigate
 - Technical layers (controllers/services/repos): More boilerplate, less domain clarity
+- New `backend/services/ai/` module: REJECTED - creates duplication with existing rag_agent/
 
 ### Decision 2: Priority as Computed Field
 
