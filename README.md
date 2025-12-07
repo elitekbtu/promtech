@@ -72,7 +72,7 @@ cp env.example .env
 Edit `.env` and set:
 
 ```env
-DATABASE_URL=postgresql://postgres:postgres@postgres:5432/hacknu
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/gidroatlas
 SECRET_KEY=your-secret-key-here
 GOOGLE_API_KEY=your-google-api-key
 TAVILY_API_KEY=your-tavily-api-key
@@ -329,7 +329,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
-**Elite Team - HackNU 2024**
+**Elite Team - Terricon Valley, GidroAtlas**
 
 - Backend Development
 - Frontend Development
@@ -342,7 +342,7 @@ Project Link: [https://github.com/elitekbtu/promtech](https://github.com/elitekb
 
 ## 🙏 Acknowledgments
 
-- HackNU 2024 Organizers
+- Terricon Valley, GidroAtlas Organizers
 - Ministry of Water Resources and Irrigation of Kazakhstan
 - OpenStreetMap contributors
 - Google Gemini AI team
