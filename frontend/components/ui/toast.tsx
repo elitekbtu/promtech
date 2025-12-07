@@ -59,7 +59,7 @@ export function Toast({ message, type = 'info', visible, onHide, duration = 3000
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 100 : 80,
+    top: Platform.OS === 'ios' ? 60 : 40,
     left: 0,
     right: 0,
     alignItems: 'center',
