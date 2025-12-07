@@ -1,12 +1,98 @@
 # RAG System Scripts
 
-This directory contains utility scripts for managing the RAG (Retrieval-Augmented Generation) system.
+This directory contains utility scripts for managing the RAG (Retrieval-Augmented Generation) system with water management data.
 
-## Water Management Vector Store Initialization
+## Scripts Overview
 
-### `initialize_water_vector_store.py`
+### 1. `initialize_vector_db.py`
 
-This script indexes water management data into the vector store for semantic search.
+**Purpose**: Initialize the FAISS vector database with documents and water management data.
+
+**What it does**:
+- Indexes document files (.txt, .pdf) from the `rag_agent/documents` directory
+- Indexes water objects from the database with priority calculations and metadata
+- Indexes passport text sections with object references
+- Creates embeddings using Google's `models/embedding-001`
+- Saves the vector store to `rag_agent/data/vector_store`
+
+**Usage**:
+```bash
+# From host machine
+docker exec promtech-backend-1 python rag_agent/scripts/initialize_vector_db.py
+
+# Or inside container
+python rag_agent/scripts/initialize_vector_db.py
+```
+
+**Prerequisites**:
+- `GOOGLE_API_KEY` environment variable must be set
+- Database must contain water objects and passport texts
+- PostgreSQL container must be running
+
+---
+
+### 2. `test_water_search.py`
+
+**Purpose**: Test semantic search functionality with water-specific queries.
+
+**What it does**:
+- Tests vector search tool with 20+ water management queries
+- Verifies metadata extraction (object names, regions, priorities)
+- Tests both Russian and English queries
+- Validates document type indicators (💧 Водный объект, 📋 Паспорт)
+
+**Usage**:
+```bash
+# Interactive mode with pauses between queries
+docker exec -it promtech-backend-1 python rag_agent/scripts/test_water_search.py
+```
+
+---
+
+### 3. `test_rag_water_queries.py`
+
+**Purpose**: Test RAG API endpoints with water management scenarios.
+
+**What it does**:
+- Tests `POST /api/rag/query` endpoint with water filters
+- Tests `POST /api/rag/explain-priority/{object_id}` convenience endpoint
+- Verifies water metadata extraction in API responses
+- Validates source citations and confidence scores
+
+**Usage**:
+```bash
+# Ensure API server is running first
+python backend/rag_agent/scripts/test_rag_water_queries.py
+
+# With custom API URL
+API_BASE_URL=http://localhost:8000 python backend/rag_agent/scripts/test_rag_water_queries.py
+```
+
+---
+
+## Quick Start Guide
+
+1. **Start containers**:
+```bash
+docker compose up --build -d
+```
+
+2. **Initialize vector database**:
+```bash
+docker exec promtech-backend-1 python rag_agent/scripts/initialize_vector_db.py
+```
+
+3. **Test vector search**:
+```bash
+docker exec -it promtech-backend-1 python rag_agent/scripts/test_water_search.py
+```
+
+4. **Test RAG endpoints**:
+```bash
+python backend/rag_agent/scripts/test_rag_water_queries.py
+```
+
+---
 
 **What it does:**
 

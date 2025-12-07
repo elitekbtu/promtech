@@ -66,13 +66,13 @@
 
 ## 8. RAG Endpoint Enhancements
 
-- [ ] 8.1 Update existing `POST /api/rag/query` endpoint to handle water management queries with updated system context
-- [ ] 8.2 Add `POST /api/rag/explain-priority/{object_id}` convenience endpoint in `backend/rag_agent/routes/router.py`
-- [ ] 8.3 Update `QueryRequest` schema to support water domain context (optional object_id, region, priority_level filters for query context)
-- [ ] 8.4 Enhance `QueryResponse` schema to include water-specific sources (object references from vector metadata)
-- [ ] 8.5 Test RAG query with water management scenarios ("показать озера с высоким приоритетом", "объясни приоритет объекта", "каково состояние водоемов в Алматинской области")
-- [ ] 8.6 Verify vector_search returns properly formatted water data with citations
-- [ ] 8.7 Update RAG system initialization to load water domain configuration and verify vector store contains water data
+- [x] 8.1 Update existing `POST /api/rag/query` endpoint to handle water management queries with updated system context
+- [x] 8.2 Add `POST /api/rag/explain-priority/{object_id}` convenience endpoint in `backend/rag_agent/routes/router.py`
+- [x] 8.3 Update `QueryRequest` schema to support water domain context (optional object_id, region, priority_level filters for query context)
+- [x] 8.4 Enhance `QueryResponse` schema to include water-specific sources (object references from vector metadata)
+- [x] 8.5 Test RAG query with water management scenarios ("показать озера с высоким приоритетом", "объясни приоритет объекта", "каково состояние водоемов в Алматинской области")
+- [x] 8.6 Verify vector_search returns properly formatted water data with citations
+- [x] 8.7 Update RAG system initialization to load water domain configuration and verify vector store contains water data
 
 ## 9. Data Seeding & Import
 

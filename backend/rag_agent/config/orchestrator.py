@@ -88,10 +88,26 @@ class RAGSystem:
         self.specialist_agents = {}
     
     def initialize(self, environment: str = "development"):
-        """Initialize the RAG system."""
+        """Initialize the RAG system with water management configuration."""
         self.config.configure_for_environment(environment)
         
-        # Initialize supervisor agent
+        # Verify vector store contains water data
+        try:
+            from rag_agent.tools.vector_search import get_vector_store_status
+            status = get_vector_store_status()
+            if status != "initialized":
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    "Vector store not initialized. Run 'python rag_agent/scripts/initialize_vector_db.py' "
+                    "to index water management data."
+                )
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error checking vector store status: {e}")
+        
+        # Initialize supervisor agent with water domain context
         self.supervisor_agent = self.config.get_supervisor_agent()
         
         # Initialize specialist agents

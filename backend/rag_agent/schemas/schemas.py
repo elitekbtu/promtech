@@ -13,6 +13,12 @@ class QueryRequest(BaseModel):
     context: Optional[Dict[str, Any]] = Field(None, description="Additional context for the query")
     environment: str = Field("development", description="Environment to run in (development, production, testing)")
     max_iterations: Optional[int] = Field(None, description="Maximum number of agent iterations")
+    
+    # Water management specific filters
+    object_id: Optional[int] = Field(None, description="Filter by specific water object ID")
+    region: Optional[str] = Field(None, description="Filter by region (e.g., 'Алматинская область')")
+    priority_level: Optional[str] = Field(None, description="Filter by priority level (high, medium, low)")
+    resource_type: Optional[str] = Field(None, description="Filter by resource type (lake, canal, reservoir)")
 
 
 class QueryResponse(BaseModel):
@@ -24,6 +30,11 @@ class QueryResponse(BaseModel):
     status: str = Field("success", description="Status of the query processing")
     processing_time: Optional[float] = Field(None, description="Time taken to process the query")
     timestamp: datetime = Field(default_factory=datetime.now, description="Timestamp of the response")
+    
+    # Water management specific metadata
+    water_objects: Optional[List[Dict[str, Any]]] = Field(None, description="Water objects referenced in the response")
+    regions: Optional[List[str]] = Field(None, description="Regions covered in the response")
+    priority_levels: Optional[List[str]] = Field(None, description="Priority levels mentioned in the response")
 
 
 class SystemStatus(BaseModel):
