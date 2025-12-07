@@ -1,11 +1,12 @@
 /**
  * Authentication Utility
  * 
- * Secure storage for JWT tokens and user data using Expo SecureStore.
+ * Secure storage for JWT tokens and user data using Expo SecureStore (Native) or localStorage (Web).
  * Provides functions for managing authentication state.
  */
 
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 // Storage keys
 const TOKEN_KEY = 'jwt_access_token';
@@ -31,13 +32,51 @@ export interface TokenResponse {
     user: UserData;
 }
 
+// Helper functions for cross-platform storage
+async function setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            console.error('Local storage is not available:', e);
+        }
+    } else {
+        await SecureStore.setItemAsync(key, value);
+    }
+}
+
+async function getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            console.error('Local storage is not available:', e);
+            return null;
+        }
+    } else {
+        return await SecureStore.getItemAsync(key);
+    }
+}
+
+async function deleteItem(key: string): Promise<void> {
+    if (Platform.OS === 'web') {
+        try {
+            localStorage.removeItem(key);
+        } catch (e) {
+            console.error('Local storage is not available:', e);
+        }
+    } else {
+        await SecureStore.deleteItemAsync(key);
+    }
+}
+
 /**
  * Save JWT access token securely
  * @param token - JWT access token
  */
 export async function saveAuthToken(token: string): Promise<void> {
     try {
-        await SecureStore.setItemAsync(TOKEN_KEY, token);
+        await setItem(TOKEN_KEY, token);
     } catch (error) {
         console.error('Error saving auth token:', error);
         throw error;
@@ -50,7 +89,7 @@ export async function saveAuthToken(token: string): Promise<void> {
  */
 export async function getAuthToken(): Promise<string | null> {
     try {
-        return await SecureStore.getItemAsync(TOKEN_KEY);
+        return await getItem(TOKEN_KEY);
     } catch (error) {
         console.error('Error retrieving auth token:', error);
         return null;
@@ -63,7 +102,7 @@ export async function getAuthToken(): Promise<string | null> {
  */
 export async function saveUserData(user: UserData): Promise<void> {
     try {
-        await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
+        await setItem(USER_KEY, JSON.stringify(user));
     } catch (error) {
         console.error('Error saving user data:', error);
         throw error;
@@ -76,7 +115,7 @@ export async function saveUserData(user: UserData): Promise<void> {
  */
 export async function getUserData(): Promise<UserData | null> {
     try {
-        const data = await SecureStore.getItemAsync(USER_KEY);
+        const data = await getItem(USER_KEY);
         return data ? JSON.parse(data) : null;
     } catch (error) {
         console.error('Error retrieving user data:', error);
@@ -133,8 +172,8 @@ export async function getUserRole(): Promise<'guest' | 'expert' | null> {
 export async function clearAuth(): Promise<void> {
     try {
         await Promise.all([
-            SecureStore.deleteItemAsync(TOKEN_KEY),
-            SecureStore.deleteItemAsync(USER_KEY),
+            deleteItem(TOKEN_KEY),
+            deleteItem(USER_KEY),
         ]);
     } catch (error) {
         console.error('Error clearing auth data:', error);
@@ -147,6 +186,7 @@ export async function clearAuth(): Promise<void> {
  * @returns true if available
  */
 export async function isSecureStoreAvailable(): Promise<boolean> {
+    if (Platform.OS === 'web') return true; // LocalStorage is available
     try {
         return await SecureStore.isAvailableAsync();
     } catch (error) {

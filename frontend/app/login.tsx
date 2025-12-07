@@ -6,24 +6,13 @@ import ZamanLogo from '@/components/zaman-logo';
 import { Ionicons } from '@expo/vector-icons';
 import { ZamanColors } from '@/constants/theme';
 import { config } from '@/lib/config';
-import { TokenResponse, UserData, saveAuthResponse } from '@/lib/auth';
-
-interface UserData {
-  id: number;
-  name: string;
-  surname: string;
-  email: string;
-  phone: string;
-  avatar?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { TokenResponse, saveAuthResponse } from '@/lib/auth';
 
 interface FaceVerificationResult {
   success: boolean;
   verified: boolean;
   message: string;
-  token?: TokenResponse;  // Backend should return full token response
+  token?: TokenResponse;
   confidence?: number;
   distance?: number;
   threshold?: number;
@@ -33,6 +22,7 @@ interface FaceVerificationResult {
 
 export default function LoginScreen() {
   const router = useRouter();
+  const [view, setView] = useState<'selection' | 'expert'>('selection');
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showCamera, setShowCamera] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,7 +56,6 @@ export default function LoginScreen() {
 
   async function saveUserSession(tokenResponse: TokenResponse) {
     try {
-      // Save JWT token and user data securely using SecureStore
       await saveAuthResponse(tokenResponse);
       console.log('✅ Auth data saved securely (role:', tokenResponse.user.role, ')');
     } catch (error) {
@@ -80,118 +69,82 @@ export default function LoginScreen() {
     return emailRegex.test(email.trim());
   }
 
+  async function handleGuestLogin() {
+    setIsLoading(true);
+    try {
+      // Create dummy guest session
+      const guestToken: TokenResponse = {
+        access_token: 'guest-token',
+        token_type: 'bearer',
+        user: {
+          id: 0,
+          name: 'Guest',
+          surname: 'User',
+          email: 'guest@gidroatlas.kz',
+          phone: '',
+          role: 'guest',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+      };
+      
+      await saveUserSession(guestToken);
+      console.log('✅ Guest login successful');
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('Error during guest login:', error);
+      Alert.alert('Error', 'Could not login as guest');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   async function handleFaceVerify() {
     if (!capturedPhoto) {
       Alert.alert('Error', 'Please capture a photo first');
       return;
     }
 
-    // Prevent duplicate calls
-    if (isLoading) {
-      console.log('Verification already in progress, skipping...');
-      return;
-    }
-
+    if (isLoading) return;
     setIsLoading(true);
     
     try {
-      console.log('Starting face verification...');
-      console.log('Photo URI:', capturedPhoto);
-      console.log('API URL:', `${config.backendURL}/api/faceid/verify`);
-      
-      // Fetch the photo from the URI
       const response = await fetch(capturedPhoto);
-      if (!response.ok) {
-        throw new Error('Failed to load photo from URI');
-      }
-      
       const blob = await response.blob();
-      console.log('Blob created, size:', blob.size, 'type:', blob.type);
-      
-      if (blob.size === 0) {
-        throw new Error('Photo file is empty');
-      }
       
       const formData = new FormData();
-      // @ts-ignore - FormData accepts blob with filename
+      // @ts-ignore
       formData.append('file', blob, 'photo.jpg');
 
-      console.log('Sending verification request...');
       const verifyResponse = await fetch(`${config.backendURL}/api/faceid/verify`, {
         method: 'POST',
         body: formData,
       });
 
-      console.log('Response status:', verifyResponse.status);
-      
       if (!verifyResponse.ok) {
-        const errorText = await verifyResponse.text();
-        console.error('Server error:', verifyResponse.status, errorText);
         throw new Error(`Server error: ${verifyResponse.status}`);
       }
 
       const result: FaceVerificationResult = await verifyResponse.json();
-      console.log('Verification result:', result);
 
       if (result.success && result.verified && result.token) {
-        // Clear captured photo immediately to prevent re-triggering
         setCapturedPhoto(null);
-        
-        // Save JWT token and user data
         await saveUserSession(result.token);
-        
-        console.log('✅ Face ID login successful! User role:', result.token.user.role);
-        
-        // Redirect immediately
         router.replace('/(tabs)');
       } else if (result.success && !result.verified) {
-        Alert.alert(
-          '❌ Face Not Recognized',
-          result.message || 'No matching face found. Please try again or register if you don\'t have an account.',
-          [{ text: 'OK' }]
-        );
-      } else if (result.error) {
-        let errorMsg = 'Error processing your photo.';
-        if (result.error.toLowerCase().includes('face')) {
-          errorMsg = 'Could not detect a face in the photo. Please ensure your face is clearly visible and try again.';
-        }
-        Alert.alert('❌ Verification Error', errorMsg, [{ text: 'OK' }]);
+        Alert.alert('❌ Face Not Recognized', result.message || 'No matching face found.');
       } else {
-        Alert.alert(
-          '❌ Login Failed',
-          result.message || 'Face verification failed. Please try again.',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('❌ Login Failed', result.message || 'Face verification failed.');
       }
     } catch (error: any) {
       console.error('Error during face verification:', error);
-      
-      let errorMessage = 'Could not connect to the server. Please check your internet connection and try again.';
-      
-      if (error.message) {
-        if (error.message.includes('Network request failed')) {
-          errorMessage = 'Network error: Cannot reach the server. Please check if the server is running and your internet connection is active.';
-        } else if (error.message.includes('Failed to load photo')) {
-          errorMessage = 'Failed to load the captured photo. Please try taking the photo again.';
-        } else if (error.message.includes('Photo file is empty')) {
-          errorMessage = 'The captured photo is empty. Please try taking the photo again.';
-        } else if (error.message.includes('Server error')) {
-          errorMessage = 'Server error occurred. Please try again or contact support if the issue persists.';
-        }
-      }
-      
-      Alert.alert(
-        '🔌 Connection Error',
-        errorMessage,
-        [{ text: 'OK' }]
-      );
+      Alert.alert('🔌 Connection Error', 'Could not connect to the server.');
     } finally {
       setIsLoading(false);
     }
   }
 
   async function handleEmailPasswordLogin() {
-    // Validate fields
     if (!email.trim() || !password.trim()) {
       Alert.alert('❌ Validation Error', 'Please enter both email and password');
       return;
@@ -207,9 +160,7 @@ export default function LoginScreen() {
     try {
       const loginResponse = await fetch(`${config.backendURL}/api/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
           password: password,
@@ -218,42 +169,21 @@ export default function LoginScreen() {
 
       if (loginResponse.ok) {
         const tokenData: TokenResponse = await loginResponse.json();
-        
-        // Save JWT token and user data
         await saveUserSession(tokenData);
-        
-        console.log('✅ Login successful! User role:', tokenData.user.role);
-        
-        // Redirect immediately
         router.replace('/(tabs)');
       } else {
         const errorData = await loginResponse.json();
-        console.error('Login error:', loginResponse.status, errorData);
-        
-        let errorMessage = 'Login failed. Please try again.';
-        
-        if (loginResponse.status === 401) {
-          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-        } else if (errorData.detail) {
-          errorMessage = typeof errorData.detail === 'string' ? errorData.detail : 'Login failed';
-        }
-        
-        Alert.alert('❌ Login Failed', errorMessage);
+        Alert.alert('❌ Login Failed', errorData.detail || 'Login failed');
       }
     } catch (error) {
       console.error('Error during login:', error);
-      Alert.alert(
-        '🔌 Connection Error',
-        'Could not connect to the server. Please check your internet connection and try again.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('🔌 Connection Error', 'Could not connect to the server.');
     } finally {
       setIsLoading(false);
     }
   }
 
   async function handleRegister() {
-    // Validate fields
     if (!name.trim() || !surname.trim() || !email.trim() || !phone.trim() || !password.trim()) {
       Alert.alert('❌ Validation Error', 'Please fill in all required fields');
       return;
@@ -261,11 +191,6 @@ export default function LoginScreen() {
 
     if (!validateEmail(email)) {
       Alert.alert('❌ Invalid Email', 'Please enter a valid email address');
-      return;
-    }
-
-    if (password.length < 8) {
-      Alert.alert('❌ Invalid Password', 'Password must be at least 8 characters long');
       return;
     }
 
@@ -284,10 +209,9 @@ export default function LoginScreen() {
       formData.append('phone', phone.trim());
       formData.append('password', password);
 
-      // Add avatar
       const response = await fetch(capturedPhoto);
       const blob = await response.blob();
-      // @ts-ignore - FormData accepts blob with filename
+      // @ts-ignore
       formData.append('avatar', blob, 'avatar.jpg');
 
       const registerResponse = await fetch(`${config.backendURL}/api/auth/register`, {
@@ -297,53 +221,53 @@ export default function LoginScreen() {
 
       if (registerResponse.ok) {
         const tokenData: TokenResponse = await registerResponse.json();
-        
-        // Clear captured photo to prevent re-triggering
         setCapturedPhoto(null);
-        
-        // Save JWT token and user data
         await saveUserSession(tokenData);
-        
-        console.log('✅ Registration successful! User role:', tokenData.user.role);
-        
-        // Redirect immediately
         router.replace('/(tabs)');
       } else {
         const errorData = await registerResponse.json();
-        console.error('Registration error:', registerResponse.status, errorData);
-        
-        let errorMessage = 'Could not register. Please try again.';
-        
-        if (registerResponse.status === 400) {
-          if (errorData.detail?.includes('Email')) {
-            errorMessage = 'This email is already registered. Please use a different email or try logging in.';
-          } else if (errorData.detail?.includes('Phone')) {
-            errorMessage = 'This phone number is already registered. Please use a different number.';
-          } else {
-            errorMessage = errorData.detail || 'This email or phone number is already registered.';
-          }
-        } else if (registerResponse.status === 422) {
-          if (typeof errorData.detail === 'string') {
-            errorMessage = errorData.detail;
-          } else if (Array.isArray(errorData.detail)) {
-            errorMessage = errorData.detail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join('\n');
-          }
-        } else if (errorData.detail) {
-          errorMessage = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail);
-        }
-        
-        Alert.alert('❌ Registration Failed', errorMessage);
+        Alert.alert('❌ Registration Failed', errorData.detail || 'Registration failed');
       }
     } catch (error) {
       console.error('Error during registration:', error);
-      Alert.alert(
-        '🔌 Connection Error',
-        'Could not connect to the server. Please check your internet connection and try again.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('🔌 Connection Error', 'Could not connect to the server.');
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (view === 'selection') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.logoMark}>
+            <ZamanLogo size={90} withAccent />
+          </View>
+          <Text style={styles.appName}>ZAMAN</Text>
+          <Text style={styles.tagline}>Select your role</Text>
+        </View>
+
+        <View style={styles.content}>
+          <TouchableOpacity 
+            style={styles.roleButton}
+            onPress={handleGuestLogin}
+            disabled={isLoading}
+          >
+            <Ionicons name="person-outline" size={32} color={ZamanColors.black} />
+            <Text style={styles.roleButtonText}>Enter as Guest</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.roleButton, styles.expertButton]}
+            onPress={() => setView('expert')}
+            disabled={isLoading}
+          >
+            <Ionicons name="briefcase-outline" size={32} color={ZamanColors.white} />
+            <Text style={[styles.roleButtonText, styles.expertButtonText]}>Enter as Expert</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -356,14 +280,21 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Minimal Header */}
+          {/* Header with Back Button */}
           <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton} 
+              onPress={() => setView('selection')}
+            >
+              <Ionicons name="arrow-back" size={24} color={ZamanColors.black} />
+            </TouchableOpacity>
+            
             <View style={styles.logoMark}>
               <ZamanLogo size={90} withAccent />
             </View>
             <Text style={styles.appName}>ZAMAN</Text>
             <Text style={styles.tagline}>
-              {mode === 'login' ? 'Welcome back' : 'Get started'}
+              {mode === 'login' ? 'Expert Login' : 'Expert Registration'}
             </Text>
           </View>
 
@@ -584,6 +515,13 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     paddingHorizontal: 32,
     alignItems: 'center',
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 80 : 60,
+    left: 32,
+    zIndex: 10,
   },
   logoMark: {
     marginBottom: 20,
@@ -706,6 +644,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: ZamanColors.persianGreen,
     fontWeight: '600',
+  },
+  roleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: ZamanColors.white,
+    borderWidth: 1,
+    borderColor: ZamanColors.gray[300],
+    borderRadius: 16,
+    paddingVertical: 24,
+    marginBottom: 20,
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  roleButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: ZamanColors.black,
+  },
+  expertButton: {
+    backgroundColor: ZamanColors.black,
+    borderColor: ZamanColors.black,
+  },
+  expertButtonText: {
+    color: ZamanColors.white,
   },
 });
 
