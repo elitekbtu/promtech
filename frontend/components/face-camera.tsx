@@ -25,15 +25,15 @@ export default function FaceCamera({ onCapture, onClose, isVerifying = false }: 
       <View style={styles.container}>
         <View style={styles.permissionContainer}>
           <Ionicons name="camera-outline" size={64} color="#666" style={styles.permissionIcon} />
-          <Text style={styles.permissionText}>We need your permission to use the camera</Text>
+          <Text style={styles.permissionText}>Нам нужно ваше разрешение на использование камеры</Text>
           <Text style={styles.permissionSubtext}>
-            This app requires camera access to verify your identity using facial recognition
+            Этому приложению требуется доступ к камере для верификации вашей личности с помощью распознавания лица
           </Text>
           <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-            <Text style={styles.permissionButtonText}>Grant Permission</Text>
+            <Text style={styles.permissionButtonText}>Разрешить</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>Отмена</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -58,7 +58,7 @@ export default function FaceCamera({ onCapture, onClose, isVerifying = false }: 
         }
       } catch (error) {
         console.error('Error taking picture:', error);
-        Alert.alert('Error', 'Failed to take picture. Please try again.');
+        Alert.alert('Ошибка', 'Не удалось сделать фото. Попробуйте ещё раз.');
       }
     }
   }
@@ -79,10 +79,10 @@ export default function FaceCamera({ onCapture, onClose, isVerifying = false }: 
         <View style={styles.instructionContainer}>
           <View style={styles.instructionBox}>
             <Text style={styles.instructionText}>
-              Position your face in the center
+              Расположите лицо в центре
             </Text>
             <Text style={styles.instructionSubtext}>
-              Make sure your face is well-lit and clearly visible
+              Убедитесь, что лицо хорошо освещено и чётко видно
             </Text>
           </View>
         </View>

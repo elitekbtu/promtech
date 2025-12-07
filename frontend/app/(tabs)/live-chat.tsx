@@ -69,8 +69,8 @@ RULES:
   // UI translations
   const translations = {
     ru: {
-      title: 'GidroAtlas Live Chat',
-      subtitle: 'Multimodal AI Assistant',
+      title: 'GidroAtlas Live Чат',
+      subtitle: 'Мультимодальный AI-ассистент',
       connect: 'Подключить',
       live: 'LIVE',
       greetingMessage: 'Привет! Я GidroAtlas AI с мультимодальными возможностями. Включи микрофон, камеру или покажи свой экран чтобы начать!',
@@ -87,38 +87,38 @@ RULES:
       cameraOff: 'Камера выключена',
       screenOn: 'Показ экрана включен - AI видит твой экран!',
       screenOff: 'Показ экрана остановлен',
-      microphone: 'Microphone',
-      camera: 'Camera',
-      screen: 'Screen',
-      cameraPreview: 'Camera Preview',
-      screenPreview: 'Screen Preview',
-      volume: 'Volume',
+      microphone: 'Микрофон',
+      camera: 'Камера',
+      screen: 'Экран',
+      cameraPreview: 'Превью камеры',
+      screenPreview: 'Превью экрана',
+      volume: 'Громкость',
     },
     en: {
-      title: 'GidroAtlas Live Chat',
-      subtitle: 'Multimodal AI Assistant',
-      connect: 'Connect',
+      title: 'GidroAtlas Live Чат',
+      subtitle: 'Мультимодальный AI-ассистент',
+      connect: 'Подключить',
       live: 'LIVE',
-      greetingMessage: 'Hello! I\'m GidroAtlas AI with multimodal capabilities. Turn on your microphone, camera, or share your screen to start!',
-      connected: 'Connected to GidroAtlas Live API',
-      disconnected: 'Disconnected from GidroAtlas',
-      connectFirst: 'Please connect to GidroAtlas first',
-      emptyStateText: 'Press "Connect" to start',
-      emptyStateSubtext: 'After connecting, use the buttons below',
-      emptyStateButtons: 'Voice • Camera • Screen Share',
-      apiKeyMissing: 'API key not found',
-      micOn: 'Microphone is ON - Speak now!',
-      micOff: 'Microphone turned off',
-      cameraOn: 'Camera is ON - AI can see you!',
-      cameraOff: 'Camera turned off',
-      screenOn: 'Screen sharing is ON - AI can see your screen!',
-      screenOff: 'Screen sharing stopped',
-      microphone: 'Microphone',
-      camera: 'Camera',
-      screen: 'Screen',
-      cameraPreview: 'Camera Preview',
-      screenPreview: 'Screen Preview',
-      volume: 'Volume',
+      greetingMessage: 'Привет! Я GidroAtlas AI с мультимодальными возможностями. Включи микрофон, камеру или покажи свой экран чтобы начать!',
+      connected: 'Подключено к GidroAtlas Live API',
+      disconnected: 'Отключено от GidroAtlas',
+      connectFirst: 'Сначала подключитесь к GidroAtlas',
+      emptyStateText: 'Нажми "Подключить" чтобы начать',
+      emptyStateSubtext: 'После подключения используй кнопки ниже',
+      emptyStateButtons: 'Голос • Камера • Экран',
+      apiKeyMissing: 'API ключ не найден',
+      micOn: 'Микрофон включен - Говори!',
+      micOff: 'Микрофон выключен',
+      cameraOn: 'Камера включена - AI видит тебя!',
+      cameraOff: 'Камера выключена',
+      screenOn: 'Показ экрана включен - AI видит твой экран!',
+      screenOff: 'Показ экрана остановлен',
+      microphone: 'Микрофон',
+      camera: 'Камера',
+      screen: 'Экран',
+      cameraPreview: 'Превью камеры',
+      screenPreview: 'Превью экрана',
+      volume: 'Громкость',
     },
   };
 
@@ -202,7 +202,7 @@ RULES:
       }
     } catch (error) {
       console.error('Connection error:', error);
-      alert('Error: Check your API key');
+      alert('Ошибка: Проверьте ваш API ключ');
     }
   };
 
@@ -276,7 +276,7 @@ RULES:
         alert(t.micOn);
       } catch (error) {
         console.error('Microphone error:', error);
-        alert('Error: Could not access microphone');
+        alert('Ошибка: Не удалось получить доступ к микрофону');
       }
     }
   };
@@ -343,7 +343,7 @@ RULES:
     }
 
     if (Platform.OS !== 'web') {
-      alert('Webcam is only available on web platform');
+      alert('Веб-камера доступна только в веб-версии');
       return;
     }
 
@@ -364,7 +364,7 @@ RULES:
         alert(t.cameraOn);
       } catch (error) {
         console.error('Camera error:', error);
-        alert('Error: Could not access camera');
+        alert('Ошибка: Не удалось получить доступ к камере');
       }
     }
   };
@@ -377,7 +377,7 @@ RULES:
     }
 
     if (Platform.OS !== 'web') {
-      alert('Screen sharing is only available on web platform');
+      alert('Показ экрана доступен только в веб-версии');
       return;
     }
 
@@ -398,7 +398,7 @@ RULES:
         alert(t.screenOn);
       } catch (error) {
         console.error('Screen share error:', error);
-        alert('Error: Could not capture screen');
+        alert('Ошибка: Не удалось захватить экран');
       }
     }
   };
@@ -472,7 +472,7 @@ RULES:
               style={{ marginRight: 4 }}
             />
             <Text style={[styles.ragIndicatorText, styles.ragIndicatorTextActive, { fontSize: 11 }]}>
-              RAG Tools {ragToolsHealthy ? 'Active' : 'Error'}
+              RAG инструменты {ragToolsHealthy ? 'активны' : 'ошибка'}
             </Text>
           </View>
         </View>

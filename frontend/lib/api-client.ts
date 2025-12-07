@@ -163,7 +163,7 @@ export async function getUserAccounts(userId: number): Promise<Account[]> {
 
   if (!response.ok) {
     const error: ApiError = await response.json();
-    throw new Error(error.detail || 'Failed to fetch accounts');
+    throw new Error(error.detail || 'Не удалось загрузить аккаунты');
   }
 
   return response.json();
@@ -186,7 +186,7 @@ export async function createAccount(data: AccountCreate): Promise<Account> {
 
   if (!response.ok) {
     const error: ApiError = await response.json();
-    throw new Error(error.detail || 'Failed to create account');
+    throw new Error(error.detail || 'Не удалось создать аккаунт');
   }
 
   return response.json();
@@ -228,7 +228,7 @@ export async function getUserTransactions(
 
   if (!response.ok) {
     const error: ApiError = await response.json();
-    throw new Error(error.detail || 'Failed to fetch transactions');
+    throw new Error(error.detail || 'Не удалось загрузить транзакции');
   }
 
   return response.json();
@@ -254,7 +254,7 @@ export async function createDeposit(
 
   if (!response.ok) {
     const error: ApiError = await response.json();
-    throw new Error(error.detail || 'Failed to create deposit');
+    throw new Error(error.detail || 'Не удалось создать депозит');
   }
 
   return response.json();
@@ -280,7 +280,7 @@ export async function createWithdrawal(
 
   if (!response.ok) {
     const error: ApiError = await response.json();
-    throw new Error(error.detail || 'Failed to create withdrawal');
+    throw new Error(error.detail || 'Не удалось создать вывод');
   }
 
   return response.json();
@@ -306,7 +306,7 @@ export async function createTransfer(
 
   if (!response.ok) {
     const error: ApiError = await response.json();
-    throw new Error(error.detail || 'Failed to create transfer');
+    throw new Error(error.detail || 'Не удалось создать перевод');
   }
 
   return response.json();
@@ -340,7 +340,7 @@ export async function getFinancialAnalysis(
 
   if (!response.ok) {
     const error: ApiError = await response.json();
-    throw new Error(error.detail || 'Failed to fetch financial analysis');
+    throw new Error(error.detail || 'Не удалось загрузить финансовый анализ');
   }
 
   return response.json();

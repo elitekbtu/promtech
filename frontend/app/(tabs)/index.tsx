@@ -62,29 +62,29 @@ export default function HomeScreen() {
 
   const features = [
     {
-      title: 'Live Chat',
-      description: 'Real-time AI conversations',
+      title: 'Голосовой чат',
+      description: 'AI-разговоры в реальном времени',
       icon: 'chatbubbles',
       href: '/(tabs)/live-chat' as const,
       bgColor: GidroAtlasColors.cloud
     },
     {
-      title: 'Water Objects',
-      description: 'View all water objects',
+      title: 'Водные объекты',
+      description: 'Просмотр всех водных объектов',
       icon: 'water',
       href: '/(tabs)/water-objects' as const,
       bgColor: GidroAtlasColors.cloud
     },
     {
-      title: 'Priority Table',
-      description: 'Expert priority analysis',
+      title: 'Таблица приоритетов',
+      description: 'Экспертный анализ приоритетов',
       icon: 'stats-chart',
       href: '/(tabs)/priorities' as const,
       bgColor: GidroAtlasColors.cloud
     },
     {
-      title: 'AI Search',
-      description: 'Ask questions about water resources',
+      title: 'AI-поиск',
+      description: 'Задавайте вопросы о водных ресурсах',
       icon: 'search',
       href: '/(tabs)/explore' as const,
       bgColor: GidroAtlasColors.cloud
@@ -128,8 +128,7 @@ export default function HomeScreen() {
         {/* Content */}
         <View style={styles.content}>
           {/* Quick Actions */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Быстрые действия</Text>
+          <View style={styles.section}>   
             <View style={styles.quickActions}>
               {features.map((feature, index) => (
                 <Link key={index} href={feature.href} asChild>
