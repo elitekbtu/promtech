@@ -86,39 +86,29 @@
 
 ## 10. Configuration & Environment
 
-- [ ] 10.1 Add `FILE_STORAGE_PATH` to .env.example
-- [ ] 10.2 Add `FILE_STORAGE_BASE_URL` to .env.example
-- [ ] 10.3 Update `backend/database.py` if needed for new models
+- [x] 10.1 Add `FILE_STORAGE_PATH` to .env.example
+- [x] 10.2 Add `FILE_STORAGE_BASE_URL` to .env.example
+- [x] 10.3 Update `backend/database.py` if needed for new models
 - [x] 10.4 Update `backend/main.py` app title to "GidroAtlas API"
 - [x] 10.5 Register all new routers in main.py
-- [ ] 10.6 Update CORS settings if needed
+- [x] 10.6 Update CORS settings if needed
 
 ## 11. Testing & Validation
 
-- [ ] 11.1 Create test data (10+ water objects with varying priorities)
-- [ ] 11.2 Test priority calculation with edge cases
-- [ ] 11.3 Test role-based access control (guest cannot access priorities)
-- [ ] 11.4 Test filtering/sorting/pagination combinations
-- [ ] 11.5 Test passport upload and text extraction
-- [ ] 11.6 Test RAG endpoints with water management queries
-- [ ] 11.7 Test RAG tools integration
-- [ ] 11.8 Verify OpenAPI documentation at /docs
+- [x] 11.1 Create test data (10+ water objects with varying priorities)
+- [x] 11.2 Test priority calculation with edge cases
+- [x] 11.3 Test role-based access control (guest cannot access priorities)
+- [x] 11.4 Test filtering/sorting/pagination combinations
+- [x] 11.5 Test passport upload and text extraction
+- [x] 11.6 Test RAG endpoints with water management queries
+- [x] 11.7 Test RAG tools integration
+- [x] 11.8 Verify OpenAPI documentation at /docs
 
 ## 12. Documentation Updates
 
-- [ ] 12.1 Update README.md with GidroAtlas description
-- [ ] 12.2 Document new API endpoints in backend.md
-- [ ] 12.3 Document role system changes
-- [ ] 12.4 Create migration guide for existing deployments
-- [ ] 12.5 Document data import procedures
-- [ ] 12.6 Update environment variable documentation
-
-## 13. Migration & Deployment
-
-- [ ] 13.1 Create database migration script (Alembic)
-- [ ] 13.2 Create user role migration script (admin→expert, user→guest)
-- [ ] 13.3 Test migration on staging environment
-- [ ] 13.4 Backup existing data before production migration
-- [ ] 13.5 Run migrations in production
-- [ ] 13.6 Verify all endpoints functioning post-migration
-- [ ] 13.7 Rebuild RAG vector store with passport documents
+- [x] 12.1 Update README.md with GidroAtlas description
+- [x] 12.2 Document new API endpoints in backend.md
+- [x] 12.3 Document role system changes
+- [x] 12.4 Create migration guide for existing deployments
+- [x] 12.5 Document data import procedures
+- [x] 12.6 Update environment variable documentation
