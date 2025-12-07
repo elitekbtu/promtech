@@ -14,9 +14,12 @@ from services.passports.router import router as passports_router
 
 app = FastAPI(title="GidroAtlas API", version="1.0.0", description="Water Resource Management System for Kazakhstan")
 
+# CORS Configuration
+# In production, replace ["*"] with specific frontend URLs
+# Example: ["https://gidroatlas.kz", "https://app.gidroatlas.kz"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # TODO: Restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

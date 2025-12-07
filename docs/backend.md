@@ -1,17 +1,18 @@
-# Backend Technical Documentation — PromTech API (FastAPI + Gemini)
+# Backend Technical Documentation — GidroAtlas API
 
 ## 1. Project Overview
 
-**PromTech Backend** (currently labeled as "Zamanbank API" in code) — FastAPI-based backend service with AI-powered features including:
+**GidroAtlas Backend** — FastAPI-based water resource management system with AI-powered features:
 
 Backend provides:
 
-- User authentication and registration system
-- Face ID verification using DeepFace
+- Water object management with priority-based inspection system
+- User authentication and Face ID verification
 - Agentic RAG system powered by LangGraph and Google Gemini
-- Role-based access control (admin/user)
-- RESTful API endpoints
-- Integration with vector databases for semantic search
+- Role-based access control (guest/expert)
+- RESTful API endpoints with Russian language support
+- Passport document management and analysis
+- Vector database integration for semantic search
 
 ---
 
@@ -19,92 +20,130 @@ Backend provides:
 
 ### 2.1 Goals
 
-- Provide secure user authentication with Face ID verification
-- Implement agentic RAG system for intelligent query processing
-- Deliver clean REST API for frontend integration
-- Enable role-based access control (admin/user)
-- Support AI-powered features using Google Gemini
+- Manage water resources across Kazakhstan with geospatial data
+- Provide priority-based inspection system for water objects
+- Implement secure authentication with Face ID verification
+- Enable role-based access (guest can view, expert can manage priorities)
+- Deliver AI-powered query processing via RAG system
+- Support passport document upload and analysis
 
 ### 2.2 Backend Responsibilities
 
-- REST API (FastAPI, JSON)
-- User authentication and authorization
-- Face ID verification and matching
-- Database access and user management
+- REST API (FastAPI, JSON) with Russian language support
+- User authentication and authorization (JWT)
+- Face ID verification and matching (DeepFace)
+- Water object CRUD operations with filtering/sorting
+- Priority calculation based on technical condition and passport age
+- Database access with PostgreSQL
 - AI-powered query processing via RAG system
 - Integration with Google Gemini and vector databases
-- File uploads (avatars)
+- File uploads (avatars, passport PDFs)
 
 ---
 
 ## 3. System Architecture
 
-### 3.1 Архитектурный стиль: Modular Monolith
+### 3.1 Architecture Style: Modular Monolith
 
-Проект использует архитектуру **Modular Monolith**. Это обеспечивает четкое разделение доменов и упрощает поддержку, сохраняя простоту развертывания.
+The project uses **Modular Monolith** architecture. This provides clear domain separation and simplifies maintenance while keeping deployment simple.
 
-**Структура папок:**
+**Folder Structure:**
 
 ```text
 backend/
-├── app/
-│   ├── core/              # Общие компоненты (DB, Config, Security)
-│   ├── modules/           # Независимые модули
-│   │   ├── auth/          # Авторизация и пользователи
-│   │   ├── objects/       # Водные объекты и паспорта
-│   │   ├── priorities/    # Расчет приоритетов
-│   │   └── ai/            # Agentic RAG (LangGraph + Gemini)
-│   ├── main.py            # Сборка приложения
-│   └── ...
-├── Agentic_rag/           # Исходный код RAG (референс)
-├── docs/
-├── scripts/
-├── pyproject.toml         # Управление зависимостями (uv)
-└── docker-compose.yml
+├── main.py               # FastAPI application entry point
+├── database.py           # Database configuration (PostgreSQL)
+├── requirements.txt      # Python dependencies
+├── alembic/              # Database migrations
+│   └── versions/
+├── models/               # SQLAlchemy models
+│   ├── user.py           # User model
+│   ├── water_object.py   # WaterObject model
+│   └── passport_text.py  # PassportText model
+├── services/             # Business logic
+│   ├── auth/             # Authentication services
+│   ├── objects/          # Water object services
+│   ├── priorities/       # Priority calculation
+│   └── passports/        # Passport management
+├── faceid/               # Face verification
+│   ├── router.py
+│   ├── service.py
+│   └── schemas.py
+├── rag_agent/            # Agentic RAG system
+│   ├── config/
+│   ├── routes/
+│   ├── tools/
+│   └── utils/
+├── scripts/              # Data import and testing
+│   ├── import_objects.py
+│   ├── import_passports.py
+│   ├── enrich_data.py
+│   └── test_*.py
+└── uploads/              # File storage
+    ├── avatars/
+    └── passports/
 ```
 
-### 3.2 Основные компоненты
+### 3.2 Core Components
 
-- **FastAPI backend**
+- **FastAPI Backend**
 
-  - роуты `/auth`, `/objects`, `/priorities`, `/ai/...`;
-  - OpenAPI/Swagger.
-  - Запускается в **Docker** контейнере.
+  - Routes: `/api/auth`, `/api/objects`, `/api/priorities`, `/api/passports`, `/api/rag`, `/api/faceid`
+  - OpenAPI/Swagger documentation at `/docs`
+  - Runs in Docker container
 
-- **PostgreSQL** (любая SQL-СУБД допустима по ТЗ).
-  - Запускается через **Docker Compose**.
-- **Файловое хранилище паспортов**
+- **PostgreSQL Database**
 
-  - локальная папка/том Docker с отдачей по `FILE_STORAGE_BASE_URL` (выбор по умолчанию для хакатона);
-  - S3-совместимое хранилище можно подключить позже, но не требуется для MVP;
-  - backend хранит только `pdf_url`.
+  - Supports models: User, WaterObject, PassportText
+  - Migrations managed with Alembic
+  - Runs via Docker Compose
+
+- **File Storage**
+
+  - Local folder/Docker volume with serving via `FILE_STORAGE_BASE_URL`
+  - Stores passport PDFs and avatars
+  - Backend stores only `pdf_url` references
 
 - **Gemini API**
 
-  - основной LLM для chat / explain / search;
-  - используется через небольшой клиент-обёртку.
+  - Primary LLM for chat/explain/search operations
+  - Used through client wrapper in RAG system
 
-- **Agentic RAG слой (Модуль)**
+- **Agentic RAG Layer**
+  - Implemented as a separate module
+  - Uses LangGraph for agent coordination
+  - Agent processes queries, coordinates tools, and generates responses
+  - Integrates with PostgreSQL for vector search
+  - Assembles context and requests Gemini for final answer
 
-  - Реализован как отдельный модуль в архитектуре Modular Monolith.
-  - Основан на референсной реализации (находится в `backend/Agentic_rag`), использующей **LangGraph**.
-  - Агент принимает запрос, координирует инструменты (Tools) и формирует ответ.
-  - **Важно:** Референсная реализация использует SQLite. При интеграции необходимо перевести хранение истории и векторный поиск на основной **PostgreSQL** (pgvector или отдельная таблица).
+### 3.3 Request Flows
 
-  - собирает контекст и просит Gemini сгенерировать финальный ответ.
+1. **Maps and Lists**
+   Frontend calls `/api/objects` → Backend filters/sorts in DB → Returns list with coordinates → Frontend renders map and table
 
-### 3.3 Потоки запросов (упрощённо)
+2. **Object Details**
+   `/api/objects/{id}` → Backend returns all fields + `pdf_url` → Frontend shows card and "Open Passport" button
 
-1. **Карты и списки**
-   Фронт вызывает `/objects` → backend фильтрует/сортирует в БД → отдаёт список и координаты → фронт рисует карту и таблицу.
-
-2. **Карточка объекта**
-   `/objects/{id}` → backend отдаёт все поля + `pdf_url` → фронт показывает карточку и кнопку “Открыть паспорт”.
-
-3. **Приоритезация**
-   `/priorities/table` (только `expert`) → backend отдаёт таблицу с `priority`.
+3. **Prioritization**
+   `/api/priorities/table` (expert only) → Backend returns table with `priority` scores
 
 4. **AI / Agentic RAG**
+   `/api/rag/query` → AI Agent:
+
+   - Understands query
+   - Decides whether to:
+     - Filter SQL objects
+     - Fetch passport text for objects/regions
+   - Assembles context
+   - Calls Gemini for final answer
+
+5. **Карточка объекта**
+   `/objects/{id}` → backend отдаёт все поля + `pdf_url` → фронт показывает карточку и кнопку “Открыть паспорт”.
+
+6. **Приоритезация**
+   `/priorities/table` (только `expert`) → backend отдаёт таблицу с `priority`.
+
+7. **AI / Agentic RAG**
    `/ai/...` → **AI-агент**:
 
    - понимает запрос;
