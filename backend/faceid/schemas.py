@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 
@@ -19,7 +19,7 @@ class FaceVerificationResult(BaseModel):
     success: bool
     verified: bool
     message: str
-    user: Optional[UserMatchInfo] = None
+    token: Optional[Dict[str, Any]] = None  # JWT token response with access_token and user data
     confidence: Optional[float] = None
     distance: Optional[float] = None
     threshold: Optional[float] = None

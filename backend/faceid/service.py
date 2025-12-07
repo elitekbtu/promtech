@@ -204,15 +204,7 @@ class FaceIDService:
                     "success": True,
                     "verified": True,
                     "message": f"Face verified successfully! Welcome, {best_user.name} {best_user.surname}",
-                    "user": {
-                        "user_id": best_user.id,
-                        "name": best_user.name,
-                        "surname": best_user.surname,
-                        "email": best_user.email,
-                        "phone": best_user.phone,
-                        "avatar": best_user.avatar,
-                        "created_at": best_user.created_at.isoformat() if best_user.created_at else None
-                    },
+                    "user_id": best_user.id,  # Return user_id for token generation
                     "confidence": best_match.get("confidence"),
                     "distance": best_match.get("distance"),
                     "threshold": best_match.get("threshold"),

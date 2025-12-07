@@ -2,6 +2,8 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
+from services.auth.service import create_access_token
+from services.auth.schemas import UserRead
 from .service import FaceIDService
 from .schemas import FaceVerificationResult
 
@@ -80,6 +82,28 @@ async def verify_face(
         
         # Verify face against all users
         result = face_service.verify_face_against_all_users(contents, db)
+        
+        # If verification successful, generate JWT token
+        if result.get("verified") and result.get("user_id"):
+            user_id = result["user_id"]
+            # Get full user object from database for role
+            from models.user import User
+            user = db.query(User).filter(User.id == user_id).first()
+            
+            if user:
+                # Generate JWT token
+                access_token = create_access_token(
+                    user_id=user.id,
+                    email=user.email,
+                    role=user.role
+                )
+                
+                # Return token response format
+                result["token"] = {
+                    "access_token": access_token,
+                    "token_type": "bearer",
+                    "user": UserRead.model_validate(user).model_dump(mode='json')
+                }
         
         # Return result
         return JSONResponse(

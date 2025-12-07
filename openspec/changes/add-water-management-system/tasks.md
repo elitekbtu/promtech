@@ -47,12 +47,12 @@
 
 ## 6. Passport Management
 
-- [ ] 6.1 Create `backend/services/passports/` module structure
-- [ ] 6.2 Implement file upload handler for PDF passports
-- [ ] 6.3 Implement PDF text extraction using pypdf
-- [ ] 6.4 Create passport text storage service (save to `PassportText` model)
-- [ ] 6.5 Implement passport retrieval by object_id
-- [ ] 6.6 Configure file storage path and base URL from environment variables
+- [x] 6.1 Create `backend/services/passports/` module structure
+- [x] 6.2 Implement file upload handler for PDF passports
+- [x] 6.3 Implement PDF text extraction using pypdf
+- [x] 6.4 Create passport text storage service (save to `PassportText` model)
+- [x] 6.5 Implement passport retrieval by object_id
+- [x] 6.6 Configure file storage path and base URL from environment variables
 
 ## 7. RAG System Customization
 

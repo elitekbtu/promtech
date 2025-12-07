@@ -6,6 +6,7 @@ import ZamanLogo from '@/components/zaman-logo';
 import { Ionicons } from '@expo/vector-icons';
 import { ZamanColors } from '@/constants/theme';
 import { config } from '@/lib/config';
+import { TokenResponse, UserData, saveAuthResponse } from '@/lib/auth';
 
 interface UserData {
   id: number;
@@ -22,14 +23,7 @@ interface FaceVerificationResult {
   success: boolean;
   verified: boolean;
   message: string;
-  user?: {
-    user_id: number;
-    name: string;
-    surname: string;
-    email: string;
-    phone: string;
-    avatar: string;
-  };
+  token?: TokenResponse;  // Backend should return full token response
   confidence?: number;
   distance?: number;
   threshold?: number;
@@ -70,39 +64,14 @@ export default function LoginScreen() {
     setShowCamera(false);
   }
 
-  async function saveUserSession(userData: UserData | FaceVerificationResult['user']) {
+  async function saveUserSession(tokenResponse: TokenResponse) {
     try {
-      if (!userData) {
-        console.error('No user data provided');
-        return;
-      }
-
-      // Normalize user data format
-      let normalizedUser: UserData;
-      
-      if ('user_id' in userData) {
-        // FaceVerificationResult.user format
-        normalizedUser = {
-          id: userData.user_id,
-          name: userData.name,
-          surname: userData.surname,
-          email: userData.email,
-          phone: userData.phone,
-          avatar: userData.avatar,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-      } else {
-        // UserData format (already normalized)
-        normalizedUser = userData as UserData;
-      }
-      
-      const userJson = JSON.stringify(normalizedUser);
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('user', userJson);
-      }
+      // Save JWT token and user data securely using SecureStore
+      await saveAuthResponse(tokenResponse);
+      console.log('✅ Auth data saved securely (role:', tokenResponse.user.role, ')');
     } catch (error) {
-      console.error('Error saving user session:', error);
+      console.error('❌ Error saving user session:', error);
+      throw error;
     }
   }
 
@@ -164,16 +133,16 @@ export default function LoginScreen() {
       const result: FaceVerificationResult = await verifyResponse.json();
       console.log('Verification result:', result);
 
-      if (result.success && result.verified && result.user) {
+      if (result.success && result.verified && result.token) {
         // Clear captured photo immediately to prevent re-triggering
         setCapturedPhoto(null);
         
-        // Save session
-        await saveUserSession(result.user);
+        // Save JWT token and user data
+        await saveUserSession(result.token);
         
-        console.log('Login successful, redirecting...');
+        console.log('✅ Face ID login successful! User role:', result.token.user.role);
         
-        // Redirect immediately without Alert
+        // Redirect immediately
         router.replace('/(tabs)');
       } else if (result.success && !result.verified) {
         Alert.alert(
@@ -248,14 +217,14 @@ export default function LoginScreen() {
       });
 
       if (loginResponse.ok) {
-        const userData: UserData = await loginResponse.json();
+        const tokenData: TokenResponse = await loginResponse.json();
         
-        // Save session
-        await saveUserSession(userData);
+        // Save JWT token and user data
+        await saveUserSession(tokenData);
         
-        console.log('Email/password login successful, redirecting...');
+        console.log('✅ Login successful! User role:', tokenData.user.role);
         
-        // Redirect immediately without Alert
+        // Redirect immediately
         router.replace('/(tabs)');
       } else {
         const errorData = await loginResponse.json();
@@ -327,17 +296,17 @@ export default function LoginScreen() {
       });
 
       if (registerResponse.ok) {
-        const userData: UserData = await registerResponse.json();
+        const tokenData: TokenResponse = await registerResponse.json();
         
         // Clear captured photo to prevent re-triggering
         setCapturedPhoto(null);
         
-        // Save session
-        await saveUserSession(userData);
+        // Save JWT token and user data
+        await saveUserSession(tokenData);
         
-        console.log('Registration successful, redirecting...');
+        console.log('✅ Registration successful! User role:', tokenData.user.role);
         
-        // Redirect immediately without Alert
+        // Redirect immediately
         router.replace('/(tabs)');
       } else {
         const errorData = await registerResponse.json();

@@ -9,67 +9,75 @@ The system SHALL support two distinct user roles: `guest` (public read-only acce
 **Previous**: System supported `admin` and `user` roles.  
 **Change**: Replace with water management domain-specific roles.
 
-**Status**: ⚠️ **JWT Implementation Deferred** - Role system implemented in database and models, but JWT token authentication is commented out to maintain backward compatibility with frontend. Login/register endpoints return `UserRead` instead of JWT tokens.
+**Status**: ✅ **JWT Implementation ACTIVE** - Role system fully implemented with JWT token authentication. Login/register endpoints return JWT tokens with user data.
 
 #### Scenario: Register guest user
 
 - **GIVEN** a new user registration
 - **WHEN** no role is specified
 - **THEN** user SHALL be created with role="guest"
+- **AND** JWT token SHALL be returned with access_token and user data
 
 #### Scenario: Register expert user
 
 - **GIVEN** an administrator creating a user account
 - **WHEN** role="expert" is specified
 - **THEN** user SHALL be created with expert privileges
+- **AND** JWT token SHALL be returned with access_token and user data
 
-#### Scenario: Login returns user data with role
+#### Scenario: Login returns JWT token with user data
 
 - **GIVEN** a user with role="expert"
 - **WHEN** logging in with valid credentials
-- **THEN** response SHALL include user data with role="expert" field
-- **NOTE**: JWT token implementation is deferred (TODO: implement when frontend ready)
+- **THEN** response SHALL include JWT token with:
+  - access_token (Bearer token, 7 days expiration)
+  - token_type ("bearer")
+  - user data with role="expert" field
 
 #### Scenario: Guest cannot access expert endpoints
 
 - **GIVEN** a user with role="guest"
-- **WHEN** attempting to access /priorities/table
+- **WHEN** attempting to access /priorities/table with valid JWT
 - **THEN** 403 Forbidden SHALL be returned
 
 #### Scenario: Expert can access all endpoints
 
 - **GIVEN** a user with role="expert"
-- **WHEN** accessing any water management endpoint
+- **WHEN** accessing any water management endpoint with valid JWT
 - **THEN** request SHALL be authorized
 
-#### Scenario: Authentication uses existing session mechanism
+#### Scenario: Authentication uses JWT Bearer tokens
 
 - **GIVEN** a request to protected endpoints
 - **WHEN** authentication is required
-- **THEN** existing session-based auth SHALL be used (not JWT)
-- **NOTE**: JWT implementation is available but commented out for future use
+- **THEN** JWT Bearer token SHALL be validated from Authorization header
+- **AND** User and role SHALL be extracted from token claims
 
-## DEFERRED Requirements (TODO)
+## ACTIVE Requirements
 
-### Requirement: Role-Based JWT Claims (FUTURE IMPLEMENTATION)
+### Requirement: Role-Based JWT Claims
 
-**Status**: 🔜 Code prepared but commented out. Requires frontend implementation.
+**Status**: ✅ Fully implemented and active.
 
-The system WILL (future) include user role in JWT tokens for authorization decisions.
+The system SHALL include user role in JWT tokens for authorization decisions.
 
-#### Scenario: JWT contains role claim (DEFERRED)
+#### Scenario: JWT contains role claim
 
 - **GIVEN** a successful login
-- **WHEN** JWT token is generated (future)
-- **THEN** token payload SHALL include "role" field with value "guest" or "expert"
-- **NOTE**: Helper functions exist in `auth/service.py` but are commented out
+- **WHEN** JWT token is generated
+- **THEN** token payload SHALL include:
+  - "sub": user_id (string)
+  - "email": user email
+  - "role": "guest" or "expert"
+  - "exp": expiration timestamp (7 days from issue)
 
-#### Scenario: Validate role claim on protected endpoints (DEFERRED)
+#### Scenario: Validate role claim on protected endpoints
 
 - **GIVEN** a request to a protected endpoint
-- **WHEN** JWT is validated (future)
+- **WHEN** JWT is validated
 - **THEN** user role SHALL be extracted from token and used for authorization
-- **NOTE**: `get_current_user()`, `require_expert()` dependencies prepared but not active
+- **AND** `get_current_user()` dependency SHALL return authenticated User
+- **AND** `require_expert()` dependency SHALL enforce expert role
 
 ### Requirement: Role Migration
 

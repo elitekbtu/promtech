@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from services.auth.service import create_user, login_user, get_user, update_user_avatar
-from services.auth.schemas import UserLogin, UserRead  # TODO: Add Token when frontend ready
+from services.auth.schemas import UserLogin, UserRead, Token
 from typing import Optional
 from pydantic import EmailStr, ValidationError
 import re
@@ -38,7 +38,7 @@ def validate_name(name: str, field_name: str) -> str:
     return name
 
 
-@router.post("/register", response_model=UserRead, tags=["auth"])
+@router.post("/register", response_model=Token, tags=["auth"])
 async def register(
     name: str = Form(..., description="User's first name", example="John"),
     surname: str = Form(..., description="User's last name", example="Doe"),
@@ -51,10 +51,10 @@ async def register(
     """
     Register a new user with optional avatar image for Face ID.
     
-    Returns user data with role field (default: guest).
+    Returns JWT token with user data (default role: guest).
     New users are assigned the 'guest' role by default.
     
-    TODO: Update to return JWT Token when frontend is ready to handle it.
+    The token should be stored by the frontend and sent in Authorization header for subsequent requests.
     """
     # Validate inputs
     name = validate_name(name, "Name")
@@ -71,7 +71,7 @@ async def register(
         avatar_file=avatar,
         db=db
     )
-@router.post("/login", response_model=UserRead, tags=["auth"])
+@router.post("/login", response_model=Token, tags=["auth"])
 async def login(
     credentials: UserLogin,
     db: Session = Depends(get_db)
@@ -79,10 +79,11 @@ async def login(
     """
     Login with email and password.
     
-    Returns user data with role field if credentials are valid.
-    The role (guest or expert) can be used for client-side authorization logic.
+    Returns JWT token with user data if credentials are valid.
+    The role (guest or expert) determines access to various endpoints.
     
-    TODO: Update to return JWT Token when frontend is ready to handle it.
+    The token should be stored by the frontend and sent in Authorization header:
+    Authorization: Bearer <access_token>
     """
     return login_user(
         email=credentials.email,

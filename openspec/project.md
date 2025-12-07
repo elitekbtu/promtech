@@ -218,7 +218,11 @@ backend/
 - Passwords: 8-72 characters (bcrypt limitation)
 - Face embeddings stored server-side only
 - CORS enabled for all origins (development mode)
-- No JWT implementation yet (simple session-based)
+- **JWT Authentication**: Implemented with 7-day token expiration
+  - Token-based authentication with Bearer scheme
+  - Role-based access control (guest/expert roles)
+  - Tokens include user_id, email, and role claims
+  - Secret key configured via `SECRET_KEY` environment variable
 
 ### Business/Domain
 

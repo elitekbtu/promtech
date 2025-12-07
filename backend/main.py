@@ -9,6 +9,7 @@ from rag_agent.routes.router import router as rag_router
 from services.auth.router import router as auth_router
 from services.objects.router import router as objects_router
 from services.priorities.router import router as priorities_router
+from services.passports.router import router as passports_router
 
 
 app = FastAPI(title="GidroAtlas API", version="1.0.0", description="Water Resource Management System for Kazakhstan")
@@ -34,6 +35,7 @@ app.include_router(router)
 app.include_router(auth_router, prefix="/api/auth")
 app.include_router(objects_router, prefix="/api")
 app.include_router(priorities_router, prefix="/api")
+app.include_router(passports_router, prefix="/api")
 app.include_router(faceid_router, prefix="/api/faceid", tags=["Face Verification"])
 app.include_router(rag_router, tags=["RAG"])
 app.include_router(rag_live_query_router, tags=["RAG Live Query"])

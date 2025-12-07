@@ -1,7 +1,7 @@
 # GidroAtlas Implementation Status
 
 **Last Updated:** December 7, 2025  
-**Status:** 🚧 In Progress (Phase 5/13 Complete)
+**Status:** 🚧 In Progress (Phase 6/13 Complete)
 
 ## 📊 Overall Progress
 
@@ -9,11 +9,12 @@
 - ✅ **Phase 2:** Core Business Logic - **COMPLETE** (6/6 tasks)
 - ✅ **Phase 3:** API Endpoints - Water Objects - **COMPLETE** (7/7 tasks)
 - ✅ **Phase 4:** API Endpoints - Priorities - **COMPLETE** (5/5 tasks)
-- ✅ **Phase 5:** Authentication Updates - **COMPLETE** (5/5 tasks)
-- 🔄 **Phase 6:** Passport Management - **NEXT** (0/6 tasks)
-- ⏳ **Phases 7-13:** Not started (54 tasks remaining)
+- ✅ **Phase 5:** Authentication Updates - **COMPLETE** (5/5 tasks, JWT active)
+- ✅ **Phase 6:** Passport Management - **COMPLETE** (6/6 tasks)
+- 🔄 **Phase 7:** RAG System Customization - **NEXT** (0/7 tasks)
+- ⏳ **Phases 8-13:** Not started (48 tasks remaining)
 
-**Total:** 28/82 tasks complete (34.1%)
+**Total:** 34/82 tasks complete (41.5%)
 
 ---
 
@@ -295,8 +296,8 @@ Response: Top N objects sorted by priority (desc)
 
 1. ✅ Updated `backend/services/auth/schemas.py` with UserRole enum
 2. ✅ Updated `UserRead` schema to include role field
-3. ⚠️ JWT implementation prepared but deferred (backward compatibility)
-4. ✅ Created role validation dependencies (commented out for future)
+3. ✅ JWT implementation ACTIVE and working
+4. ✅ Created role validation dependencies (get_current_user, require_expert)
 5. ✅ Updated user registration to default to guest role
 
 ### Deliverables:
@@ -304,70 +305,72 @@ Response: Top N objects sorted by priority (desc)
 ```
 backend/services/auth/
 ├── schemas.py (updated)
-│   ├── UserRead (added role field)
-│   ├── Token (JWT schema - prepared for future)
-│   └── TokenData (JWT payload - prepared for future)
+│   ├── UserRead (with role field)
+│   ├── Token (JWT response schema - ACTIVE)
+│   └── TokenData (JWT payload schema - ACTIVE)
 ├── service.py (updated)
-│   ├── JWT functions (commented out - TODO)
-│   ├── get_current_user() (commented out - TODO)
-│   ├── get_current_user_role() (commented out - TODO)
-│   ├── require_expert() (commented out - TODO)
-│   ├── login_user() returns UserRead (backward compatible)
-│   └── create_user() returns UserRead (backward compatible)
-└── router.py (backward compatible)
-    ├── /register returns UserRead
-    └── /login returns UserRead
+│   ├── create_access_token() (ACTIVE - 7 day expiration)
+│   ├── decode_access_token() (ACTIVE - validates JWT)
+│   ├── get_current_user() (ACTIVE - extracts from Bearer token)
+│   ├── get_current_user_role() (ACTIVE - returns role)
+│   ├── require_expert() (ACTIVE - enforces expert role)
+│   ├── login_user() returns Token (JWT with user data)
+│   └── create_user() returns Token (JWT with user data)
+└── router.py (JWT-enabled)
+    ├── /register returns Token (access_token + user)
+    └── /login returns Token (access_token + user)
 
 backend/requirements.txt
-└── Added pyjwt>=2.8.0 (prepared for future)
+└── pyjwt>=2.8.0 (ACTIVE)
 
 env.example
-└── Added SECRET_KEY configuration (prepared for future)
+└── SECRET_KEY configuration (ACTIVE)
 ```
 
 ### Current Implementation:
 
-#### Authentication Flow (Current):
+#### Authentication Flow:
 
 1. **Registration:**
 
-   - User registers → Returns UserRead with role
+   - User registers → Returns Token with access_token and user data
    - Default role: `guest`
-   - No JWT token (backward compatible)
+   - JWT token includes: user_id, email, role, exp (7 days)
 
 2. **Login:**
 
-   - User provides credentials → Returns UserRead with role
-   - Role included in response: `guest` or `expert`
-   - No JWT token (backward compatible)
+   - User provides credentials → Returns Token with access_token and user data
+   - Role included: `guest` or `expert`
+   - JWT token includes: user_id, email, role, exp (7 days)
 
 3. **Protected Endpoints:**
-   - Currently using existing session-based auth
-   - Role-based filtering implemented in endpoint logic
-   - JWT dependencies prepared but not active
+   - All endpoints use JWT authentication via Bearer token
+   - Authorization header: `Bearer <access_token>`
+   - Role-based access control enforced:
+     - Water objects CREATE/UPDATE/DELETE: expert only
+     - Priorities endpoints: expert only
+     - Passport upload/delete: expert only
+     - Water objects READ: both guest and expert (filtered responses)
 
-### Deferred Features (TODO):
+### JWT Configuration:
 
-⚠️ **JWT Token Authentication** - Code prepared but commented out:
-
-- Token generation functions exist
-- Token validation functions exist
-- OAuth2 dependencies defined but not used
-- Waiting for frontend implementation
-
-**Why Deferred:**
+**Token Structure:**
 
 - Frontend expects `UserRead` response, not `Token` object
-- Breaking change avoided for backward compatibility
-- All JWT code preserved with TODO comments
+```json
+{
+  "sub": "123",  // user_id
+  "email": "user@example.com",
+  "role": "guest",  // or "expert"
+  "exp": 1234567890  // Unix timestamp (7 days from issue)
+}
+```
 
-**Next Steps for JWT (Future):**
+**Environment Variables:**
 
-1. Frontend: Update login/register to handle Token response
-2. Frontend: Store access_token in localStorage/session
-3. Frontend: Add Authorization: Bearer {token} header to requests
-4. Backend: Uncomment JWT functions and dependencies
-5. Backend: Update endpoints to use Depends(get_current_user)
+- `SECRET_KEY`: JWT signing secret (configured in `.env`)
+- Algorithm: HS256
+- Expiration: 7 days (ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7)
 
 ### Role System (Active):
 
@@ -379,13 +382,133 @@ env.example
 
 ✅ **API Responses:**
 
-- UserRead includes role field
-- Role visible to frontend
-- Can be used for client-side UI logic
+- Token includes user data with role
+- Role used for authorization
+- Frontend must store token and send in headers
 
 ---
 
-## 🔄 Phase 6: Passport Management (NEXT)
+## ✅ Phase 6: Passport Management
+
+### Tasks Completed:
+
+1. ✅ Created `backend/services/passports/` module structure
+2. ✅ Implemented file upload handler for PDF passports
+3. ✅ Implemented PDF text extraction using pypdf
+4. ✅ Created passport text storage service
+5. ✅ Implemented passport retrieval by object_id
+6. ✅ Configured file storage with environment variables
+
+### Deliverables:
+
+```
+backend/services/passports/
+├── __init__.py
+├── schemas.py (60+ lines)
+│   ├── PassportUploadResponse (upload result)
+│   └── PassportTextResponse (extracted text)
+├── service.py (280+ lines)
+│   ├── save_pdf_file() - Save PDF to disk
+│   ├── extract_text_from_pdf() - Extract using pypdf
+│   ├── parse_passport_sections() - Parse into sections
+│   ├── upload_passport() - Complete upload workflow
+│   ├── get_passport_text() - Retrieve extracted text
+│   └── delete_passport() - Delete PDF and text
+└── router.py (120+ lines)
+    ├── POST /passports/{object_id}/upload
+    ├── GET /passports/{object_id}/text
+    └── DELETE /passports/{object_id}
+
+backend/main.py (updated)
+└── Register passports_router with prefix="/api"
+
+env.example (updated)
+├── PASSPORT_STORAGE_PATH=uploads/passports
+└── PASSPORT_BASE_URL=/uploads/passports
+```
+
+### Features Implemented:
+
+#### PDF Upload & Storage:
+```python
+POST /api/passports/{object_id}/upload
+- Validates PDF format
+- Saves to configured storage path
+- Updates water object with PDF URL
+- Returns upload confirmation
+```
+
+#### Text Extraction:
+- **Library:** pypdf (PdfReader)
+- **Method:** Extract from all pages
+- **Parsing:** Keyword-based section detection
+- **Sections:**
+  - General Information (общая информация)
+  - Technical Parameters (технические параметры)
+  - Ecological State (экологическое состояние)
+  - Recommendations (рекомендации)
+
+#### Storage Model:
+```python
+PassportText:
+- full_text: Complete extracted text
+- general_info: Parsed section
+- technical_params: Parsed section
+- ecological_state: Parsed section
+- recommendations: Parsed section
+- object_id: Foreign key to WaterObject
+```
+
+#### Text Retrieval:
+```python
+GET /api/passports/{object_id}/text
+- Returns extracted text with sections
+- Includes creation timestamp
+- 404 if no passport exists
+```
+
+#### Deletion:
+```python
+DELETE /api/passports/{object_id}
+- Removes PDF file from disk
+- Deletes PassportText from database
+- Clears pdf_url from WaterObject
+- Returns 204 No Content
+```
+
+### Configuration:
+
+**Environment Variables:**
+- `PASSPORT_STORAGE_PATH` - Where PDFs are saved (default: uploads/passports)
+- `PASSPORT_BASE_URL` - URL path for accessing PDFs (default: /uploads/passports)
+
+**File Naming:**
+- Pattern: `object_{id}_passport.pdf`
+- Example: `object_1_passport.pdf`
+
+### Text Parsing Strategy:
+
+**Current Implementation:**
+- Simple keyword-based section detection
+- Supports Russian and English keywords
+- Falls back to full_text if sections not found
+
+**Future Enhancements (Optional):**
+- Use NLP for better section detection
+- Regex patterns for specific formats
+- Table extraction
+- Image OCR integration
+
+### TODO Notes:
+
+⚠️ **Authentication:** Endpoints have TODO comments for JWT authentication
+- Upload should require expert role
+- Delete should require expert role
+- Text retrieval can be accessible to authenticated users
+
+---
+
+## 🔄 Phase 7: RAG System Customization (NEXT)
 
 ### Planned Tasks:
 
