@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from database import get_db
-from services.auth.service import create_user, login_user, get_user, update_user_avatar, promote_to_expert_role
+from services.auth.service import create_user, login_user, get_user, update_user_avatar
 from services.auth.schemas import UserLogin, UserRead, Token
 from typing import Optional
 from pydantic import EmailStr, ValidationError
@@ -46,19 +46,18 @@ async def register(
     email: str = Form(..., description="User's email address", example="john.doe@example.com"),
     phone: str = Form(..., description="User's phone number", example="+77001234567"),
     password: str = Form(..., description="User's password (8-72 characters)", example="SecurePass123"),
-    expert_code: Optional[str] = Form(None, description="Expert access code (optional, for expert registration)"),
+    role: str = Form("guest", description="User role: guest or expert", example="guest"),
     avatar: Optional[UploadFile] = File(None, description="User's avatar image (optional)"),
     db: Session = Depends(get_db)
 ):
     """
     Register a new user with optional avatar image for Face ID.
     
-    Returns JWT token with user data (default role: guest).
+    Users can choose their role during registration:
+    - guest: Can view map and objects only (no priority information)
+    - expert: Full access to priorities, filters, and passports
     
-    **Expert Registration:**
-    - Provide `expert_code` to register as an expert
-    - Expert code: Use the secret EXPERT_ACCESS_CODE from environment
-    - Without code: registers as guest (default)
+    Returns JWT token with user data.
     
     The token should be stored by the frontend and sent in Authorization header for subsequent requests.
     """
@@ -68,13 +67,17 @@ async def register(
     email = validate_email(email)
     password = validate_password(password)
     
+    # Validate role
+    if role not in ["guest", "expert"]:
+        raise HTTPException(status_code=422, detail="Role must be either 'guest' or 'expert'")
+    
     return await create_user(
         name=name,
         surname=surname,
         email=email,
         phone=phone,
         password=password,
-        expert_code=expert_code,
+        role=role,
         avatar_file=avatar,
         db=db
     )
@@ -123,18 +126,6 @@ async def login(
 async def update_avatar(
     user_id: int,
     avatar: UploadFile = File(..., description="New avatar image"),
-    db: Session = Depends(get_db)
-):
-    """
-    Update user's avatar image.
-    """
-    return await update_user_avatar(user_id, avatar, db)
-
-
-@router.post("/{user_id}/promote-to-expert", response_model=UserRead, tags=["auth"])
-async def promote_to_expert(
-    user_id: int,
-    admin_code: str = Form(..., description="Admin access code"),
     db: Session = Depends(get_db)
 ):
     """

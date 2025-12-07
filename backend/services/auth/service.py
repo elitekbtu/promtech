@@ -197,8 +197,9 @@ async def create_user(
     email: str,
     phone: str,
     password: str,
+    role: str = "guest",
     avatar_file: Optional[UploadFile] = None,
-    db: Session = Depends(get_db)
+    db: Session = None
 ) -> Token:
     """
     Create a new user with optional avatar
@@ -223,7 +224,7 @@ async def create_user(
     if db.query(User).filter(User.phone == phone).first():
         raise HTTPException(status_code=400, detail="Phone already registered")
 
-    # Create user without avatar first (default role is guest)
+    # Create user without avatar first
     new_user = User(
         name=name,
         surname=surname,
@@ -231,7 +232,7 @@ async def create_user(
         phone=phone,
         password_hash=pwd_context.hash(password),
         avatar=None,
-        role=UserRole.guest  # Default to guest role
+        role=UserRole.expert if role == "expert" else UserRole.guest
     )
 
     db.add(new_user)
