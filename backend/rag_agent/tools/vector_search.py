@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 from typing import List, Dict, Any, Optional
 from langchain_core.tools import tool
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -72,17 +73,21 @@ class VectorSearchTool:
                use_hyde: bool = True, use_hybrid: bool = True,
                similarity_threshold: float = 0.5) -> str:
         """
-        Полноценный RAG поиск с максимальным качеством.
+        Search for relevant documents using advanced RAG techniques:
+        - HyDE (Hypothetical Document Embeddings) for query expansion
+        - Hybrid Search (BM25 + Vector) for better recall
+        - AI Reranking for improved precision
         
         Args:
             query: Search query
-            k: Number of results to return (default: 5)
-            use_reranking: AI reranking для лучшей точности
-            use_hyde: HyDE query expansion для лучшего покрытия
-            use_hybrid: Hybrid search (BM25 + Vector) для лучшего recall
+            k: Number of results to return
+            use_reranking: Whether to use Gemini reranking for better accuracy
+            use_hyde: Whether to use HyDE query expansion
+            use_hybrid: Whether to use hybrid search (BM25 + Vector)
+            similarity_threshold: Minimum similarity score (lower is better for FAISS distance)
             
         Returns:
-            str: Полные результаты поиска с контекстом
+            str: Formatted search results with quality indicators
         """
         if not self.vector_store_manager or not self.vector_store_manager.vector_store:
             raise RuntimeError(
@@ -91,38 +96,81 @@ class VectorSearchTool:
             )
         
         try:
-            # Полноценный RAG поиск с максимальным качеством
+            # Use advanced RAG search with all features
             results = self.vector_store_manager.search_documents(
                 query, 
                 k=k, 
-                use_reranking=use_reranking,  # Используем переданные параметры
-                use_hyde=use_hyde,  # Используем переданные параметры
-                use_hybrid=use_hybrid,  # Используем переданные параметры
-                use_multi_query=True,  # Включено для лучшего покрытия
-                ensure_diversity=True,  # Включено для разнообразия источников
-                merge_context=True  # Включено для полного контекста
+                use_reranking=use_reranking,
+                use_hyde=use_hyde,
+                use_hybrid=use_hybrid
             )
             
             if not results:
-                return f"Не найдено документов для запроса: '{query}'"
+                return f"Информация не найдена"
             
-            # Форматирование с полным контентом
-            formatted_results = []
-            for result in results:
-                # Используем enhanced_content если есть (с merged context)
-                content = result.get('enhanced_content') or result.get('content', '')
-                metadata = result.get('metadata', {})
-                object_name = metadata.get('object_name', '')
+            # Собираем все результаты для максимально полного ответа
+            all_contents = []
+            seen_content = set()  # Для дедупликации похожего контента
+            
+            for idx, result in enumerate(results):
+                content = result.get('content', '').strip()
                 
-                # Показываем полный контент без обрезания
-                if object_name and object_name not in content[:200]:
-                    # Если название не в начале контента, добавляем его
-                    formatted_results.append(f"{object_name}\n{content}")
-                else:
-                    # Иначе просто полный контент
-                    formatted_results.append(content)
+                if not content:
+                    continue
+                
+                # Убираем метки типа "[Контекст из документа]"
+                if '[Контекст из документа]:' in content:
+                    parts = content.split('[Контекст из документа]:')
+                    content = parts[0].strip()
+                
+                # Убираем только технические метаданные, но сохраняем полезную информацию
+                lines_to_remove = [
+                    'ResourceType.', 'PriorityLevel.',
+                ]
+                
+                # Очищаем контент, но сохраняем больше информации
+                cleaned_lines = []
+                for line in content.split('\n'):
+                    line = line.strip()
+                    if not line or line.isspace():
+                        continue
+                    
+                    # Пропускаем только технические метаданные
+                    if any(tech in line for tech in lines_to_remove):
+                        continue
+                    
+                    # Пропускаем пустые значения
+                    if line in ['Не указана', 'None', 'N/A', '']:
+                        continue
+                    
+                    cleaned_lines.append(line)
+                
+                # Объединяем в один текст
+                cleaned_content = '\n'.join(cleaned_lines)
+                
+                # Убираем множественные переносы строк
+                cleaned_content = re.sub(r'\n{3,}', '\n\n', cleaned_content)
+                cleaned_content = cleaned_content.strip()
+                
+                # Дедупликация: добавляем только если контент существенно отличается
+                # Используем первые 200 символов как ключ для быстрой проверки
+                content_key = cleaned_content[:200].lower()
+                if content_key not in seen_content and len(cleaned_content) > 50:
+                    seen_content.add(content_key)
+                    all_contents.append(cleaned_content)
             
-            return "\n\n".join(formatted_results)
+            # Объединяем все результаты в один полный ответ
+            if not all_contents:
+                return f"Информация не найдена"
+            
+            # Объединяем все результаты с разделителями
+            combined_content = '\n\n'.join(all_contents)
+            
+            # Финальная очистка: убираем только множественные переносы
+            combined_content = re.sub(r'\n{4,}', '\n\n\n', combined_content)
+            combined_content = combined_content.strip()
+            
+            return combined_content
             
         except Exception as e:
             logger.error(f"Error performing vector search: {e}")
