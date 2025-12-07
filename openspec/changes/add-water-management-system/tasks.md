@@ -76,13 +76,13 @@
 
 ## 9. Data Seeding & Import
 
-- [ ] 9.1 Create `backend/scripts/import_osm_water.py` script
-- [ ] 9.2 Implement Overpass API query for Kazakhstan water bodies
-- [ ] 9.3 Parse OSM data into WaterObject format
-- [ ] 9.4 Implement bulk insert of water objects
-- [ ] 9.5 Create manual import process for reference objects (Barakkol, Koskol, Kamystykol)
-- [ ] 9.6 Add sample passport documents to seed data
-- [ ] 9.7 Create documentation for data import process
+- [x] 9.1 Create `backend/scripts/import_osm_water.py` script
+- [x] 9.2 Implement Overpass API query for Kazakhstan water bodies
+- [x] 9.3 Parse OSM data into WaterObject format
+- [x] 9.4 Implement bulk insert of water objects
+- [x] 9.5 Create manual import process for reference objects (Barakkol, Koskol, Kamystykol)
+- [x] 9.6 Add sample passport documents to seed data
+- [x] 9.7 Create documentation for data import process
 
 ## 10. Configuration & Environment
 
