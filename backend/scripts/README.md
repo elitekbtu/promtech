@@ -9,17 +9,20 @@ This directory contains utility scripts for data management and system maintenan
 Seeds the database with reference water objects from hackathon documentation.
 
 **Usage:**
+
 ```bash
 python scripts/seed_reference_objects.py
 ```
 
 **What it does:**
+
 - Inserts 5 reference water objects (Коскол, Камыстыкол, etc.)
 - Sets realistic technical conditions and passport dates
 - Calculates priorities automatically
 - Skips objects that already exist (safe to re-run)
 
 **Output:**
+
 ```
 ======================================================================
 Seeding Reference Water Objects
@@ -39,19 +42,23 @@ Seeded 5 reference objects
 Seeds passport text data for reference water objects.
 
 **Usage:**
+
 ```bash
 python scripts/seed_passport_texts.py
 ```
 
 **Prerequisites:**
+
 - Run `seed_reference_objects.py` first
 
 **What it does:**
+
 - Adds detailed passport text for Коскол and Камыстыкол
 - Includes geographic, technical, and ecological information
 - Stores data in structured sections (general_info, technical_params, ecological_state, recommendations)
 
 **Output:**
+
 ```
 ======================================================================
 Seeding Passport Text Data
@@ -75,6 +82,7 @@ Total passports seeded: 2
 **NEW!** Seeds all passport PDFs from `uploads/passports/` directory.
 
 **Usage:**
+
 ```bash
 # Test run (parse only, no database insertion)
 python scripts/seed_all_passports.py --dry-run
@@ -84,6 +92,7 @@ python scripts/seed_all_passports.py
 ```
 
 **What it does:**
+
 - Scans `uploads/passports/` for all PDF files
 - Extracts text from each PDF using pypdf
 - Parses metadata: name, region, resource type, coordinates, technical condition, etc.
@@ -94,12 +103,14 @@ python scripts/seed_all_passports.py
 - Skips duplicates (safe to re-run)
 
 **Expected results:**
+
 - 20 water objects from passport PDFs
 - Includes famous Kazakhstan lakes: Балхаш, Алаколь, Тенгиз, Боровое
 - Includes major reservoirs: Капшагайское, Бухтарминское, Шардаринское
 - Includes irrigation canals: Иртыш-Караганда, Большой Алматинский
 
 **Output:**
+
 ```
 ======================================================================
 Seeding All Passport PDFs
@@ -130,6 +141,7 @@ Success rate: 100.0%
 Imports water bodies from OpenStreetMap for Kazakhstan.
 
 **Usage:**
+
 ```bash
 # Test run (parse only, no database insertion)
 python scripts/import_osm_water.py --limit 50 --dry-run
@@ -142,6 +154,7 @@ python scripts/import_osm_water.py
 ```
 
 **What it does:**
+
 - Queries Overpass API for Kazakhstan water bodies (lakes, rivers, canals, reservoirs)
 - Parses OSM tags into WaterObject format
 - Filters for named water bodies only
@@ -149,11 +162,13 @@ python scripts/import_osm_water.py
 - Handles API rate limits with retry logic
 
 **Expected results:**
+
 - ~1000-5000 water bodies from Kazakhstan
 - Takes 5-15 minutes depending on API load
 - Region names initially set to "Неизвестная область" (can be enhanced later)
 
 **Options:**
+
 - `--limit N`: Import max N objects (useful for testing)
 - `--dry-run`: Parse data but don't insert into database
 
@@ -164,6 +179,7 @@ python scripts/import_osm_water.py
 ### DATA_IMPORT_GUIDE.md
 
 Comprehensive guide covering:
+
 - Quick start with reference objects
 - Large-scale OSM import
 - Vector store indexing (required after data import)
@@ -177,6 +193,7 @@ Comprehensive guide covering:
 ## Quick Start Workflow
 
 **Development (quick setup with real data):**
+
 ```bash
 cd backend
 
@@ -196,6 +213,7 @@ python rag_agent/scripts/rebuild_vector_store.py
 **Total after quick setup: 25 water objects, 22 passports**
 
 **Production (full data):**
+
 ```bash
 cd backend
 
@@ -269,6 +287,7 @@ Solution: Run scripts from backend directory or use absolute imports
 **Error: `Connection refused` (database)**
 
 Solution: Ensure PostgreSQL container is running:
+
 ```bash
 docker-compose ps
 docker-compose up -d  # if stopped
@@ -287,6 +306,7 @@ Solution: Check OSM data exists for region using https://overpass-turbo.eu/
 ## Script Dependencies
 
 All scripts require:
+
 - `sqlalchemy` - Database ORM
 - `requests` - HTTP client (OSM import only)
 - Database connection via `database.py`
@@ -299,6 +319,7 @@ Dependencies are already in `requirements.txt`.
 ## Notes
 
 1. **Vector Store**: After ANY data import, rebuild the RAG vector store:
+
    ```bash
    python rag_agent/scripts/rebuild_vector_store.py
    ```
@@ -311,4 +332,4 @@ Dependencies are already in `requirements.txt`.
 
 ---
 
-*For detailed information, see [DATA_IMPORT_GUIDE.md](./DATA_IMPORT_GUIDE.md)*
+_For detailed information, see [DATA_IMPORT_GUIDE.md](./DATA_IMPORT_GUIDE.md)_

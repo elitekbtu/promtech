@@ -7,30 +7,30 @@ import enum
 
 class ResourceType(str, enum.Enum):
     """Types of water resources"""
-    lake = "lake"
-    canal = "canal"
-    reservoir = "reservoir"
-    river = "river"
-    other = "other"
+    lake = "озеро"
+    canal = "канал"
+    reservoir = "водохранилище"
+    river = "река"
+    other = "другое"
 
 
 class WaterType(str, enum.Enum):
     """Water salinity classification"""
-    fresh = "fresh"          # пресная
-    non_fresh = "non_fresh"  # непресная
+    fresh = "пресная"
+    non_fresh = "непресная"
 
 
 class FaunaType(str, enum.Enum):
     """Fauna presence classification"""
-    fish_bearing = "fish_bearing"      # рыбопродуктивная
-    non_fish_bearing = "non_fish_bearing"  # нерыбопродуктивная
+    fish_bearing = "рыбопродуктивная"
+    non_fish_bearing = "нерыбопродуктивная"
 
 
 class PriorityLevel(str, enum.Enum):
     """Priority classification based on inspection score"""
-    high = "high"      # >= 10
-    medium = "medium"  # 6-9
-    low = "low"        # <= 5
+    high = "высокий"      # >= 10
+    medium = "средний"    # 6-9
+    low = "низкий"        # <= 5
 
 
 class WaterObject(Base):

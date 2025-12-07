@@ -23,6 +23,11 @@ class QueryRequest(BaseModel):
     query: str
     context: Optional[Dict[str, Any]] = None
     environment: str = "development"
+    # Optional water management filters
+    object_id: Optional[int] = None
+    region: Optional[str] = None
+    priority_level: Optional[str] = None
+    resource_type: Optional[str] = None
 
 
 class QueryResponse(BaseModel):
@@ -32,6 +37,10 @@ class QueryResponse(BaseModel):
     sources: list
     confidence: float
     status: str
+    # Water management metadata
+    water_objects: Optional[list] = None
+    regions: Optional[list] = None
+    priority_levels: Optional[list] = None
 
 
 @router.post("/query", response_model=QueryResponse)
