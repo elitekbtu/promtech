@@ -1,0 +1,1231 @@
+{
+  "name": "GidroAtlas Daily High Risk Water Object Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "tg_chat_id",
+              "value": "<__PLACEHOLDER_VALUE__Telegram Chat ID__>",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "alert_emails",
+              "value": "justworker1990@gmail.com,askhat.ss23@gmail.com",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "89d426c1-7334-4fb7-a6d3-a4abcae64335",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1WwFzCpnF5LJhd_UvdvjgloCdQQk8rt0Gd1L2Uf_K8y8",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Water",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "4961c44f-3b0e-47fe-98f4-7ca9cd21db5c",
+      "name": "Read Water Objects (Google Sheets)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        528
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GkwaA01JcZJwREGM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Calculate priority score for water objects\nconst item = $input.item.json;\n\n// Get current year\nconst currentYear = new Date().getFullYear();\n\n// Extract year from passport_date\nlet passportYear;\nif (item.passport_date) {\n  const passportDate = new Date(item.passport_date);\n  passportYear = passportDate.getFullYear();\n} else {\n  passportYear = currentYear; // Default to current year if no date\n}\n\n// Calculate passport age in years\nconst passport_age_years = currentYear - passportYear;\n\n// Get technical condition (default to 3 if not provided)\nconst technical_condition = item.technical_condition || 3;\n\n// Calculate priority score\n// PriorityScore = (6 - technical_condition) * 3 + passport_age_years\nconst priority = (6 - technical_condition) * 3 + passport_age_years;\n\n// Classify priority level\nlet priority_level;\nif (priority >= 12) {\n  priority_level = 'high';\n} else if (priority >= 6) {\n  priority_level = 'medium';\n} else {\n  priority_level = 'low';\n}\n\n// Return all original fields plus new calculated fields\nreturn {\n  ...item,\n  passport_age_years,\n  priority,\n  priority_level\n};"
+      },
+      "id": "8ca2ed72-2723-4e65-b823-43dd9116190b",
+      "name": "Calculate Priority Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.priority_level }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "78018154-fb66-43f5-a34f-614c194ff787",
+      "name": "Filter High Risk Only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "telegram_message",
+              "value": "=🚨 HIGH RISK ALERT — GidroAtlas\n\nОбъект: {{ $json.name }}\nРегион: {{ $json.region }}\nТип: {{ $json.resource_type }}\nСостояние: {{ $json.technical_condition }}\nВозраст паспорта: {{ $json.passport_age_years }} лет\nPriorityScore: {{ $json.priority }}\n\nРекомендуется первоочередное обследование.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "ee2e01a2-94ef-4842-ae23-dce71c0b2c21",
+      "name": "Compose Telegram Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{$json.telegram_message}}",
+        "additionalFields": {}
+      },
+      "id": "7d1fd2c4-4132-4bdd-be99-4fd15197da1b",
+      "name": "Send Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2432,
+        600
+      ],
+      "webhookId": "9a2c1f8f-6915-4e78-aa04-c28ac3d4b6e7",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VbW3Ykn40cI8gB94",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "frogjustkeepwatching@gmail.com",
+        "toEmail": "={{ $('Workflow Configuration').first().json.alert_emails }}",
+        "subject": "=GidroAtlas High Risk Alert - {{ $json.name }}",
+        "emailFormat": "text",
+        "text": "={{ $json.gemini_message \n   || $json.telegram_message \n   || ($json.result && $json.result.text) \n   || $json.text }}",
+        "options": {}
+      },
+      "id": "082cec13-471d-4f12-80e3-b19f21eab760",
+      "name": "Send Email Alert (Optional)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2656,
+        600
+      ],
+      "webhookId": "19ec4f78-5d31-4400-ae5e-3037c9069144",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "7qxeJH3zuxVjkwsl",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "id"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Ты инженер-гидротехник. На основе ТОЛЬКО следующих данных JSON создай краткое предупреждение (3-5 строк) о высоком риске объекта. НЕ добавляй факты от себя. Используй только предоставленные данные:\n\nДанные объекта:\n{{ $json }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6e67050d-d30d-4f9d-a1e6-5155bcbcb3f5",
+      "name": "Gemini Text Polish (Optional)",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        600
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cw6xeQnfznxZwqE3",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            },
+            {}
+          ]
+        }
+      },
+      "id": "b9f507f3-7428-48be-8009-b6b1e424fdf5",
+      "name": "Minute 05:00 Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        64,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "7c44b242-32d1-4a46-ae24-51b28f28617b",
+      "name": "Telegram /start Command",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        920
+      ],
+      "webhookId": "cd99f483-7151-4b8c-9c27-9163e0fee22d",
+      "credentials": {
+        "telegramApi": {
+          "id": "VbW3Ykn40cI8gB94",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "chat_id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "username",
+              "value": "={{ $json.message.from.username || 'Unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "first_name",
+              "value": "={{ $json.message.from.first_name || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "last_name",
+              "value": "={{ $json.message.from.last_name || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "subscribed_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "dbe9f4f0-0f08-4aae-890b-06cb0568cf22",
+      "name": "Extract User Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        920
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1WwFzCpnF5LJhd_UvdvjgloCdQQk8rt0Gd1L2Uf_K8y8"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Subscribers"
+        },
+        "options": {}
+      },
+      "id": "83f4a81a-ad7d-4012-b3ca-a1be27fb1e91",
+      "name": "Check if User Exists",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        920
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GkwaA01JcZJwREGM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.user_exists }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            },
+            {
+              "id": "acb91ed9-ca8b-495a-8a93-7eb3c62fc4e8",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9888acd1-e12f-488a-8ed0-2e96f407b739",
+      "name": "User Already Registered?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        920
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1WwFzCpnF5LJhd_UvdvjgloCdQQk8rt0Gd1L2Uf_K8y8"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Subscribers"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Extract User Data').item.json.chat_id }}",
+            "username": "={{ $('Extract User Data').item.json.username }}",
+            "first_name": "={{ $('Extract User Data').item.json.first_name }}",
+            "last_name": "={{ $('Extract User Data').item.json.last_name }}",
+            "subscribed_at": "={{ $('Extract User Data').item.json.subscribed_at }}",
+            "is_active": "TRUE"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "username",
+              "displayName": "username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_name",
+              "displayName": "last_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subscribed_at",
+              "displayName": "subscribed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "update_id",
+              "displayName": "update_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_exists",
+              "displayName": "user_exists",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "8c64957f-695b-4b39-aae7-9ad56d1c6877",
+      "name": "Save New Subscriber",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1184,
+        824
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GkwaA01JcZJwREGM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Extract User Data').item.json.chat_id }}",
+        "text": "✅ Добро пожаловать в GidroAtlas!\n\nВы успешно подписались на уведомления о водных объектах высокого риска.\n\nВы будете получать ежедневные алерты в 09:00 (Almaty) о критических объектах, требующих первоочередного обследования.\n\nДля отписки напишите /stop",
+        "additionalFields": {}
+      },
+      "id": "aa6b181d-6648-4ddd-9b40-3c5c163787b0",
+      "name": "Send Welcome Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        824
+      ],
+      "webhookId": "ffec5488-12cd-4325-8b98-c220793ce685",
+      "credentials": {
+        "telegramApi": {
+          "id": "VbW3Ykn40cI8gB94",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "ℹ️ Вы уже подписаны на уведомления GidroAtlas.\n\nВы получаете ежедневные алерты о водных объектах высокого риска.\n\nДля отписки напишите /stop",
+        "additionalFields": {}
+      },
+      "id": "6fa39752-cd0b-4ef9-b6df-e5920eacc28b",
+      "name": "Send Already Subscribed Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1184,
+        1016
+      ],
+      "webhookId": "5e28d598-2833-4956-aebe-359715937cc6",
+      "credentials": {
+        "telegramApi": {
+          "id": "VbW3Ykn40cI8gB94",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// chat_id текущего пользователя\nconst currentUser = String($(\"Extract User Data\").all()[0].json.chat_id);\n\n// все строки из Google Sheets (Subscribers)\nconst rows = $(\"Check if User Exists\").all().map(item => item.json);\n\n// проверка — есть ли chat_id в таблице\nconst exists = rows.some(row => String(row.chat_id) === currentUser);\n\n// вернуть данные пользователя + флаг\nreturn [\n  {\n    json: {\n      ...$(\"Extract User Data\").all()[0].json,\n      user_exists: exists,\n    },\n  },\n];\n"
+      },
+      "id": "90d0dfc7-64e3-4be0-b316-c70a6c8e96d0",
+      "name": "Check User in List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        920
+      ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "e530597a-b7f4-4a2d-abf7-2a52e4fbf8f8",
+      "name": "Telegram /stop Command",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        1336
+      ],
+      "webhookId": "097f4a7f-4099-49bf-b0b8-fba7e3cdaa72",
+      "credentials": {
+        "telegramApi": {
+          "id": "VbW3Ykn40cI8gB94",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "chat_id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "f2a8b3d3-1e98-41ce-9af3-54de11c236f4",
+      "name": "Extract User Data (Stop)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        1336
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1WwFzCpnF5LJhd_UvdvjgloCdQQk8rt0Gd1L2Uf_K8y8"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Subscribers"
+        },
+        "options": {}
+      },
+      "id": "04a4343b-6470-4fa9-9825-b86243c266e7",
+      "name": "Read Subscribers (Stop)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        1336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GkwaA01JcZJwREGM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// chat_id пользователя из \"Extract User Data (Stop)\"\nconst currentUser = $('Extract User Data (Stop)').first().json.chat_id.toString();\n\n// все строки из листа Subscribers\nconst rows = $input.all().map(item => item.json);\n\n// есть ли такой chat_id в таблице\nconst exists = rows.some(row => String(row.chat_id) === currentUser);\n\n// возвращаем ОДИН новый item\nreturn [\n  {\n    json: {\n      chat_id: currentUser,\n      user_exists: exists,\n    },\n  },\n];\n"
+      },
+      "id": "464fbd20-35e9-4ce5-abb7-213d9c9c88c4",
+      "name": "Check User in List (Stop)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        1336
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.user_exists }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "741faeed-a925-4163-8d54-c1048778e4f5",
+      "name": "User Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        1336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1WwFzCpnF5LJhd_UvdvjgloCdQQk8rt0Gd1L2Uf_K8y8"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Subscribers"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $json.chat_id }}",
+            "is_active": "false"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "username",
+              "displayName": "username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_name",
+              "displayName": "last_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subscribed_at",
+              "displayName": "subscribed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "update_id",
+              "displayName": "update_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_exists",
+              "displayName": "user_exists",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "6e8550eb-60fc-4445-8fc6-22f6665a985e",
+      "name": "Update is_active to false",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1184,
+        1240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GkwaA01JcZJwREGM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "❌ Вы отписались от уведомлений GidroAtlas.\n\nВы больше не будете получать алерты о водных объектах высокого риска.\n\nДля повторной подписки напишите /start",
+        "additionalFields": {}
+      },
+      "id": "138cf314-a944-466d-a10b-249a29bd38d9",
+      "name": "Send Unsubscribe Confirmation",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        1240
+      ],
+      "webhookId": "c76f5cdf-887a-4cee-b97f-fdaa7c3a896b",
+      "credentials": {
+        "telegramApi": {
+          "id": "VbW3Ykn40cI8gB94",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Extract User Data (Stop)').item.json.chat_id }}",
+        "text": "ℹ️ Вы не были подписаны на уведомления GidroAtlas.\n\nДля подписки на алерты о водных объектах высокого риска напишите /start",
+        "additionalFields": {}
+      },
+      "id": "6061b357-32d5-43a5-8663-b16e8e1e2068",
+      "name": "Send Not Subscribed Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1184,
+        1432
+      ],
+      "webhookId": "4f576331-11be-48cb-993b-4c9b19586c12",
+      "credentials": {
+        "telegramApi": {
+          "id": "VbW3Ykn40cI8gB94",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1WwFzCpnF5LJhd_UvdvjgloCdQQk8rt0Gd1L2Uf_K8y8"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Subscribers"
+        },
+        "options": {}
+      },
+      "id": "dd5ac977-9cd7-437c-8804-ec31e03a5b7a",
+      "name": "Read Active Subscribers",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1984,
+        528
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GkwaA01JcZJwREGM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "4d960715-c0e8-4aa6-8111-2602c6f0ae01",
+      "name": "Merge Alert with Subscribers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2208,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "gemini_message",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "telegram_message",
+              "value": "={{ $('Compose Telegram Message').first().json.telegram_message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "ac0988ad-e84c-48f2-b2d9-6e7c4fdba8a3",
+      "name": "Extract Gemini Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1760,
+        600
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Read Water Objects (Google Sheets)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Calculate Priority Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Water Objects (Google Sheets)": {
+      "main": [
+        [
+          {
+            "node": "Calculate Priority Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Priority Score": {
+      "main": [
+        [
+          {
+            "node": "Filter High Risk Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter High Risk Only": {
+      "main": [
+        [
+          {
+            "node": "Compose Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Gemini Text Polish (Optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Email Alert (Optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Text Polish (Optional)": {
+      "main": [
+        [
+          {
+            "node": "Extract Gemini Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Minute 05:00 Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram /start Command": {
+      "main": [
+        [
+          {
+            "node": "Extract User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract User Data": {
+      "main": [
+        [
+          {
+            "node": "Check if User Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if User Exists": {
+      "main": [
+        [
+          {
+            "node": "Check User in List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Already Registered?": {
+      "main": [
+        [
+          {
+            "node": "Send Already Subscribed Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save New Subscriber",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save New Subscriber": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check User in List": {
+      "main": [
+        [
+          {
+            "node": "User Already Registered?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram /stop Command": {
+      "main": [
+        [
+          {
+            "node": "Extract User Data (Stop)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract User Data (Stop)": {
+      "main": [
+        [
+          {
+            "node": "Read Subscribers (Stop)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Subscribers (Stop)": {
+      "main": [
+        [
+          {
+            "node": "Check User in List (Stop)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check User in List (Stop)": {
+      "main": [
+        [
+          {
+            "node": "User Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Exists?": {
+      "main": [
+        [
+          {
+            "node": "Update is_active to false",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Not Subscribed Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update is_active to false": {
+      "main": [
+        [
+          {
+            "node": "Send Unsubscribe Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Active Subscribers": {
+      "main": [
+        [
+          {
+            "node": "Merge Alert with Subscribers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Alert with Subscribers": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Gemini Message": {
+      "main": [
+        [
+          {
+            "node": "Merge Alert with Subscribers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Active Subscribers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b1d6b8a1-a32a-4109-96ea-a8f96a49e125",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3f14efa9c86172eb0271e301734b79c8457bb865935eddac329d36927d05953b"
+  },
+  "id": "DjlwOKub72aMLeUc",
+  "tags": []
+}
