@@ -17,6 +17,9 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GidroAtlasColors } from '@/constants/theme';
 
+// Alias for consistent naming throughout component
+const ZamanColors = GidroAtlasColors;
+
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 interface DockItem {

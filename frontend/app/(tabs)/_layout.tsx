@@ -38,10 +38,9 @@ export default function TabLayout() {
       onPress: () => router.push('/(tabs)/explore'),
     },
     {
-      icon: 'chatbubbles' as const,
-      label: 'Live Chat',
+      icon: 'chatbubble-ellipses' as const,
+      label: 'Chat',
       onPress: () => router.push('/(tabs)/live-chat'),
-      badge: 3, // Example badge
     },
   ];
 

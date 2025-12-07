@@ -104,8 +104,8 @@ export default function ExploreScreen() {
         }
       }
       
-      // Call RAG Transaction API (has access to account tools)
-      const response = await fetch(`${config.backendURL}/api/rag/transaction/query`, {
+      // Call RAG API
+      const response = await fetch(`${config.backendURL}/api/rag/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -113,11 +113,7 @@ export default function ExploreScreen() {
         },
         body: JSON.stringify({
           query: userMessage.content,
-          user_id: userId,  // Use actual user ID from localStorage
-          context: {
-            session_id: sessionId,
-          },
-          environment: 'production'
+          language: 'ru',
         })
       });
       
