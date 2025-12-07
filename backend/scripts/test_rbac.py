@@ -42,8 +42,11 @@ def test_rbac():
         if guest_response.status_code == 200:
             guest_data = guest_response.json()
             print(f"✅ Guest login successful")
-            print(f"   Role: {guest_data.get('role', 'N/A')}")
             guest_token = guest_data.get('access_token', '')
+        elif guest_response.status_code == 403:
+            print(f"⚠️  Guest login blocked (status 403) - as expected, only experts can login")
+            print("   Guest access is provided without authentication")
+            guest_token = None
         else:
             print(f"⚠️  Guest login failed (status {guest_response.status_code})")
             print("   Creating guest user may be needed for this test")
@@ -62,7 +65,6 @@ def test_rbac():
         if expert_response.status_code == 200:
             expert_data = expert_response.json()
             print(f"✅ Expert login successful")
-            print(f"   Role: {expert_data.get('role', 'N/A')}")
             expert_token = expert_data.get('access_token', '')
         else:
             print(f"❌ Expert login failed (status {expert_response.status_code})")

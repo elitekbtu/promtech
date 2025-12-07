@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from database import get_db
 from models import UserRole
-from services.auth.service import get_current_user
+from services.auth.service import get_current_user, get_user_role_or_guest
 from services.objects.service import WaterObjectService
 from services.objects.schemas import (
     WaterObjectCreate,
@@ -19,11 +19,6 @@ from services.objects.schemas import (
 router = APIRouter(prefix="/objects", tags=["Water Objects"])
 
 
-def get_current_user_role(current_user = Depends(get_current_user)) -> UserRole:
-    """Dependency to get current user's role"""
-    return current_user.role
-
-
 def require_expert(current_user = Depends(get_current_user)):
     """Dependency to require expert role"""
     if current_user.role != UserRole.expert:
@@ -37,9 +32,8 @@ def require_expert(current_user = Depends(get_current_user)):
 
 @router.get(
     "/",
-    response_model=WaterObjectListResponse,
     summary="List water objects",
-    description="Get a paginated list of water objects with optional filtering and sorting. Guest users will not see priority information."
+    description="Get a paginated list of water objects with optional filtering and sorting. Unauthenticated users and guests will not see priority information."
 )
 async def list_water_objects(
     # Filtering parameters
@@ -63,13 +57,15 @@ async def list_water_objects(
     
     # Dependencies
     db: Session = Depends(get_db),
-    user_role: UserRole = Depends(get_current_user_role)
+    user_role: UserRole = Depends(get_user_role_or_guest)
 ):
     """
     List water objects with filtering, sorting, and pagination.
     
-    **Guest users** see only basic information (no priority data).
+    **Unauthenticated users and guests** see only basic information (no priority data).
     **Expert users** see full information including priorities and can filter by priority.
+    
+    No authentication required - defaults to guest view.
     """
     
     # Build filter object
@@ -98,38 +94,47 @@ async def list_water_objects(
     # Get filtered and paginated results
     items, total = WaterObjectService.list_with_filters(db, filters, pagination)
     
+    # Convert to appropriate response type based on user role
+    if user_role == UserRole.guest:
+        # Convert to guest response (no priority data)
+        response_items = [WaterObjectGuestResponse.model_validate(item) for item in items]
+    else:
+        # Return full response with priority data
+        response_items = [WaterObjectResponse.model_validate(item) for item in items]
+    
     # Build response
     has_more = (offset + len(items)) < total
     
-    return WaterObjectListResponse(
-        items=items,
-        total=total,
-        limit=limit,
-        offset=offset,
-        has_more=has_more
-    )
+    return {
+        "items": response_items,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "has_more": has_more
+    }
 
 
 @router.get(
     "/{object_id}",
-    response_model=WaterObjectResponse,
     responses={
         404: {"description": "Water object not found"},
         403: {"description": "Insufficient permissions (guest cannot see priorities)"}
     },
     summary="Get water object by ID",
-    description="Retrieve detailed information about a specific water object. Guest users will not see priority information."
+    description="Retrieve detailed information about a specific water object. Unauthenticated users and guests will not see priority information."
 )
 async def get_water_object(
     object_id: int,
     db: Session = Depends(get_db),
-    user_role: UserRole = Depends(get_current_user_role)
+    user_role: UserRole = Depends(get_user_role_or_guest)
 ):
     """
     Get detailed information about a water object.
     
-    **Guest users** see only basic information (no priority data).
+    **Unauthenticated users and guests** see only basic information (no priority data).
     **Expert users** see full information including priority calculations.
+    
+    No authentication required - defaults to guest view.
     """
     
     water_object = WaterObjectService.get_by_id(db, object_id)
@@ -243,17 +248,17 @@ async def delete_water_object(
         404: {"description": "Water object not found or no passport available"}
     },
     summary="Get water object passport metadata",
-    description="Retrieve passport document metadata for a water object."
+    description="Retrieve passport document metadata for a water object. Available to all users."
 )
 async def get_water_object_passport(
     object_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     """
     Get passport document metadata for a water object.
     
-    Returns basic passport information including document date and PDF URL.
+    Returns passport file URL and basic metadata.
+    No authentication required.
     """
     
     water_object = WaterObjectService.get_by_id(db, object_id)

@@ -20,13 +20,12 @@ class UserLogin(BaseModel):
 
 
 class UserRead(BaseModel):
-    """Schema for reading user data"""
+    """Schema for reading user data (expert only)"""
     id: int
     name: str
     surname: str
     email: str  
     phone: str
-    role: UserRole = Field(default=UserRole.guest, description="User role (guest or expert)")
     avatar: Optional[str] = Field(None, description="Avatar filename (for Face ID)")
     created_at: datetime
     updated_at: datetime

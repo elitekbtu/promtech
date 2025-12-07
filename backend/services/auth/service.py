@@ -149,6 +149,50 @@ def get_current_user_role(current_user: User = Depends(get_current_user)) -> Use
     return current_user.role
 
 
+async def get_optional_user(
+    token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=False)),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """
+    Dependency to get current user if authenticated, None otherwise.
+    Does not raise an error if no token is provided.
+    
+    Args:
+        token: Optional JWT token from Authorization header
+        db: Database session
+        
+    Returns:
+        Current authenticated User or None
+    """
+    if not token:
+        return None
+    
+    try:
+        token_data = decode_access_token(token)
+        user = db.query(User).filter(User.id == token_data.user_id).first()
+        
+        if user and not user.deleted_at:
+            return user
+    except HTTPException:
+        # Invalid token - treat as unauthenticated
+        pass
+    
+    return None
+
+
+def get_user_role_or_guest(current_user: Optional[User] = Depends(get_optional_user)) -> UserRole:
+    """
+    Dependency to get current user's role, defaulting to guest for unauthenticated users.
+    
+    Args:
+        current_user: Current user or None if not authenticated
+        
+    Returns:
+        User's role or UserRole.guest for unauthenticated requests
+    """
+    return current_user.role if current_user else UserRole.guest
+
+
 def require_expert(current_user: User = Depends(get_current_user)) -> User:
     """
     Dependency to require expert role
@@ -197,12 +241,14 @@ async def create_user(
     email: str,
     phone: str,
     password: str,
-    role: str = "guest",
+    role: str = "expert",
     avatar_file: Optional[UploadFile] = None,
     db: Session = None
 ) -> Token:
     """
-    Create a new user with optional avatar
+    Create a new expert user with optional avatar.
+    
+    All registered users are experts. Guest access is provided without registration.
     
     Args:
         name: User's first name
@@ -210,11 +256,12 @@ async def create_user(
         email: User's email
         phone: User's phone number
         password: User's password
+        role: User role (always "expert" for registered users)
         avatar_file: Optional avatar image file
         db: Database session
         
     Returns:
-        Created user data (with role field)
+        JWT token with expert user data
     """
     # Check if email already exists
     if db.query(User).filter(User.email == email).first():
@@ -270,7 +317,9 @@ async def create_user(
 
 def login_user(email: str, password: str, db: Session = Depends(get_db)) -> Token:
     """
-    Login user with email and password
+    Login user with email and password.
+    
+    **Only expert users can login.** Guest users do not need authentication.
     
     Args:
         email: User's email
@@ -278,7 +327,10 @@ def login_user(email: str, password: str, db: Session = Depends(get_db)) -> Toke
         db: Database session
         
     Returns:
-        User data (with role field)
+        JWT token with user data
+        
+    Raises:
+        HTTPException: If credentials invalid or user is not an expert
     """
     user = db.query(User).filter(User.email == email).first()
     
@@ -286,7 +338,14 @@ def login_user(email: str, password: str, db: Session = Depends(get_db)) -> Toke
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     if user.deleted_at:
-        raise HTTPException(status_code=401, detail="User is deleted")
+        raise HTTPException(status_code=401, detail="User account is deleted")
+    
+    # Only experts can login
+    if user.role != UserRole.expert:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Login is only available for expert users. Guest access is provided without authentication."
+        )
     
     access_token = create_access_token(
         user_id=user.id,

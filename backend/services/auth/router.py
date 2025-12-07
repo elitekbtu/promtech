@@ -46,16 +46,16 @@ async def register(
     email: str = Form(..., description="User's email address", example="john.doe@example.com"),
     phone: str = Form(..., description="User's phone number", example="+77001234567"),
     password: str = Form(..., description="User's password (8-72 characters)", example="SecurePass123"),
-    role: str = Form("guest", description="User role: guest or expert", example="guest"),
     avatar: Optional[UploadFile] = File(None, description="User's avatar image (optional)"),
     db: Session = Depends(get_db)
 ):
     """
-    Register a new user with optional avatar image for Face ID.
+    Register a new expert user with optional avatar image for Face ID.
     
-    Users can choose their role during registration:
-    - guest: Can view map and objects only (no priority information)
-    - expert: Full access to priorities, filters, and passports
+    **Registration creates expert users only.**
+    All registered users receive the expert role.
+    
+    Unauthenticated users can access the system as guests without registration.
     
     Returns JWT token with user data.
     
@@ -67,9 +67,8 @@ async def register(
     email = validate_email(email)
     password = validate_password(password)
     
-    # Validate role
-    if role not in ["guest", "expert"]:
-        raise HTTPException(status_code=422, detail="Role must be either 'guest' or 'expert'")
+    # Force role to expert (registration is expert-only)
+    role = "expert"
     
     return await create_user(
         name=name,
@@ -107,10 +106,13 @@ async def login(
     """
     Login with email and password (JSON body).
     
-    Returns JWT token with user data if credentials are valid.
-    The role (guest or expert) determines access to various endpoints.
+    **Expert users only** - Login is restricted to registered experts.
     
-    The token should be stored by the frontend and sent in Authorization header:
+    Unauthenticated users automatically have guest access to view water objects
+    without priority information. No login required for guest functionality.
+    
+    Returns JWT token with user data if credentials are valid.
+    The token should be stored and sent in Authorization header:
     Authorization: Bearer <access_token>
     
     Note: For Swagger UI, use the /token endpoint instead.
@@ -120,6 +122,17 @@ async def login(
         password=credentials.password,
         db=db
     )
+
+
+@router.post("/logout", tags=["auth"])
+async def logout():
+    """
+    Logout endpoint.
+    """
+    return {
+        "message": "Logout successful.",
+        "success": True
+    }
 
 
 @router.put("/{user_id}/avatar", response_model=UserRead, tags=["auth"])
