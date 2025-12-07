@@ -5,15 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { ZamanColors } from '@/constants/theme';
 import ZamanLogo from '@/components/zaman-logo';
-
-interface UserData {
-  id: number;
-  name: string;
-  surname: string;
-  email: string;
-  phone: string;
-  avatar?: string;
-}
+import { clearAuth, getUserData, UserData } from '@/lib/auth';
+import { authAPI } from '@/lib/api-services';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -23,27 +16,32 @@ export default function HomeScreen() {
     loadUser();
   }, []);
 
-  function loadUser() {
+  async function loadUser() {
     try {
-      if (typeof localStorage !== 'undefined') {
-        const userJson = localStorage.getItem('user');
-        if (userJson) {
-          setUser(JSON.parse(userJson));
-        }
-      }
+      const userData = await getUserData();
+      setUser(userData);
     } catch (error) {
       console.error('Error loading user:', error);
     }
+  }
+
+  async function performLogout() {
+    try {
+      // Call backend logout API
+      await authAPI.logout();
+    } catch (error) {
+      console.warn('Backend logout failed:', error);
+    }
+    // Always clear local auth data
+    await clearAuth();
+    router.replace('/login');
   }
 
   function handleLogout() {
     // On web, Alert.alert doesn't work, so use confirm
     if (Platform.OS === 'web') {
       if (window.confirm('Are you sure you want to logout?')) {
-        if (typeof localStorage !== 'undefined') {
-          localStorage.removeItem('user');
-        }
-        router.replace('/login');
+        performLogout();
       }
     } else {
       Alert.alert(
@@ -54,12 +52,7 @@ export default function HomeScreen() {
           { 
             text: 'Logout', 
             style: 'destructive',
-            onPress: () => {
-              if (typeof localStorage !== 'undefined') {
-                localStorage.removeItem('user');
-              }
-              router.replace('/login');
-            }
+            onPress: () => performLogout()
           }
         ]
       );
