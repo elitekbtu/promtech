@@ -9,7 +9,7 @@ from rag_agent.routes.router import router as rag_router
 from services.auth.router import router as auth_router
 
 
-app = FastAPI(title="Zamanbank API", version="1.0.0", description="Zamanbank API")
+app = FastAPI(title="Promtech", version="1.0.0", description="Promtech API")
 
 app.add_middleware(
     CORSMiddleware,

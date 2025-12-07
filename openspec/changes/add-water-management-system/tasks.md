@@ -10,12 +10,12 @@
 
 ## 2. Core Business Logic
 
-- [ ] 2.1 Implement priority calculation function: `(6 - technical_condition) * 3 + passport_age_years`
-- [ ] 2.2 Implement priority level mapping (high/medium/low based on score)
-- [ ] 2.3 Create water object service layer with CRUD operations
-- [ ] 2.4 Implement filtering logic (region, resource_type, water_type, fauna, date ranges, technical_condition)
-- [ ] 2.5 Implement sorting logic (all WaterObject fields)
-- [ ] 2.6 Implement pagination helpers
+- [x] 2.1 Implement priority calculation function: `(6 - technical_condition) * 3 + passport_age_years`
+- [x] 2.2 Implement priority level mapping (high/medium/low based on score)
+- [x] 2.3 Create water object service layer with CRUD operations
+- [x] 2.4 Implement filtering logic (region, resource_type, water_type, fauna, date ranges, technical_condition)
+- [x] 2.5 Implement sorting logic (all WaterObject fields)
+- [x] 2.6 Implement pagination helpers
 
 ## 3. API Endpoints - Water Objects
 

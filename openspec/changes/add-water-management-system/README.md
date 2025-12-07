@@ -1,6 +1,10 @@
 # OpenSpec Change Proposal: Water Management System
 
-## Status: ✅ Validated & Ready for Review
+## Status: 🚧 In Progress - Phase 3/13
+
+**Phase 1 ✅ COMPLETED** - Database Models & Schema (5/5 tasks)  
+**Phase 2 ✅ COMPLETED** - Core Business Logic (6/6 tasks)  
+**Phase 3 🔄 NEXT** - API Endpoints - Water Objects (7 tasks)
 
 I've created a comprehensive OpenSpec change proposal to transform your current backend (Zamanbank API) into **GidroAtlas** - a water resource management system for Kazakhstan.
 
@@ -103,9 +107,59 @@ Comprehensive design document covering:
 - MODIFIED `/api/rag/query` endpoint for water queries
 - ADDED `/api/rag/explain-priority/{object_id}` convenience endpoint (expert-only)
 - Enhanced QueryRequest/QueryResponse schemas
-- Domain-specific formatting
+- Domain-specific response formatting
 - Error handling
 - Response caching
+
+## 🎯 Implementation Progress
+
+### ✅ Completed Phases
+
+#### Phase 1: Database Models & Schema (5/5 tasks) ✅
+
+- [x] WaterObject SQLAlchemy model with enums (ResourceType, WaterType, FaunaType, PriorityLevel)
+- [x] PassportText model with structured sections
+- [x] User model updated (guest/expert roles)
+- [x] Alembic migration created and applied
+- [x] Database indexes on key fields
+
+**Deliverables:**
+
+- `backend/models/water_object.py` (140 lines)
+- `backend/models/passport_text.py` (35 lines)
+- `backend/models/user.py` (modified with UserRole enum)
+- `backend/alembic/versions/933ade9f4842_*.py` (migration)
+- Database tables: `water_objects`, `passport_texts`, `users` with proper enums
+
+#### Phase 2: Core Business Logic (6/6 tasks) ✅
+
+- [x] Priority calculation: `(6 - technical_condition) * 3 + passport_age_years`
+- [x] Priority level mapping (HIGH ≥10, MEDIUM 6-9, LOW ≤5)
+- [x] WaterObjectService with CRUD operations
+- [x] Filtering (11 parameters: region, resource_type, water_type, fauna, technical_condition, priority, dates)
+- [x] Sorting (any field, asc/desc)
+- [x] Pagination helpers (limit/offset with total count)
+
+**Deliverables:**
+
+- `backend/services/objects/schemas.py` (150+ lines, 8 Pydantic schemas)
+- `backend/services/objects/service.py` (290+ lines, 10 methods)
+- Tested: 9 priority calculation tests ✅
+- Tested: 8 CRUD integration tests ✅
+
+### 🔄 Next Phase
+
+#### Phase 3: API Endpoints - Water Objects (0/7 tasks)
+
+- [ ] 3.1 Create `backend/services/objects/router.py`
+- [ ] 3.2 Implement `GET /objects` with filtering/sorting/pagination
+- [ ] 3.3 Role-based response (exclude priority for guests)
+- [ ] 3.4 Implement `GET /objects/{id}`
+- [ ] 3.5 Implement `GET /objects/{id}/passport`
+- [ ] 3.6 Create Pydantic schemas (already done in Phase 2)
+- [ ] 3.7 Add service layer business logic (already done in Phase 2)
+
+---
 
 ## ✅ Validation Results
 
