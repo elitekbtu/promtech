@@ -2,11 +2,11 @@
 
 ## 1. Database Models & Schema
 
-- [ ] 1.1 Create `WaterObject` SQLAlchemy model with all fields (name, region, resource_type, water_type, fauna, passport_date, technical_condition, lat/lon, pdf_url, priority, priority_level)
-- [ ] 1.2 Create `PassportText` model for storing passport document text with sections
-- [ ] 1.3 Modify `User` model role field from `admin`/`user` enum to `guest`/`expert`
-- [ ] 1.4 Create database migration script (Alembic) for new models
-- [ ] 1.5 Add indexes on frequently queried fields (region, resource_type, priority, technical_condition)
+- [x] 1.1 Create `WaterObject` SQLAlchemy model with all fields (name, region, resource_type, water_type, fauna, passport_date, technical_condition, lat/lon, pdf_url, priority, priority_level)
+- [x] 1.2 Create `PassportText` model for storing passport document text with sections
+- [x] 1.3 Modify `User` model role field from `admin`/`user` enum to `guest`/`expert`
+- [x] 1.4 Create database migration script (Alembic) for new models
+- [x] 1.5 Add indexes on frequently queried fields (region, resource_type, priority, technical_condition)
 
 ## 2. Core Business Logic
 

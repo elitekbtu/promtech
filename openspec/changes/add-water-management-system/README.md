@@ -16,7 +16,7 @@ I've created a comprehensive OpenSpec change proposal to transform your current 
 - What: Complete domain transformation with new models, APIs, roles, and AI capabilities
 - Impact: Breaking changes to roles, new water object domain, RAG customization
 
-### 2. **tasks.md** - Implementation Checklist (86 tasks)
+### 2. **tasks.md** - Implementation Checklist (82 tasks)
 
 Organized into 13 phases:
 
@@ -26,7 +26,7 @@ Organized into 13 phases:
 4. API Endpoints - Priorities (5 tasks)
 5. Authentication Updates (5 tasks)
 6. Passport Management (6 tasks)
-7. RAG System Customization (6 tasks)
+7. RAG System Customization (7 tasks)
 8. RAG Endpoint Enhancements (7 tasks)
 9. Data Seeding & Import (7 tasks)
 10. Configuration & Environment (6 tasks)
