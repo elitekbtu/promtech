@@ -29,11 +29,11 @@
 
 ## Phase 4: API Endpoints - Priorities
 
-- [ ] 4.1 Create `backend/services/priorities/router.py`
-- [ ] 4.2 Implement `GET /api/priorities/table` with expert-only protection
-- [ ] 4.3 Implement filtering/sorting specific to priority dashboard
-- [ ] 4.4 Create priority statistics endpoint (count by level)
-- [ ] 4.5 Create Pydantic schemas for priority responses
+- [x] 4.1 Create `backend/services/priorities/router.py`
+- [x] 4.2 Implement `GET /api/priorities/table` with expert-only protection
+- [x] 4.3 Implement filtering/sorting specific to priority dashboard
+- [x] 4.4 Create priority statistics endpoint (count by level)
+- [x] 4.5 Create Pydantic schemas for priority responses
 
 ## Phase 5: Authentication Updates
 

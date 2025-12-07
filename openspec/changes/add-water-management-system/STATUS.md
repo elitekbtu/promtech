@@ -1,17 +1,18 @@
 # GidroAtlas Implementation Status
 
 **Last Updated:** December 7, 2025  
-**Status:** 🚧 In Progress (Phase 3/13 Complete)
+**Status:** 🚧 In Progress (Phase 4/13 Complete)
 
 ## 📊 Overall Progress
 
 - ✅ **Phase 1:** Database Models & Schema - **COMPLETE** (5/5 tasks)
 - ✅ **Phase 2:** Core Business Logic - **COMPLETE** (6/6 tasks)
 - ✅ **Phase 3:** API Endpoints - Water Objects - **COMPLETE** (7/7 tasks)
-- 🔄 **Phase 4:** API Endpoints - Priorities - **NEXT** (0/5 tasks)
-- ⏳ **Phases 5-13:** Not started (64 tasks remaining)
+- ✅ **Phase 4:** API Endpoints - Priorities - **COMPLETE** (5/5 tasks)
+- 🔄 **Phase 5:** Authentication Updates - **NEXT** (0/5 tasks)
+- ⏳ **Phases 6-13:** Not started (59 tasks remaining)
 
-**Total:** 18/82 tasks complete (22.0%)
+**Total:** 23/82 tasks complete (28.0%)
 
 ---
 
@@ -186,35 +187,116 @@ backend/main.py (updated)
 ### API Features:
 
 #### Role-Based Access:
+
 - **Guest users:** See basic water object info (no priority data)
 - **Expert users:** See full details including priority scores/levels
 - **Expert-only endpoints:** Create, update, delete operations
 
 #### Filtering System (11 parameters):
+
 - region, resource_type, water_type, fauna
 - min/max technical_condition, min/max priority (expert only)
 - priority_level (expert only), passport_date_from/to
 
 #### Pagination & Sorting:
+
 - limit: 1-100 items per page (default 100)
 - offset, sort_by (any field), sort_order (asc/desc)
 
 #### Response Codes:
+
 - `200 OK`, `201 Created`, `204 No Content`
 - `403 Forbidden` (guest → expert endpoint)
 - `404 Not Found` (object doesn't exist)
 
 ---
 
-## 🔄 Phase 4: API Endpoints - Priorities (NEXT)
+## ✅ Phase 4: API Endpoints - Priorities
+
+### Tasks Completed:
+
+1. ✅ Created `backend/services/priorities/router.py` with APIRouter
+2. ✅ Implemented `GET /api/priorities/table` (expert-only, paginated)
+3. ✅ Implemented filtering/sorting (5 filters, priority desc default)
+4. ✅ Created `GET /api/priorities/statistics` endpoint
+5. ✅ Created 5 Pydantic schemas for priority responses
+
+### Deliverables:
+
+```
+backend/services/priorities/
+├── __init__.py
+├── schemas.py (100+ lines)
+│   ├── PriorityStatistics (statistics response)
+│   ├── PriorityTableItem (table row)
+│   ├── PriorityTableResponse (paginated table)
+│   ├── PriorityFilter (filter options)
+│   └── Examples with Kazakh water object names
+└── router.py (200+ lines)
+    ├── APIRouter with prefix="/priorities"
+    ├── require_expert() dependency
+    ├── GET /priorities/statistics (count by level)
+    ├── GET /priorities/table (dashboard table)
+    └── GET /priorities/top (top N urgent objects)
+
+backend/main.py (updated)
+└── Register priorities_router with prefix="/api"
+```
+
+### API Features:
+
+#### Priority Statistics Endpoint:
+
+```python
+GET /api/priorities/statistics
+Response: {
+  "high": 15,
+  "medium": 23,
+  "low": 42,
+  "total": 80
+}
+```
+
+#### Priority Dashboard Table:
+
+```python
+GET /api/priorities/table
+Query Parameters:
+- priority_level: high/medium/low
+- min_priority, max_priority: int
+- region, resource_type: str
+- limit (1-100, default 50)
+- offset (default 0)
+- sort_by (default "priority")
+- sort_order (default "desc" for most urgent first)
+
+Response: Paginated list with priority information
+```
+
+#### Top Priorities Endpoint:
+
+```python
+GET /api/priorities/top?count=10
+Response: Top N objects sorted by priority (desc)
+```
+
+#### Security:
+
+- **All endpoints require expert role**
+- Guests receive 403 Forbidden with descriptive message
+- Uses require_expert() dependency for consistent protection
+
+---
+
+## 🔄 Phase 5: Authentication Updates (NEXT)
 
 ### Planned Tasks:
 
-1. ⏳ Create `backend/services/priorities/router.py`
-2. ⏳ Implement `GET /api/priorities/table` (expert-only)
-3. ⏳ Implement filtering/sorting for priority dashboard
-4. ⏳ Create priority statistics endpoint
-5. ⏳ Create Pydantic schemas for priority responses
+1. ⏳ Update `backend/services/auth/schemas.py` role enum to `guest`/`expert`
+2. ⏳ Modify login endpoint to return JWT with new role field
+3. ⏳ Update `UserRead` schema to reflect new role values
+4. ⏳ Create role validation dependencies (`get_current_user_role`, `require_expert`)
+5. ⏳ Update user registration to default to `guest` role
 
 ---
 
