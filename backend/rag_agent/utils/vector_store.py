@@ -198,78 +198,26 @@ class VectorStoreManager:
     
     def process_documents(self, documents: List[Document]) -> List[Document]:
         """
-        Process documents with parent-child chunking for better context preservation.
-        Best practice: Hierarchical chunking для сохранения контекста.
+        Process documents by splitting them into chunks with enhanced metadata.
         
         Args:
             documents: List of documents to process
             
         Returns:
-            List[Document]: List of processed document chunks with parent-child relationships
+            List[Document]: List of processed document chunks
         """
         if not documents:
             logger.warning("No documents to process")
             return []
         
-        logger.info("Processing documents with parent-child chunking...")
+        logger.info("Processing documents into chunks...")
         try:
-            all_chunks = []
-            
-            # Обрабатываем каждый документ отдельно для parent-child структуры
-            for doc in documents:
-                # Сначала создаем большие родительские чанки
-                parent_chunks = self.text_splitter.split_documents([doc])
-                
-                # Затем разбиваем каждый родительский чанк на маленькие дочерние
-                for parent_idx, parent_chunk in enumerate(parent_chunks):
-                    parent_content = parent_chunk.page_content
-                    
-                    # Всегда создаем child chunks для лучшего контекста
-                    # Если родительский чанк больше базового размера, разбиваем на дочерние
-                    if len(parent_content) > self.chunk_size:
-                        # Создаем маленький splitter для дочерних чанков (меньше размер для более точного поиска)
-                        child_chunk_size = max(150, self.chunk_size // 2)  # Дочерние чанки в 2 раза меньше
-                        child_splitter = RecursiveCharacterTextSplitter(
-                            chunk_size=child_chunk_size,
-                            chunk_overlap=self.chunk_overlap // 2,
-                            separators=[". ", "\n", "; ", ", ", " ", ""]
-                        )
-                        child_chunks = child_splitter.split_text(parent_content)
-                        
-                        # Создаем дочерние чанки с ссылками на родителя
-                        for child_idx, child_content in enumerate(child_chunks):
-                            if len(child_content.strip()) < 20:  # Пропускаем слишком маленькие чанки
-                                continue
-                                
-                            child_chunk = Document(
-                                page_content=child_content.strip(),
-                                metadata=parent_chunk.metadata.copy()
-                            )
-                            
-                            # Добавляем parent-child метаданные
-                            child_chunk.metadata.update({
-                                "parent_chunk_index": parent_idx,
-                                "child_chunk_index": child_idx,
-                                "total_child_chunks": len(child_chunks),
-                                "is_child": True,
-                                "is_parent": False,
-                                "parent_content_preview": parent_content[:300] + "..." if len(parent_content) > 300 else parent_content
-                            })
-                            
-                            all_chunks.append(child_chunk)
-                    else:
-                        # Маленький чанк - используем как есть, но помечаем как parent
-                        parent_chunk.metadata.update({
-                            "parent_chunk_index": parent_idx,
-                            "is_child": False,
-                            "is_parent": True
-                        })
-                        all_chunks.append(parent_chunk)
-            
-            logger.info(f"Created {len(all_chunks)} chunks with parent-child structure")
+            # Split documents into chunks
+            chunks = self.text_splitter.split_documents(documents)
+            logger.info(f"Created {len(chunks)} document chunks")
             
             # Enhanced metadata for better retrieval
-            for i, chunk in enumerate(all_chunks):
+            for i, chunk in enumerate(chunks):
                 # Get source information
                 source = chunk.metadata.get('source', 'Unknown')
                 filename = chunk.metadata.get('filename', 'Unknown')
@@ -278,45 +226,23 @@ class VectorStoreManager:
                 # Add enhanced metadata
                 chunk.metadata.update({
                     "chunk_id": i,
-                    "total_chunks": len(all_chunks),
+                    "total_chunks": len(chunks),
                     "chunk_index": i,
                     "source_file": filename,
                     "document_type": document_type,
                     "chunk_length": len(chunk.page_content),
-                    "word_count": len(chunk.page_content.split()),
                     "is_pdf": document_type == 'pdf',
                     "processed": True
                 })
                 
-                # Add content preview
+                # Add content preview for debugging
                 chunk.metadata["content_preview"] = chunk.page_content[:100] + "..." if len(chunk.page_content) > 100 else chunk.page_content
             
-            # Статистика
-            child_count = sum(1 for c in all_chunks if c.metadata.get('is_child', False))
-            parent_count = len(all_chunks) - child_count
-            logger.info(f"Chunking stats: {parent_count} parent chunks, {child_count} child chunks")
-            
-            return all_chunks
+            return chunks
             
         except Exception as e:
             logger.error(f"Error processing documents: {e}")
             return []
-    
-    def _get_parent_context(self, chunk: Dict[str, Any]) -> Optional[str]:
-        """
-        Получает контекст родительского чанка для дочернего.
-        
-        Args:
-            chunk: Дочерний чанк
-            
-        Returns:
-            Optional[str]: Контекст родителя или None
-        """
-        if not chunk.get('metadata', {}).get('is_child', False):
-            return None
-        
-        parent_preview = chunk.get('metadata', {}).get('parent_content_preview')
-        return parent_preview
     
     def create_vector_store(self, documents: List[Document]) -> bool:
         """
@@ -409,49 +335,9 @@ class VectorStoreManager:
             logger.error(f"Error loading vector store: {e}")
             return False
     
-    def _preprocess_query(self, query: str) -> str:
-        """
-        Улучшенная предобработка запроса для лучшего поиска.
-        Нормализация, обработка технических терминов, синонимы.
-        
-        Args:
-            query: Исходный запрос
-            
-        Returns:
-            str: Обработанный запрос
-        """
-        # Нормализация: убираем лишние пробелы, приводим к нижнему регистру для анализа
-        normalized = query.strip()
-        
-        # Технические термины GidroAtlas - добавляем синонимы
-        gidro_terms = {
-            'объект': ['объект', 'водоем', 'сооружение', 'гидротехническое сооружение'],
-            'паспорт': ['паспорт', 'документ', 'характеристика', 'описание'],
-            'состояние': ['состояние', 'техническое состояние', 'категория', 'статус'],
-            'водоем': ['водоем', 'озеро', 'водохранилище', 'канал', 'водный ресурс'],
-            'область': ['область', 'регион', 'район'],
-            'координаты': ['координаты', 'местоположение', 'расположение', 'географическое положение']
-        }
-        
-        # Добавляем контекстные ключевые слова для лучшего поиска
-        query_lower = normalized.lower()
-        expanded_terms = [normalized]
-        
-        for term, synonyms in gidro_terms.items():
-            if term in query_lower:
-                # Добавляем синонимы если основной термин найден
-                expanded_terms.extend(synonyms[:2])  # Берем первые 2 синонима
-        
-        # Объединяем с оригинальным запросом
-        if len(expanded_terms) > 1:
-            enhanced_query = f"{normalized} {' '.join(set(expanded_terms[1:]))}"
-            return enhanced_query
-        
-        return normalized
-    
     def _expand_query_with_hyde(self, query: str) -> str:
         """
-        Улучшенный HyDE с контекстом GidroAtlas для максимального качества.
+        Expand query using HyDE (Hypothetical Document Embeddings).
         Generate a hypothetical answer to improve search quality.
         
         Args:
@@ -464,36 +350,19 @@ class VectorStoreManager:
             return query
         
         try:
-            # Улучшенный prompt с контекстом GidroAtlas
-            hyde_prompt = f"""You are an expert on GidroAtlas - a water resources and hydrotechnical structures management system in Kazakhstan.
-
-Given the following question about water resources, hydrotechnical structures, object passports, or system functionality, write a detailed, factual answer as if you were responding from the GidroAtlas knowledge base.
-
-Context: The system contains information about:
-- Water resources (lakes, reservoirs, canals)
-- Hydrotechnical structures (locks, hydroelectric facilities)
-- Object passports with technical characteristics
-- Geographic locations and coordinates
-- Technical conditions (categories 1-5)
-- Biological characteristics (fauna, flora)
-- System functionality and specifications
+            hyde_prompt = f"""Given the following question, write a detailed, factual answer as if you were responding from a company knowledge base.
+Keep it concise (2-3 sentences) and focused on facts.
 
 Question: {query}
-
-Write a comprehensive 3-4 sentence answer that includes:
-1. Direct answer to the question
-2. Relevant technical details
-3. Related information that would be found in the knowledge base
-4. Specific terminology used in the system
 
 Answer:"""
             
             response = self.reranker_llm.invoke(hyde_prompt)
             hypothetical_answer = response.content.strip()
             
-            # Объединяем оригинальный запрос с гипотетическим ответом
+            # Combine original query with hypothetical answer
             expanded_query = f"{query} {hypothetical_answer}"
-            logger.info(f"Query expanded with enhanced HyDE (original: {len(query)} chars, expanded: {len(expanded_query)} chars)")
+            logger.info(f"Query expanded with HyDE (original: {len(query)} chars, expanded: {len(expanded_query)} chars)")
             
             return expanded_query
             
@@ -545,8 +414,8 @@ Answer:"""
             return []
         
         try:
-            # Get more candidates for combination (увеличено для лучшего покрытия)
-            fetch_k = k * 5
+            # Get more candidates for combination
+            fetch_k = k * 3
             
             # 1. Vector search
             vector_results = self.vector_store.similarity_search_with_score(query, k=fetch_k)
@@ -624,8 +493,7 @@ Answer:"""
     
     def _rerank_results(self, query: str, results: List[Dict[str, Any]], top_k: int = 5) -> List[Dict[str, Any]]:
         """
-        Advanced reranking with improved scoring and normalization.
-        Best practice: Multi-criteria reranking with proper score normalization.
+        Rerank search results using Gemini for improved relevance.
         
         Args:
             query: Original search query
@@ -639,474 +507,62 @@ Answer:"""
             return results[:top_k]
         
         try:
-            # Улучшенный prompt для более точного reranking
+            # Prepare reranking prompt
             docs_text = "\n\n".join([
-                f"--- Document {i+1} ---\n{r['content'][:800]}{'...' if len(r['content']) > 800 else ''}"
+                f"Document {i+1}:\n{r['content'][:500]}..."  # Limit to 500 chars for efficiency
                 for i, r in enumerate(results)
             ])
             
-            rerank_prompt = f"""You are an expert at evaluating document relevance for technical documentation and knowledge bases. Given a user query and candidate documents, score each document's relevance on a scale of 0-10.
+            rerank_prompt = f"""Given the user query and candidate documents, score each document's relevance to the query on a scale of 0-10.
+Output ONLY a Python list of scores, nothing else. Format: [score1, score2, score3, ...]
 
-Context: This is a RAG system for GidroAtlas - a water resources and hydrotechnical structures management system. Documents contain technical specifications, object passports, and system documentation.
+Query: {query}
 
-Scoring guidelines (be VERY GENEROUS but accurate):
-- 9-10: Highly relevant, directly answers the query with specific, detailed information. Perfect match.
-- 7-8: Very relevant, contains important related information that helps answer the query. Strong match.
-- 5-6: Moderately relevant, contains some useful related information. Good match.
-- 3-4: Somewhat relevant, tangentially related but may provide context. Weak match.
-- 1-2: Low relevance, minimal connection to query. Poor match.
-- 0: Not relevant at all. No match.
-
-CRITICAL INSTRUCTIONS (MAXIMUM GENEROSITY):
-1. Be EXTREMELY GENEROUS with scores. If a document contains ANY information related to the query (even tangentially), give it at least 8.
-2. For technical documents: If the document mentions keywords from the query, give it at least 9.
-3. For partial matches: If the document covers part of the query topic, give it at least 7.
-4. For top results (first 3 documents): Give them 9-10 if they are at all relevant.
-5. Only use scores below 7 if the document is completely irrelevant to the query.
-6. For documents about water resources, hydrotechnical structures, objects, passports - give 9-10 if query is related.
-7. Default minimum score for any relevant document: 8.0
-8. Aim for scores in the 8-10 range for relevant documents.
-
-User Query: {query}
-
-Documents to score:
+Documents:
 {docs_text}
 
-Output ONLY a Python list of scores in the exact format: [score1, score2, score3, ...]
-Each score should be a number between 0 and 10. Do not include any other text, explanations, or formatting.
-
-Example output: [7.5, 8.0, 6.5, 5.0, 4.5]
-
-Scores:"""
+Scores (0-10):"""
             
             # Get reranking scores
             response = self.reranker_llm.invoke(rerank_prompt)
             scores_text = response.content.strip()
             
-            # Логируем raw response для отладки
-            logger.debug(f"Reranking raw response: {scores_text[:200]}")
-            
-            # Улучшенный парсинг скоров с множественными стратегиями
+            # Parse scores
             import ast
-            import re
-            import json
-            scores = []
-            
-            # Стратегия 1: Пробуем парсить как Python список
             try:
-                parsed = ast.literal_eval(scores_text)
-                if isinstance(parsed, list):
-                    scores = [float(s) for s in parsed]
-                    logger.debug(f"Parsed as Python list: {scores}")
-                elif isinstance(parsed, (int, float)):
-                    scores = [float(parsed)]
+                scores = ast.literal_eval(scores_text)
+                if not isinstance(scores, list):
+                    raise ValueError("Not a list")
             except:
-                pass
+                # Fallback: try to extract numbers
+                import re
+                scores = [float(s) for s in re.findall(r'\d+\.?\d*', scores_text)]
             
-            # Стратегия 2: Пробуем JSON
-            if not scores:
-                try:
-                    # Убираем markdown code blocks если есть
-                    cleaned = scores_text.strip()
-                    if cleaned.startswith('```'):
-                        cleaned = cleaned.split('```')[1]
-                        if cleaned.startswith('json') or cleaned.startswith('python'):
-                            cleaned = cleaned.split('\n', 1)[1]
-                    if cleaned.endswith('```'):
-                        cleaned = cleaned.rsplit('```', 1)[0]
-                    
-                    parsed = json.loads(cleaned)
-                    if isinstance(parsed, list):
-                        scores = [float(s) for s in parsed]
-                        logger.debug(f"Parsed as JSON list: {scores}")
-                except:
-                    pass
+            # Ensure we have correct number of scores
+            if len(scores) != len(results):
+                logger.warning(f"Reranking returned {len(scores)} scores for {len(results)} documents. Using original ranking.")
+                return results[:top_k]
             
-            # Стратегия 3: Извлекаем все числа и фильтруем
-            if not scores:
-                numbers = re.findall(r'\d+\.?\d*', scores_text)
-                potential_scores = [float(n) for n in numbers if 0 <= float(n) <= 10]
-                # Берем первые N чисел где N = количество результатов
-                if len(potential_scores) >= len(results):
-                    scores = potential_scores[:len(results)]
-                    logger.debug(f"Extracted numbers: {scores}")
-                elif potential_scores:
-                    # Если чисел меньше, дублируем последнее
-                    scores = potential_scores + [potential_scores[-1]] * (len(results) - len(potential_scores))
-                    logger.debug(f"Extended scores: {scores}")
-            
-            # Если не получилось распарсить, используем улучшенные оценки на основе similarity
-            if not scores or len(scores) != len(results):
-                logger.warning(f"Reranking parsing failed (got {len(scores)} scores for {len(results)} results). Using enhanced similarity-based scores.")
-                logger.warning(f"Raw response was: {scores_text[:300]}")
-                # Создаем более щедрые оценки на основе similarity scores
-                for result in results:
-                    sim = result.get('similarity_score', 1.0)
-                    hybrid = result.get('hybrid_score', 0)
-                    
-                    # Преобразуем distance в score (меньше distance = выше score)
-                    # Очень щедрая нормализация для технических документов
-                    normalized_sim = max(0, min(10, 10 * (1 - min(sim, 1.0))))
-                    
-                    # Учитываем hybrid_score если есть
-                    if hybrid > 0:
-                        hybrid_score = hybrid * 10
-                        # Берем максимум из similarity и hybrid
-                        final_score = max(normalized_sim, hybrid_score * 0.9)
-                    else:
-                        final_score = normalized_sim
-                    
-                    # Максимально щедрый минимум для технических документов - целевой 9.5
-                    if sim < 0.5:  # Отличная similarity
-                        final_score = 9.5  # Целевой score 9.5
-                    elif sim < 0.7:  # Хорошая similarity
-                        final_score = max(9.5, final_score)  # Целевой score 9.5
-                    elif sim < 1.0:  # Средняя similarity
-                        final_score = max(8.5, final_score)  # Минимум 8.5
-                    elif sim < 1.5:  # Слабая similarity
-                        final_score = max(7.5, final_score)  # Минимум 7.5
-                    
-                    scores.append(final_score)
-                logger.info(f"Generated fallback scores: {scores}")
-            
-            # Агрессивная нормализация и boost для максимальных скоров
-            normalized_scores = []
-            for i, s in enumerate(scores):
-                score = max(0, min(10, float(s)))
-                
-                # Агрессивный boost для всех скоров
-                if i < len(results):
-                    result = results[i]
-                    sim = result.get('similarity_score', 1.0)
-                    hybrid = result.get('hybrid_score', 0)
-                    
-                    # Если similarity хорошая, boost rerank score - целевой 9.5
-                    if sim < 0.7:  # Хорошая similarity
-                        # Для топ результатов даем максимальный boost
-                        if i < 3:  # Топ-3 результата
-                            score = max(score, 9.5)  # Целевой score 9.5 для топ-3
-                        elif sim < 0.5:  # Отличная similarity
-                            score = max(score, 9.0)  # Минимум 9
-                        else:
-                            score = max(score, 8.0)  # Минимум 8
-                    elif sim < 1.0:  # Средняя similarity
-                        score = max(score, 7.0)  # Минимум 7
-                    
-                    # Дополнительный boost на основе hybrid score
-                    if hybrid > 0.6:
-                        score = min(10, score + 1.5)  # +1.5 за хороший hybrid
-                    elif hybrid > 0.4:
-                        score = min(10, score + 1.0)  # +1.0 за средний hybrid
-                
-                normalized_scores.append(score)
-            scores = normalized_scores
-            
-            # Улучшенная комбинация скоров
+            # Combine scores with results
             for i, result in enumerate(results):
-                rerank_score = scores[i] if i < len(scores) else 6.0  # Default 6 вместо 5
-                result['rerank_score'] = rerank_score
-                
-                # Нормализуем similarity score (distance -> similarity, 0-1)
-                sim_distance = result.get('similarity_score', 1.0)
-                # FAISS distance: меньше = лучше, нормализуем к 0-1
-                normalized_sim = max(0, min(1, 1 / (1 + sim_distance)))
-                
-                # Используем hybrid_score если есть
-                hybrid = result.get('hybrid_score', normalized_sim)
-                
-                # Агрессивная комбинация для максимальных скоров
-                # Используем взвешенное среднее с приоритетом rerank
-                base_combined = (rerank_score / 10) * 0.8 + hybrid * 0.2
-                
-                # Агрессивные бонусы за высокую релевантность
-                if rerank_score >= 9:
-                    base_combined = min(1.0, base_combined * 1.2)  # Максимальный бонус
-                elif rerank_score >= 8:
-                    base_combined = min(1.0, base_combined * 1.15)  # Большой бонус
-                elif rerank_score >= 7:
-                    base_combined = min(1.0, base_combined * 1.1)   # Средний бонус
-                elif rerank_score >= 6:
-                    base_combined = min(1.0, base_combined * 1.05)   # Небольшой бонус
-                
-                # Дополнительные бонусы
-                if normalized_sim > 0.8:
-                    base_combined = min(1.0, base_combined * 1.1)  # Отличная similarity
-                elif normalized_sim > 0.6:
-                    base_combined = min(1.0, base_combined * 1.05)  # Хорошая similarity
-                
-                # Бонус за топ позицию
-                if i == 0:  # Первый результат
-                    base_combined = min(1.0, base_combined * 1.1)
-                elif i < 3:  # Топ-3
-                    base_combined = min(1.0, base_combined * 1.05)
-                
-                result['combined_score'] = base_combined
-                result['normalized_similarity'] = normalized_sim
+                result['rerank_score'] = scores[i]
+                # Combine vector similarity and rerank score
+                result['combined_score'] = (1 - result['similarity_score']) * 0.4 + (scores[i] / 10) * 0.6
             
-            # Сортируем по combined_score
+            # Sort by combined score (descending)
             reranked = sorted(results, key=lambda x: x.get('combined_score', 0), reverse=True)
             
-            # Логируем статистику
-            top_score = reranked[0].get('combined_score', 0) if reranked else 0
-            avg_rerank = sum(r.get('rerank_score', 0) for r in reranked) / len(reranked) if reranked else 0
-            min_rerank = min(r.get('rerank_score', 0) for r in reranked) if reranked else 0
-            max_rerank = max(r.get('rerank_score', 0) for r in reranked) if reranked else 0
-            
-            logger.info(f"Reranking completed. Top combined: {top_score:.3f}, Rerank scores: avg={avg_rerank:.1f}, min={min_rerank:.1f}, max={max_rerank:.1f}/10")
-            
-            # Агрессивный boost для всех результатов чтобы получить максимальные скоры
-            if reranked:
-                logger.info(f"Applying aggressive boost for maximum scores (current avg={avg_rerank:.1f})")
-                for i, result in enumerate(reranked):
-                    sim = result.get('similarity_score', 1.0)
-                    current_rerank = result.get('rerank_score', 0)
-                    hybrid = result.get('hybrid_score', 0)
-                    
-                    # Агрессивный boost для топ результатов - целевой score 9.5
-                    if i == 0:  # Первый результат - целевой 9.5
-                        if sim < 0.5:  # Отличная similarity
-                            boosted_rerank = 10.0  # Целевой score 9.5
-                        elif sim < 0.7:
-                            boosted_rerank = max(current_rerank, 1)  # Целевой score 9.5
-                        else:
-                            boosted_rerank = max(current_rerank, 9.0)
-                    elif i < 3:  # Топ-3
-                        if sim < 0.5:
-                            boosted_rerank = max(current_rerank, 9.0)
-                        elif sim < 0.7:
-                            boosted_rerank = max(current_rerank, 8.5)
-                        else:
-                            boosted_rerank = max(current_rerank, 8.0)
-                    else:  # Остальные
-                        if sim < 0.5:
-                            boosted_rerank = max(current_rerank, 8.0)
-                        elif sim < 0.7:
-                            boosted_rerank = max(current_rerank, 7.0)
-                        else:
-                            boosted_rerank = max(current_rerank, 6.0)
-                    
-                    # Дополнительный boost на основе hybrid
-                    if hybrid > 0.7:
-                        boosted_rerank = min(10.0, boosted_rerank + 1.0)
-                    elif hybrid > 0.5:
-                        boosted_rerank = min(10.0, boosted_rerank + 0.5)
-                    
-                    result['rerank_score'] = boosted_rerank
-                    
-                    # Пересчитываем combined_score с новым rerank
-                    normalized_sim = max(0, min(1, 1 / (1 + sim)))
-                    base_combined = (boosted_rerank / 10) * 0.8 + hybrid * 0.2
-                    
-                    # Максимальные бонусы
-                    if boosted_rerank >= 9:
-                        base_combined = min(1.0, base_combined * 1.2)
-                    elif boosted_rerank >= 8:
-                        base_combined = min(1.0, base_combined * 1.15)
-                    elif boosted_rerank >= 7:
-                        base_combined = min(1.0, base_combined * 1.1)
-                    
-                    if i == 0:
-                        base_combined = min(1.0, base_combined * 1.1)  # Дополнительный бонус для топ-1
-                    
-                    result['combined_score'] = base_combined
-                
-                # Пересортируем после boost
-                reranked = sorted(reranked, key=lambda x: x.get('combined_score', 0), reverse=True)
-                new_avg = sum(r.get('rerank_score', 0) for r in reranked) / len(reranked)
-                new_max = max(r.get('rerank_score', 0) for r in reranked)
-                logger.info(f"After aggressive boost: new avg={new_avg:.1f}, max={new_max:.1f}/10")
-            
+            logger.info(f"Reranking completed. Top score: {reranked[0].get('combined_score', 0):.3f}")
             return reranked[:top_k]
             
         except Exception as e:
             logger.warning(f"Reranking failed: {e}. Using original ranking.")
-            # Fallback: сортируем по hybrid_score или similarity
-            sorted_results = sorted(results, 
-                                  key=lambda x: x.get('hybrid_score', 1 - x.get('similarity_score', 1.0)), 
-                                  reverse=True)
-            return sorted_results[:top_k]
-    
-    def _generate_multi_queries(self, query: str, num_queries: int = 3) -> List[str]:
-        """
-        Генерирует несколько вариантов запроса с учетом контекста GidroAtlas.
-        Best practice: Multi-Query Retrieval с улучшенной генерацией.
-        
-        Args:
-            query: Исходный запрос
-            num_queries: Количество вариантов запроса
-            
-        Returns:
-            List[str]: Список вариантов запроса
-        """
-        if not self.reranker_llm:
-            return [query]
-        
-        try:
-            # Улучшенный prompt с контекстом GidroAtlas
-            prompt = f"""You are helping generate search query variations for GidroAtlas - a water resources management system.
-
-Given the following question about water resources, hydrotechnical structures, or system functionality, generate {num_queries} different ways to ask this question.
-
-Context: The system contains information about:
-- Water resources (lakes, reservoirs, canals) - озера, водохранилища, каналы
-- Hydrotechnical structures (locks, hydroelectric facilities) - шлюзы, гидроузлы
-- Object passports - паспорта объектов
-- Technical characteristics - технические характеристики
-- Geographic data - географические данные
-- System functionality - функциональность системы
-
-Each variation should:
-1. Use different keywords and phrasing (Russian/English technical terms)
-2. Focus on different aspects of the question
-3. Include relevant technical terminology
-4. Be specific and searchable
-5. Consider synonyms and related terms
-
-Original question: {query}
-
-Generate {num_queries} variations, one per line, no numbering. Each variation should be a complete, searchable query:"""
-            
-            response = self.reranker_llm.invoke(prompt)
-            variations = [line.strip() for line in response.content.strip().split('\n') if line.strip()]
-            
-            # Фильтруем пустые и слишком короткие варианты
-            variations = [v for v in variations if len(v) > 10 and v != query]
-            
-            # Добавляем оригинальный запрос
-            all_queries = [query] + variations[:num_queries-1]
-            logger.info(f"Generated {len(all_queries)} enhanced query variations")
-            return all_queries
-            
-        except Exception as e:
-            logger.warning(f"Multi-query generation failed: {e}. Using original query.")
-            return [query]
-    
-    def _ensure_source_diversity(self, results: List[Dict[str, Any]], k: int, 
-                                  min_sources: int = 3) -> List[Dict[str, Any]]:
-        """
-        Обеспечивает разнообразие источников в результатах.
-        Best practice: Source Diversity для лучшего покрытия файлов.
-        
-        Args:
-            results: Список результатов поиска
-            k: Количество результатов для возврата
-            min_sources: Минимальное количество разных источников
-            
-        Returns:
-            List[Dict]: Результаты с гарантированным разнообразием источников
-        """
-        if not results:
-            return []
-        
-        # Группируем по источникам
-        source_groups = {}
-        for result in results:
-            source = result.get('metadata', {}).get('source_file', 'unknown')
-            if source not in source_groups:
-                source_groups[source] = []
-            source_groups[source].append(result)
-        
-        # Выбираем лучшие результаты из каждого источника
-        diverse_results = []
-        sources_used = set()
-        
-        # Сначала берем топ-1 из каждого источника
-        for source, source_results in source_groups.items():
-            if len(diverse_results) < k and source_results:
-                best_from_source = max(source_results, 
-                                      key=lambda x: x.get('hybrid_score', x.get('similarity_score', 0)))
-                diverse_results.append(best_from_source)
-                sources_used.add(source)
-        
-        # Если еще есть место, добавляем остальные лучшие результаты
-        remaining = [r for r in results if r not in diverse_results]
-        remaining.sort(key=lambda x: x.get('hybrid_score', x.get('similarity_score', 0)), reverse=True)
-        
-        for result in remaining:
-            if len(diverse_results) >= k:
-                break
-            diverse_results.append(result)
-        
-        logger.info(f"Source diversity: {len(sources_used)} unique sources in {len(diverse_results)} results")
-        return diverse_results[:k]
-    
-    def _merge_similar_chunks(self, results: List[Dict[str, Any]], 
-                              similarity_threshold: float = 0.8) -> List[Dict[str, Any]]:
-        """
-        Объединяет похожие чанки из одного источника для лучшего контекста.
-        Best practice: Contextual Compression.
-        
-        Args:
-            results: Список результатов
-            similarity_threshold: Порог для объединения
-            
-        Returns:
-            List[Dict]: Объединенные результаты
-        """
-        if not results:
-            return []
-        
-        merged = []
-        used_indices = set()
-        
-        for i, result in enumerate(results):
-            if i in used_indices:
-                continue
-            
-            # Ищем похожие чанки из того же источника
-            source = result.get('metadata', {}).get('source_file', '')
-            similar_chunks = [result]
-            
-            for j, other in enumerate(results[i+1:], start=i+1):
-                if j in used_indices:
-                    continue
-                
-                other_source = other.get('metadata', {}).get('source_file', '')
-                if source == other_source:
-                    # Проверяем близость по индексу чанка
-                    idx1 = result.get('metadata', {}).get('chunk_index', -1)
-                    idx2 = other.get('metadata', {}).get('chunk_index', -1)
-                    
-                    # Увеличено расстояние для объединения (до 3 вместо 2)
-                    if abs(idx1 - idx2) <= 3:  # Соседние чанки
-                        similar_chunks.append(other)
-                        used_indices.add(j)
-            
-            # Улучшенное объединение с сохранением структуры
-            if len(similar_chunks) > 1:
-                # Сортируем по chunk_index для правильного порядка
-                similar_chunks.sort(key=lambda x: x.get('metadata', {}).get('chunk_index', 0))
-                
-                # Объединяем с разделителями для читаемости
-                combined_content = "\n\n---\n\n".join([chunk['content'] for chunk in similar_chunks])
-                
-                # Берем лучшие скоры из всех объединенных чанков
-                best_sim = min(chunk.get('similarity_score', 1.0) for chunk in similar_chunks)  # Меньше = лучше
-                best_hybrid = max(chunk.get('hybrid_score', 0) for chunk in similar_chunks)  # Больше = лучше
-                
-                merged_result = {
-                    'content': combined_content,
-                    'metadata': result['metadata'].copy(),
-                    'similarity_score': best_sim,
-                    'hybrid_score': best_hybrid,
-                    'merged_chunks': len(similar_chunks),
-                    'chunk_indices': [chunk.get('metadata', {}).get('chunk_index') for chunk in similar_chunks],
-                    'total_merged_length': sum(len(chunk.get('content', '')) for chunk in similar_chunks)
-                }
-                merged.append(merged_result)
-            else:
-                merged.append(result)
-            
-            used_indices.add(i)
-        
-        return merged
+            return results[:top_k]
     
     def search_documents(self, query: str, k: int = 5, use_reranking: bool = True, 
-                        use_hyde: bool = True, use_hybrid: bool = True,
-                        use_multi_query: bool = True, ensure_diversity: bool = True,
-                        merge_context: bool = True) -> List[Dict[str, Any]]:
+                        use_hyde: bool = True, use_hybrid: bool = True) -> List[Dict[str, Any]]:
         """
-        Advanced search with best practices: Multi-Query, Source Diversity, Context Merging.
+        Search for similar documents with advanced features: HyDE, Hybrid Search, and Reranking.
         
         Args:
             query: Search query
@@ -1114,9 +570,6 @@ Generate {num_queries} variations, one per line, no numbering. Each variation sh
             use_reranking: Whether to use Gemini reranking
             use_hyde: Whether to use HyDE query expansion
             use_hybrid: Whether to use hybrid search (BM25 + Vector)
-            use_multi_query: Whether to use multi-query retrieval (best practice)
-            ensure_diversity: Whether to ensure source diversity (best practice)
-            merge_context: Whether to merge similar chunks from same source (best practice)
             
         Returns:
             List[Dict]: List of search results with metadata
@@ -1126,130 +579,39 @@ Generate {num_queries} variations, one per line, no numbering. Each variation sh
             return []
         
         try:
-            all_results = []
+            # Step 1: Query Expansion with HyDE
+            search_query = query
+            if use_hyde and self.reranker_llm:
+                search_query = self._expand_query_with_hyde(query)
             
-            # Step 0: Предобработка запроса для лучшего поиска
-            preprocessed_query = self._preprocess_query(query)
-            logger.debug(f"Query preprocessing: '{query}' -> '{preprocessed_query}'")
-            
-            # Step 1: Multi-Query Retrieval (best practice)
-            if use_multi_query and self.reranker_llm:
-                queries = self._generate_multi_queries(preprocessed_query, num_queries=4)  # Увеличено до 4
-                logger.info(f"Multi-query retrieval: searching with {len(queries)} query variations")
+            # Step 2: Perform search (Hybrid or Vector only)
+            if use_hybrid and self.bm25:
+                # Hybrid search (BM25 + Vector)
+                formatted_results = self._hybrid_search(search_query, k=k, vector_weight=0.6)
             else:
-                queries = [preprocessed_query]
-            
-            # Step 2: Search with each query variation
-            for search_query in queries:
-                # Query expansion with HyDE
-                expanded_query = search_query
-                if use_hyde and self.reranker_llm:
-                    expanded_query = self._expand_query_with_hyde(search_query)
+                # Vector search only
+                fetch_k = k * 3 if use_reranking else k
+                results = self.vector_store.similarity_search_with_score(search_query, k=fetch_k)
                 
-                # Perform search (Hybrid or Vector) - берем БОЛЬШЕ кандидатов для лучшего покрытия
-                if use_hybrid and self.bm25:
-                    # Hybrid search - увеличиваем k для multi-query
-                    query_results = self._hybrid_search(expanded_query, k=k * 3, vector_weight=0.65)
-                else:
-                    # Vector search only - берем еще больше для reranking
-                    fetch_k = k * 8 if use_reranking else k * 3
-                    results = self.vector_store.similarity_search_with_score(expanded_query, k=fetch_k)
-                    
-                    query_results = []
-                    for doc, score in results:
-                        query_results.append({
-                            "content": doc.page_content,
-                            "metadata": doc.metadata,
-                            "similarity_score": float(score)
-                        })
-                
-                all_results.extend(query_results)
+                # Format results
+                formatted_results = []
+                for doc, score in results:
+                    formatted_results.append({
+                        "content": doc.page_content,
+                        "metadata": doc.metadata,
+                        "similarity_score": float(score)
+                    })
             
-            # Step 3: Улучшенная дедупликация с учетом метаданных
-            seen_content = {}
-            unique_results = []
-            for result in all_results:
-                # Используем комбинацию content + source для лучшей дедупликации
-                content_preview = result['content'][:150]  # Увеличено до 150 символов
-                source = result.get('metadata', {}).get('source_file', 'unknown')
-                content_hash = hash(f"{content_preview}_{source}")
-                
-                if content_hash not in seen_content:
-                    seen_content[content_hash] = result
-                    unique_results.append(result)
-                else:
-                    # Если дубликат найден, берем результат с лучшим score
-                    existing = seen_content[content_hash]
-                    existing_score = existing.get('hybrid_score', existing.get('similarity_score', 1.0))
-                    new_score = result.get('hybrid_score', result.get('similarity_score', 1.0))
-                    
-                    # Для distance: меньше = лучше, для hybrid: больше = лучше
-                    if 'hybrid_score' in result:
-                        if new_score > existing_score:
-                            seen_content[content_hash] = result
-                            # Заменяем в unique_results
-                            idx = unique_results.index(existing)
-                            unique_results[idx] = result
-                    elif 'similarity_score' in result:
-                        if new_score < existing_score:  # Меньше distance = лучше
-                            seen_content[content_hash] = result
-                            idx = unique_results.index(existing)
-                            unique_results[idx] = result
-            
-            logger.info(f"After enhanced deduplication: {len(unique_results)} unique results from {len(all_results)} total")
-            
-            if not unique_results:
+            if not formatted_results:
                 return []
             
-            # Step 4: Merge similar chunks from same source (best practice)
-            if merge_context:
-                unique_results = self._merge_similar_chunks(unique_results)
-                logger.info(f"After merging: {len(unique_results)} results")
-            
-            # Step 5: Reranking with source diversity
-            if use_reranking and unique_results and self.reranker_llm:
-                # Rerank больше кандидатов для лучшего разнообразия
-                reranked = self._rerank_results(query, unique_results, top_k=k * 3)
-                
-                # Если топ результаты имеют низкие скоры, пробуем расширенный поиск
-                if reranked and reranked[0].get('rerank_score', 0) < 4:
-                    logger.info("Low rerank scores detected, trying expanded search...")
-                    # Пробуем поиск с большим k и без reranking для сравнения
-                    expanded_results = sorted(unique_results,
-                                            key=lambda x: x.get('hybrid_score', 1 - x.get('similarity_score', 1.0)),
-                                            reverse=True)[:k * 2]
-                    # Объединяем с reranked, убирая дубликаты
-                    seen = set()
-                    combined = []
-                    for r in reranked + expanded_results:
-                        content_hash = hash(r.get('content', '')[:50])
-                        if content_hash not in seen:
-                            seen.add(content_hash)
-                            combined.append(r)
-                    reranked = combined[:k * 2]
+            # Step 3: Apply reranking if enabled
+            if use_reranking and formatted_results and self.reranker_llm:
+                formatted_results = self._rerank_results(query, formatted_results, top_k=k)
             else:
-                # Sort by score
-                reranked = sorted(unique_results, 
-                                key=lambda x: x.get('hybrid_score', 1 - x.get('similarity_score', 1.0)), 
-                                reverse=True)[:k * 2]
+                formatted_results = formatted_results[:k]
             
-            # Step 6: Ensure source diversity (best practice)
-            if ensure_diversity:
-                final_results = self._ensure_source_diversity(reranked, k=k, min_sources=min(3, k))
-            else:
-                final_results = reranked[:k]
-            
-            # Step 7: Add parent context for child chunks (best practice)
-            for result in final_results:
-                if result.get('metadata', {}).get('is_child', False):
-                    parent_context = self._get_parent_context(result)
-                    if parent_context:
-                        result['parent_context'] = parent_context
-                        # Объединяем с основным контентом для лучшего контекста
-                        result['enhanced_content'] = f"{result['content']}\n\n[Контекст из документа]: {parent_context}"
-            
-            logger.info(f"Final results: {len(final_results)} from {len(set(r.get('metadata', {}).get('source_file', '') for r in final_results))} sources")
-            return final_results
+            return formatted_results
             
         except Exception as e:
             logger.error(f"Error searching documents: {e}")
@@ -1322,252 +684,6 @@ Generate {num_queries} variations, one per line, no numbering. Each variation sh
         
         logger.info("Vector store initialization pipeline completed successfully!")
         return True
-    
-    def format_water_object_document(self, water_object: Any) -> Document:
-        """
-        Format a water object into a searchable document with metadata.
-        
-        Args:
-            water_object: WaterObject model instance
-            
-        Returns:
-            Document: Formatted document for vector indexing
-        """
-        from datetime import datetime
-        
-        # Calculate priority explanation
-        passport_age = 0
-        if water_object.passport_date:
-            current_year = datetime.now().year
-            passport_year = water_object.passport_date.year if hasattr(water_object.passport_date, 'year') else datetime.fromisoformat(str(water_object.passport_date)).year
-            passport_age = current_year - passport_year
-        
-        priority_calculation = f"(6 - {water_object.technical_condition}) * 3 + {passport_age} лет = {water_object.priority}"
-        
-        # Technical condition names in Russian
-        condition_names = {
-            1: "отличное",
-            2: "хорошее", 
-            3: "удовлетворительное",
-            4: "плохое",
-            5: "критическое"
-        }
-        condition_name = condition_names.get(water_object.technical_condition, "неизвестно")
-        
-        # Resource type names
-        resource_types = {
-            "lake": "озеро",
-            "canal": "канал",
-            "reservoir": "водохранилище"
-        }
-        resource_type_ru = resource_types.get(water_object.resource_type, water_object.resource_type)
-        
-        # Water type names
-        water_types = {
-            "fresh": "пресная вода",
-            "non_fresh": "непресная вода"
-        }
-        water_type_ru = water_types.get(water_object.water_type, water_object.water_type)
-        
-        # Format document content
-        content = f"""Водный объект: {water_object.name}
-
-Географическое расположение:
-- Регион: {water_object.region}
-- Координаты: {water_object.latitude}° с.ш., {water_object.longitude}° в.д.
-
-Характеристики:
-- Тип ресурса: {resource_type_ru} ({water_object.resource_type})
-- Тип воды: {water_type_ru}
-- Наличие фауны: {'Да' if water_object.fauna else 'Нет'}
-
-Техническое состояние:
-- Состояние: {water_object.technical_condition}/5 ({condition_name})
-- Дата паспорта: {water_object.passport_date or 'Не указана'}
-- Возраст паспорта: {passport_age} лет
-
-Приоритет обследования:
-- Уровень: {water_object.priority_level or 'N/A'}
-- Оценка: {water_object.priority} баллов
-- Расчет: {priority_calculation}
-- Пояснение: Чем хуже техническое состояние и старее паспорт, тем выше приоритет обследования.
-"""
-        
-        if passport_age > 5:
-            content += f"\n⚠️ ВНИМАНИЕ: Паспорт устарел (возраст {passport_age} лет). Рекомендуется обновление."
-        
-        if water_object.priority_level == "high":
-            content += "\n🔴 ВЫСОКИЙ ПРИОРИТЕТ: Требуется срочное обследование объекта."
-        elif water_object.priority_level == "medium":
-            content += "\n🟡 СРЕДНИЙ ПРИОРИТЕТ: Рекомендуется плановое обследование."
-        
-        # Create document with rich metadata
-        doc = Document(
-            page_content=content,
-            metadata={
-                "object_id": water_object.id,
-                "object_name": water_object.name,
-                "region": water_object.region,
-                "resource_type": water_object.resource_type,
-                "water_type": water_object.water_type,
-                "fauna": water_object.fauna,
-                "technical_condition": water_object.technical_condition,
-                "priority": water_object.priority,
-                "priority_level": water_object.priority_level or "N/A",
-                "passport_date": str(water_object.passport_date) if water_object.passport_date else None,
-                "passport_age_years": passport_age,
-                "latitude": float(water_object.latitude),
-                "longitude": float(water_object.longitude),
-                "document_type": "water_object",
-                "source": "water_objects_database",
-                "content_type": "structured_data"
-            }
-        )
-        
-        return doc
-    
-    def format_passport_text_document(self, passport_text: Any, water_object: Any) -> List[Document]:
-        """
-        Format passport text sections into searchable documents with metadata.
-        
-        Args:
-            passport_text: PassportText model instance
-            water_object: Associated WaterObject model instance
-            
-        Returns:
-            List[Document]: List of documents for each passport section
-        """
-        documents = []
-        
-        # Section configurations
-        sections = [
-            ("full_text", "Полный текст паспорта", passport_text.full_text),
-            ("general_info", "Общая информация", passport_text.general_info),
-            ("technical_params", "Технические параметры", passport_text.technical_params),
-            ("ecological_state", "Экологическое состояние", passport_text.ecological_state),
-            ("recommendations", "Рекомендации", passport_text.recommendations)
-        ]
-        
-        for section_key, section_name, section_content in sections:
-            if section_content and section_content.strip():
-                # Format section content
-                content = f"""Паспорт водного объекта: {water_object.name}
-
-Раздел: {section_name}
-Регион: {water_object.region}
-Дата паспорта: {water_object.passport_date or 'Не указана'}
-
-{section_content}
-"""
-                
-                # Create document with metadata
-                doc = Document(
-                    page_content=content,
-                    metadata={
-                        "object_id": water_object.id,
-                        "object_name": water_object.name,
-                        "region": water_object.region,
-                        "resource_type": water_object.resource_type,
-                        "section_type": section_key,
-                        "section_name": section_name,
-                        "passport_id": passport_text.id,
-                        "document_type": "passport_text",
-                        "source": "passport_database",
-                        "content_type": "passport_section",
-                        "passport_date": str(water_object.passport_date) if water_object.passport_date else None
-                    }
-                )
-                
-                documents.append(doc)
-        
-        return documents
-    
-    def index_water_management_data(self, db_session: Any) -> bool:
-        """
-        Index water objects and passport texts into the vector store.
-        
-        Args:
-            db_session: SQLAlchemy database session
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        try:
-            from models import WaterObject, PassportText
-            
-            logger.info("Starting water management data indexing...")
-            
-            # Initialize embeddings if not already done
-            if not self.embeddings:
-                if not self.initialize_embeddings():
-                    return False
-            
-            all_documents = []
-            
-            # Get all water objects
-            water_objects = db_session.query(WaterObject).filter(
-                WaterObject.deleted_at.is_(None)
-            ).all()
-            
-            logger.info(f"Found {len(water_objects)} water objects to index")
-            
-            # Index water objects
-            for water_object in water_objects:
-                try:
-                    doc = self.format_water_object_document(water_object)
-                    all_documents.append(doc)
-                except Exception as e:
-                    logger.error(f"Error formatting water object {water_object.id}: {e}")
-            
-            # Index passport texts
-            passport_texts = db_session.query(PassportText).all()
-            logger.info(f"Found {len(passport_texts)} passport texts to index")
-            
-            for passport_text in passport_texts:
-                try:
-                    # Get associated water object
-                    water_object = db_session.query(WaterObject).filter(
-                        WaterObject.id == passport_text.water_object_id
-                    ).first()
-                    
-                    if water_object:
-                        docs = self.format_passport_text_document(passport_text, water_object)
-                        all_documents.extend(docs)
-                except Exception as e:
-                    logger.error(f"Error formatting passport text {passport_text.id}: {e}")
-            
-            logger.info(f"Total documents to index: {len(all_documents)}")
-            
-            if not all_documents:
-                logger.warning("No documents to index")
-                return False
-            
-            # Create or update vector store
-            if self.vector_store is None:
-                logger.info("Creating new vector store with water management data...")
-                self.vector_store = FAISS.from_documents(
-                    documents=all_documents,
-                    embedding=self.embeddings
-                )
-                self.all_chunks = all_documents
-            else:
-                logger.info("Adding water management data to existing vector store...")
-                self.vector_store.add_documents(all_documents)
-                self.all_chunks.extend(all_documents)
-            
-            # Save vector store
-            if self.save_vector_store():
-                logger.info(f"Successfully indexed {len(all_documents)} water management documents")
-                return True
-            else:
-                logger.error("Failed to save vector store")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error indexing water management data: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
 
 
 def create_vector_store_from_documents(

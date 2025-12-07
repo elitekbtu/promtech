@@ -34,10 +34,6 @@ class LiveQueryRequest(BaseModel):
 class LiveQueryResponse(BaseModel):
     """Response model for live RAG queries."""
     response: str = Field(..., description="The response from the RAG tool")
-    sources: List[Dict[str, Any]] = Field(default_factory=list, description="Sources used for the response")
-    confidence: float = Field(default=0.0, description="Confidence score of the response")
-    agents_used: List[str] = Field(default_factory=list, description="List of agents/tools used")
-    status: str = Field(default="success", description="Status of the query")
 
 
 class SupervisorStatus(BaseModel):
@@ -71,33 +67,23 @@ async def live_query(request: LiveQueryRequest):
         logger.info(f"[Live Query] Query: {query}")
         
         response_text = ""
-        sources = []
-        agents_used = []
-        confidence = 0.0
         
         # Route to appropriate tool
         if tool_name == "vector_search":
             try:
                 vector_tool = get_vector_search_tool()
-                # Полноценный RAG поиск с максимальным качеством
+                # Расширенный поиск с максимальным количеством результатов для полной информации
                 response_text = vector_tool.search(
                     query=query,
-                    k=5,  # Больше результатов для полного покрытия
-                    use_reranking=True,  # Включено для качества
-                    use_hyde=True,  # Включено для качества
-                    use_hybrid=True  # Включено для качества
+                    k=3,  # Получаем много результатов для максимально полного ответа
+                    use_reranking=True,  # Используем реранкинг для лучшей релевантности
+                    use_hyde=True,  # Включаем HyDE для расширения запроса
+                    use_hybrid=True  # Включаем гибридный поиск (BM25 + Vector) для лучшего покрытия
                 )
-                agents_used.append("vector_search")
-                sources.append({
-                    "type": "internal_documents",
-                    "tool": "vector_search"
-                })
-                confidence = 0.85
                     
             except Exception as e:
                 logger.error(f"[Live Query] Vector search error: {e}")
                 response_text = f"❌ Error performing vector search: {str(e)}\n\nPlease ensure the vector store is initialized."
-                confidence = 0.0
                 
         elif tool_name == "web_search":
             try:
@@ -107,36 +93,20 @@ async def live_query(request: LiveQueryRequest):
                     max_results=3,
                     search_depth="advanced"
                 )
-                agents_used.append("web_search")
-                
-                # Extract sources from response
-                if "Web Result" in response_text:
-                    sources.append({
-                        "type": "web_search",
-                        "tool": "web_search"
-                    })
-                    confidence = 0.80
-                else:
-                    confidence = 0.3
                     
             except Exception as e:
                 logger.error(f"[Live Query] Web search error: {e}")
                 response_text = f"❌ Error performing web search: {str(e)}\n\nPlease ensure TAVILY_API_KEY is configured."
-                confidence = 0.0
         else:
             raise HTTPException(
                 status_code=400,
                 detail=f"Unknown tool: {tool_name}. Supported tools: vector_search, web_search"
             )
         
-        logger.info(f"[Live Query] Response generated with {len(agents_used)} agent(s)")
+        logger.info(f"[Live Query] Response generated")
         
         return LiveQueryResponse(
-            response=response_text,
-            sources=sources,
-            confidence=confidence,
-            agents_used=agents_used,
-            status="success"
+            response=response_text
         )
         
     except HTTPException:
