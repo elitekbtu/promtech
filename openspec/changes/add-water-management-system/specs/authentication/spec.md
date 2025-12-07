@@ -91,6 +91,6 @@ The system SHALL enforce expert role requirement on sensitive endpoints.
 
 #### Scenario: Protect AI priority explanation
 
-- **GIVEN** the /ai/objects/{id}/explain-priority endpoint
+- **GIVEN** the /api/rag/explain-priority/{object_id} endpoint
 - **WHEN** any request is received
 - **THEN** only users with role="expert" SHALL be authorized

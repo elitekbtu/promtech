@@ -1,7 +1,14 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum
 from database import Base
 from sqlalchemy.orm import relationship
+import enum
+
+
+class UserRole(str, enum.Enum):
+    """User roles for GidroAtlas system"""
+    guest = "guest"    # View only, no access to priorities
+    expert = "expert"  # Full access including priorities and analytics
 
 
 class User(Base):
@@ -15,7 +22,7 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     avatar = Column(String, nullable=True)
 
-    role = Column(String, default="user")  # admin or user
+    role = Column(SQLEnum(UserRole), default=UserRole.guest, nullable=False)  # guest or expert
 
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)

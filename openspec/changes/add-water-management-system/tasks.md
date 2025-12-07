@@ -2,20 +2,20 @@
 
 ## 1. Database Models & Schema
 
-- [ ] 1.1 Create `WaterObject` SQLAlchemy model with all fields (name, region, resource_type, water_type, fauna, passport_date, technical_condition, lat/lon, pdf_url, priority, priority_level)
-- [ ] 1.2 Create `PassportText` model for storing passport document text with sections
-- [ ] 1.3 Modify `User` model role field from `admin`/`user` enum to `guest`/`expert`
-- [ ] 1.4 Create database migration script (Alembic) for new models
-- [ ] 1.5 Add indexes on frequently queried fields (region, resource_type, priority, technical_condition)
+- [x] 1.1 Create `WaterObject` SQLAlchemy model with all fields (name, region, resource_type, water_type, fauna, passport_date, technical_condition, lat/lon, pdf_url, priority, priority_level)
+- [x] 1.2 Create `PassportText` model for storing passport document text with sections
+- [x] 1.3 Modify `User` model role field from `admin`/`user` enum to `guest`/`expert`
+- [x] 1.4 Create database migration script (Alembic) for new models
+- [x] 1.5 Add indexes on frequently queried fields (region, resource_type, priority, technical_condition)
 
 ## 2. Core Business Logic
 
-- [ ] 2.1 Implement priority calculation function: `(6 - technical_condition) * 3 + passport_age_years`
-- [ ] 2.2 Implement priority level mapping (high/medium/low based on score)
-- [ ] 2.3 Create water object service layer with CRUD operations
-- [ ] 2.4 Implement filtering logic (region, resource_type, water_type, fauna, date ranges, technical_condition)
-- [ ] 2.5 Implement sorting logic (all WaterObject fields)
-- [ ] 2.6 Implement pagination helpers
+- [x] 2.1 Implement priority calculation function: `(6 - technical_condition) * 3 + passport_age_years`
+- [x] 2.2 Implement priority level mapping (high/medium/low based on score)
+- [x] 2.3 Create water object service layer with CRUD operations
+- [x] 2.4 Implement filtering logic (region, resource_type, water_type, fauna, date ranges, technical_condition)
+- [x] 2.5 Implement sorting logic (all WaterObject fields)
+- [x] 2.6 Implement pagination helpers
 
 ## 3. API Endpoints - Water Objects
 
@@ -57,19 +57,20 @@
 - [ ] 7.1 Create `backend/rag_agent/tools/water_search.py` - search_water_objects tool
 - [ ] 7.2 Create `backend/rag_agent/tools/passport_retrieval.py` - get_passport_content tool
 - [ ] 7.3 Create `backend/rag_agent/tools/priority_explainer.py` - explain_priority_logic tool
-- [ ] 7.4 Update orchestrator system prompts to hydro-engineering domain
-- [ ] 7.5 Modify vector store initialization to index passport documents
-- [ ] 7.6 Remove or adapt generic web search tool (Tavily) for water management context
+- [ ] 7.4 Update `backend/rag_agent/config/orchestrator.py` system prompts to hydro-engineering domain
+- [ ] 7.5 Modify `backend/rag_agent/utils/vector_store.py` to index passport documents
+- [ ] 7.6 Update `backend/rag_agent/tools/web_search.py` to adapt Tavily for water management context (or disable if not needed)
+- [ ] 7.7 Register new tools in orchestrator configuration
 
-## 8. AI Endpoints
+## 8. RAG Endpoint Enhancements
 
-- [ ] 8.1 Create `backend/services/ai/router.py` for domain-specific AI endpoints
-- [ ] 8.2 Implement `POST /ai/chat` - general water management chat
-- [ ] 8.3 Implement `POST /ai/objects/{id}/explain-priority` - priority explanation
-- [ ] 8.4 Implement `POST /ai/search` - natural language search
-- [ ] 8.5 Create `GeminiAgentService` facade over LangGraph
-- [ ] 8.6 Integrate water object and passport tools into agent workflow
-- [ ] 8.7 Create response schemas for AI endpoints
+- [ ] 8.1 Update existing `POST /api/rag/query` endpoint to handle water management queries
+- [ ] 8.2 Add `POST /api/rag/explain-priority/{object_id}` convenience endpoint in `backend/rag_agent/routes/router.py`
+- [ ] 8.3 Update `QueryRequest` schema to support water domain context (object_id, region, priority_level filters)
+- [ ] 8.4 Enhance `QueryResponse` schema to include water-specific sources (object references)
+- [ ] 8.5 Integrate new tools (water_search, passport_retrieval, priority_explainer) into existing orchestrator workflow
+- [ ] 8.6 Test RAG query with water management scenarios ("показать озера с высоким приоритетом")
+- [ ] 8.7 Update RAG system initialization to load water domain configuration
 
 ## 9. Data Seeding & Import
 
@@ -97,7 +98,7 @@
 - [ ] 11.3 Test role-based access control (guest cannot access priorities)
 - [ ] 11.4 Test filtering/sorting/pagination combinations
 - [ ] 11.5 Test passport upload and text extraction
-- [ ] 11.6 Test AI endpoints with sample queries
+- [ ] 11.6 Test RAG endpoints with water management queries
 - [ ] 11.7 Test RAG tools integration
 - [ ] 11.8 Verify OpenAPI documentation at /docs
 
