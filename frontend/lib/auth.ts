@@ -8,6 +8,8 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
+console.log('Auth module loaded. Platform:', Platform.OS);
+
 // Storage keys
 const TOKEN_KEY = 'jwt_access_token';
 const USER_KEY = 'user_data';
@@ -36,9 +38,13 @@ export interface TokenResponse {
 async function setItem(key: string, value: string): Promise<void> {
     if (Platform.OS === 'web') {
         try {
-            localStorage.setItem(key, value);
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem(key, value);
+            } else {
+                console.warn('localStorage is not available');
+            }
         } catch (e) {
-            console.error('Local storage is not available:', e);
+            console.error('Local storage error:', e);
         }
     } else {
         await SecureStore.setItemAsync(key, value);
@@ -48,9 +54,12 @@ async function setItem(key: string, value: string): Promise<void> {
 async function getItem(key: string): Promise<string | null> {
     if (Platform.OS === 'web') {
         try {
-            return localStorage.getItem(key);
+            if (typeof localStorage !== 'undefined') {
+                return localStorage.getItem(key);
+            }
+            return null;
         } catch (e) {
-            console.error('Local storage is not available:', e);
+            console.error('Local storage error:', e);
             return null;
         }
     } else {
@@ -61,9 +70,11 @@ async function getItem(key: string): Promise<string | null> {
 async function deleteItem(key: string): Promise<void> {
     if (Platform.OS === 'web') {
         try {
-            localStorage.removeItem(key);
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem(key);
+            }
         } catch (e) {
-            console.error('Local storage is not available:', e);
+            console.error('Local storage error:', e);
         }
     } else {
         await SecureStore.deleteItemAsync(key);

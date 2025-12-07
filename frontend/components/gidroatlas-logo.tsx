@@ -1,26 +1,26 @@
 import React from 'react';
 import Svg, { Path, G, Defs, LinearGradient, Stop } from 'react-native-svg';
-import { ZamanColors } from '@/constants/theme';
+import { GidroAtlasColors } from '@/constants/theme';
 
-interface ZamanLogoProps {
+interface GidroAtlasLogoProps {
   size?: number;
   withAccent?: boolean;
 }
 
-export default function ZamanLogo({ size = 80, withAccent = true }: ZamanLogoProps) {
+export default function GidroAtlasLogo({ size = 80, withAccent = true }: GidroAtlasLogoProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 240 280" fill="none">
       <Defs>
         <LinearGradient id="solarGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor={ZamanColors.solar} stopOpacity="0.6" />
-          <Stop offset="100%" stopColor={ZamanColors.solar} stopOpacity="0.2" />
+          <Stop offset="0%" stopColor={GidroAtlasColors.solar} stopOpacity="0.6" />
+          <Stop offset="100%" stopColor={GidroAtlasColors.solar} stopOpacity="0.2" />
         </LinearGradient>
       </Defs>
       <G>
         {/* Top left square */}
         <Path
           d="M70 45 L125 45 L125 100 L70 100 Z"
-          stroke={ZamanColors.persianGreen}
+          stroke={GidroAtlasColors.persianGreen}
           strokeWidth="7"
           fill="none"
           strokeLinecap="round"
@@ -30,7 +30,7 @@ export default function ZamanLogo({ size = 80, withAccent = true }: ZamanLogoPro
         {/* Top right rotated square (diamond) - with solar accent */}
         <Path
           d="M165 35 L205 75 L165 115 L125 75 Z"
-          stroke={withAccent ? ZamanColors.solar : ZamanColors.persianGreen}
+          stroke={withAccent ? GidroAtlasColors.solar : GidroAtlasColors.persianGreen}
           strokeWidth="7"
           fill={withAccent ? "url(#solarGlow)" : "none"}
           strokeLinecap="round"
@@ -40,7 +40,7 @@ export default function ZamanLogo({ size = 80, withAccent = true }: ZamanLogoPro
         {/* Middle left rotated square (diamond) */}
         <Path
           d="M35 115 L75 155 L35 195 L-5 155 Z"
-          stroke={ZamanColors.persianGreen}
+          stroke={GidroAtlasColors.persianGreen}
           strokeWidth="7"
           fill="none"
           strokeLinecap="round"
@@ -50,7 +50,7 @@ export default function ZamanLogo({ size = 80, withAccent = true }: ZamanLogoPro
         {/* Middle center square - with solar accent on border */}
         <Path
           d="M95 125 L145 125 L145 175 L95 175 Z"
-          stroke={ZamanColors.persianGreen}
+          stroke={GidroAtlasColors.persianGreen}
           strokeWidth="7"
           fill="none"
           strokeLinecap="round"
@@ -59,7 +59,7 @@ export default function ZamanLogo({ size = 80, withAccent = true }: ZamanLogoPro
         {withAccent && (
           <Path
             d="M95 125 L145 125"
-            stroke={ZamanColors.solar}
+            stroke={GidroAtlasColors.solar}
             strokeWidth="8"
             strokeLinecap="round"
           />
@@ -68,7 +68,7 @@ export default function ZamanLogo({ size = 80, withAccent = true }: ZamanLogoPro
         {/* Bottom right rotated square (diamond) */}
         <Path
           d="M185 195 L225 235 L185 275 L145 235 Z"
-          stroke={ZamanColors.persianGreen}
+          stroke={GidroAtlasColors.persianGreen}
           strokeWidth="7"
           fill="none"
           strokeLinecap="round"
@@ -78,7 +78,7 @@ export default function ZamanLogo({ size = 80, withAccent = true }: ZamanLogoPro
         {/* Connecting lines for geometric effect */}
         <Path
           d="M97 72 L125 100 M165 115 L120 150"
-          stroke={ZamanColors.persianGreen}
+          stroke={GidroAtlasColors.persianGreen}
           strokeWidth="5"
           strokeLinecap="round"
           opacity="0.7"

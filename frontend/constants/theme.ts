@@ -1,14 +1,11 @@
 /**
- * Zaman Color DNA - закрепленная триада
- * Persian Green - технологии: цифровая опора и навигация
- * Solar - люди: тепло, забота и поддержка
- * Cloud - традиции: честность и прозрачность
+ * GidroAtlas Color DNA
  */
 
 import { Platform } from 'react-native';
 
-// Zaman Brand Colors
-export const ZamanColors = {
+// GidroAtlas Brand Colors
+export const GidroAtlasColors = {
   persianGreen: '#2D9A86',
   solar: '#EEFE6D',
   cloud: '#F5F9F8',
@@ -28,33 +25,33 @@ export const ZamanColors = {
   },
 };
 
-const tintColorLight = ZamanColors.persianGreen;
-const tintColorDark = ZamanColors.solar;
+const tintColorLight = GidroAtlasColors.persianGreen;
+const tintColorDark = GidroAtlasColors.solar;
 
 export const Colors = {
   light: {
-    text: ZamanColors.black,
-    background: ZamanColors.white,
-    backgroundSecondary: ZamanColors.cloud,
+    text: GidroAtlasColors.black,
+    background: GidroAtlasColors.white,
+    backgroundSecondary: GidroAtlasColors.cloud,
     tint: tintColorLight,
-    primary: ZamanColors.persianGreen,
-    accent: ZamanColors.solar,
-    icon: ZamanColors.gray[600],
-    tabIconDefault: ZamanColors.gray[400],
+    primary: GidroAtlasColors.persianGreen,
+    accent: GidroAtlasColors.solar,
+    icon: GidroAtlasColors.gray[600],
+    tabIconDefault: GidroAtlasColors.gray[400],
     tabIconSelected: tintColorLight,
-    border: ZamanColors.gray[200],
+    border: GidroAtlasColors.gray[200],
   },
   dark: {
-    text: ZamanColors.cloud,
-    background: ZamanColors.gray[900],
-    backgroundSecondary: ZamanColors.gray[800],
+    text: GidroAtlasColors.cloud,
+    background: GidroAtlasColors.gray[900],
+    backgroundSecondary: GidroAtlasColors.gray[800],
     tint: tintColorDark,
-    primary: ZamanColors.persianGreen,
-    accent: ZamanColors.solar,
-    icon: ZamanColors.gray[400],
-    tabIconDefault: ZamanColors.gray[500],
+    primary: GidroAtlasColors.persianGreen,
+    accent: GidroAtlasColors.solar,
+    icon: GidroAtlasColors.gray[400],
+    tabIconDefault: GidroAtlasColors.gray[500],
     tabIconSelected: tintColorDark,
-    border: ZamanColors.gray[700],
+    border: GidroAtlasColors.gray[700],
   },
 };
 

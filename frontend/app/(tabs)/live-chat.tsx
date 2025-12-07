@@ -5,7 +5,7 @@ import Constants from 'expo-constants';
 import { AudioRecorder } from '@/lib/audio-recorder';
 import { useWebcam } from '@/hooks/use-webcam';
 import { useScreenCapture } from '@/hooks/use-screen-capture';
-import { ZamanColors } from '@/constants/theme';
+import { GidroAtlasColors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 // @ts-ignore - для web video элемента
@@ -77,14 +77,14 @@ INSTRUCTIONS:
   // UI translations
   const translations = {
     ru: {
-      title: 'Gemini Live Chat',
+      title: 'GidroAtlas Live Chat',
       subtitle: 'Multimodal AI Assistant',
       connect: 'Подключить',
       live: 'LIVE',
-      greetingMessage: 'Привет! Я Gemini AI с мультимодальными возможностями. Включи микрофон, камеру или покажи свой экран чтобы начать!',
-      connected: 'Подключено к Gemini Live API',
-      disconnected: 'Отключено от Gemini',
-      connectFirst: 'Сначала подключитесь к Gemini',
+      greetingMessage: 'Привет! Я GidroAtlas AI с мультимодальными возможностями. Включи микрофон, камеру или покажи свой экран чтобы начать!',
+      connected: 'Подключено к GidroAtlas Live API',
+      disconnected: 'Отключено от GidroAtlas',
+      connectFirst: 'Сначала подключитесь к GidroAtlas',
       emptyStateText: 'Нажми "Подключить" чтобы начать',
       emptyStateSubtext: 'После подключения используй кнопки ниже',
       emptyStateButtons: 'Голос • Камера • Экран',
@@ -103,14 +103,14 @@ INSTRUCTIONS:
       volume: 'Volume',
     },
     en: {
-      title: 'Gemini Live Chat',
+      title: 'GidroAtlas Live Chat',
       subtitle: 'Multimodal AI Assistant',
       connect: 'Connect',
       live: 'LIVE',
-      greetingMessage: 'Hello! I\'m Gemini AI with multimodal capabilities. Turn on your microphone, camera, or share your screen to start!',
-      connected: 'Connected to Gemini Live API',
-      disconnected: 'Disconnected from Gemini',
-      connectFirst: 'Please connect to Gemini first',
+      greetingMessage: 'Hello! I\'m GidroAtlas AI with multimodal capabilities. Turn on your microphone, camera, or share your screen to start!',
+      connected: 'Connected to GidroAtlas Live API',
+      disconnected: 'Disconnected from GidroAtlas',
+      connectFirst: 'Please connect to GidroAtlas first',
       emptyStateText: 'Press "Connect" to start',
       emptyStateSubtext: 'After connecting, use the buttons below',
       emptyStateButtons: 'Voice • Camera • Screen Share',
@@ -426,7 +426,7 @@ INSTRUCTIONS:
               <Ionicons 
                 name={ragToolsHealthy ? "checkmark-circle" : "alert-circle"} 
                 size={16} 
-                color={ZamanColors.white} 
+                color={GidroAtlasColors.white} 
                 style={{ marginRight: 6 }}
               />
               <Text style={[styles.ragIndicatorText, (ragToolsHealthy || !ragToolsHealthy) && styles.ragIndicatorTextActive]}>
@@ -476,7 +476,7 @@ INSTRUCTIONS:
             <Ionicons 
               name={ragToolsHealthy ? "checkmark-circle" : "alert-circle"} 
               size={14} 
-              color={ZamanColors.white} 
+              color={GidroAtlasColors.white} 
               style={{ marginRight: 4 }}
             />
             <Text style={[styles.ragIndicatorText, styles.ragIndicatorTextActive, { fontSize: 11 }]}>
@@ -523,7 +523,7 @@ INSTRUCTIONS:
         {messages.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconContainer}>
-              <Ionicons name="chatbubbles-outline" size={64} color={ZamanColors.persianGreen} />
+              <Ionicons name="chatbubbles-outline" size={64} color={GidroAtlasColors.persianGreen} />
             </View>
             <Text style={styles.emptyStateText}>
               {t.emptyStateText}
@@ -560,19 +560,19 @@ INSTRUCTIONS:
         <View style={styles.activeIndicator}>
           {isMicOn && (
             <View style={styles.activeItem}>
-              <Ionicons name="mic" size={16} color={ZamanColors.persianGreen} />
+              <Ionicons name="mic" size={16} color={GidroAtlasColors.persianGreen} />
               <Text style={styles.activeText}>{t.microphone}</Text>
             </View>
           )}
           {webcam.isStreaming && (
             <View style={styles.activeItem}>
-              <Ionicons name="videocam" size={16} color={ZamanColors.persianGreen} />
+              <Ionicons name="videocam" size={16} color={GidroAtlasColors.persianGreen} />
               <Text style={styles.activeText}>{t.camera}</Text>
             </View>
           )}
           {screenCapture.isStreaming && (
             <View style={styles.activeItem}>
-              <Ionicons name="desktop" size={16} color={ZamanColors.persianGreen} />
+              <Ionicons name="desktop" size={16} color={GidroAtlasColors.persianGreen} />
               <Text style={styles.activeText}>{t.screen}</Text>
             </View>
           )}
@@ -590,7 +590,7 @@ INSTRUCTIONS:
           <Ionicons 
             name={isMicOn ? 'mic' : 'mic-off'} 
             size={28} 
-            color={isMicOn ? ZamanColors.white : ZamanColors.black} 
+            color={isMicOn ? GidroAtlasColors.white : GidroAtlasColors.black} 
             style={{ marginBottom: 8 }}
           />
           <Text style={[styles.controlButtonText, isMicOn && styles.controlButtonTextActive]}>
@@ -606,7 +606,7 @@ INSTRUCTIONS:
           <Ionicons 
             name={webcam.isStreaming ? 'videocam' : 'videocam-off'} 
             size={28} 
-            color={webcam.isStreaming ? ZamanColors.white : ZamanColors.black} 
+            color={webcam.isStreaming ? GidroAtlasColors.white : GidroAtlasColors.black} 
             style={{ marginBottom: 8 }}
           />
           <Text style={[styles.controlButtonText, webcam.isStreaming && styles.controlButtonTextActive]}>
@@ -622,7 +622,7 @@ INSTRUCTIONS:
           <Ionicons 
             name={screenCapture.isStreaming ? 'desktop' : 'desktop-outline'} 
             size={28} 
-            color={screenCapture.isStreaming ? ZamanColors.white : ZamanColors.black} 
+            color={screenCapture.isStreaming ? GidroAtlasColors.white : GidroAtlasColors.black} 
             style={{ marginBottom: 8 }}
           />
           <Text style={[styles.controlButtonText, screenCapture.isStreaming && styles.controlButtonTextActive]}>
@@ -641,7 +641,7 @@ export default function LiveChatScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: ZamanColors.white 
+    backgroundColor: GidroAtlasColors.white 
   },
   header: { 
     flexDirection: 'row', 
@@ -650,9 +650,9 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingHorizontal: 24,
     paddingBottom: 20,
-    backgroundColor: ZamanColors.white, 
+    backgroundColor: GidroAtlasColors.white, 
     borderBottomWidth: 1, 
-    borderBottomColor: ZamanColors.gray[200],
+    borderBottomColor: GidroAtlasColors.gray[200],
   },
   headerLeft: {
     flexDirection: 'column',
@@ -670,18 +670,18 @@ const styles = StyleSheet.create({
   headerTitle: { 
     fontSize: 24, 
     fontWeight: '600', 
-    color: ZamanColors.black,
+    color: GidroAtlasColors.black,
     letterSpacing: 0.5,
   },
   headerSubtitle: { 
     fontSize: 13, 
-    color: ZamanColors.gray[500], 
+    color: GidroAtlasColors.gray[500], 
     marginTop: 4,
     fontWeight: '400',
   },
   languageSwitcher: {
     flexDirection: 'row',
-    backgroundColor: ZamanColors.cloud,
+    backgroundColor: GidroAtlasColors.cloud,
     borderRadius: 12,
     padding: 3,
     gap: 4,
@@ -702,15 +702,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   languageButtonActive: {
-    backgroundColor: ZamanColors.persianGreen,
+    backgroundColor: GidroAtlasColors.persianGreen,
   },
   languageButtonText: {
-    color: ZamanColors.gray[500],
+    color: GidroAtlasColors.gray[500],
     fontSize: 13,
     fontWeight: '500',
   },
   languageButtonTextActive: {
-    color: ZamanColors.white,
+    color: GidroAtlasColors.white,
   },
   ragIndicator: {
     flexDirection: 'row',
@@ -718,9 +718,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: ZamanColors.cloud,
+    backgroundColor: GidroAtlasColors.cloud,
     borderWidth: 1,
-    borderColor: ZamanColors.gray[300],
+    borderColor: GidroAtlasColors.gray[300],
   },
   ragIndicatorMobile: {
     paddingHorizontal: 12,
@@ -728,35 +728,35 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   ragIndicatorHealthy: {
-    backgroundColor: ZamanColors.persianGreen,
-    borderColor: ZamanColors.persianGreen,
+    backgroundColor: GidroAtlasColors.persianGreen,
+    borderColor: GidroAtlasColors.persianGreen,
   },
   ragIndicatorError: {
     backgroundColor: '#f44336',
     borderColor: '#f44336',
   },
   ragIndicatorText: {
-    color: ZamanColors.black,
+    color: GidroAtlasColors.black,
     fontSize: 12,
     fontWeight: '600',
   },
   ragIndicatorTextActive: {
-    color: ZamanColors.white,
+    color: GidroAtlasColors.white,
   },
   mobileRagRow: {
     paddingHorizontal: 24,
     paddingVertical: 8,
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
     borderBottomWidth: 1,
-    borderBottomColor: ZamanColors.gray[200],
+    borderBottomColor: GidroAtlasColors.gray[200],
     alignItems: 'flex-start',
   },
   connectButton: { 
     paddingHorizontal: 24, 
     paddingVertical: 10, 
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
     borderWidth: 1,
-    borderColor: ZamanColors.gray[300],
+    borderColor: GidroAtlasColors.gray[300],
     borderRadius: 12,
   },
   connectButtonMobile: {
@@ -765,11 +765,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   connectButtonActive: { 
-    backgroundColor: ZamanColors.solar,
-    borderColor: ZamanColors.solar,
+    backgroundColor: GidroAtlasColors.solar,
+    borderColor: GidroAtlasColors.solar,
   },
   connectButtonText: { 
-    color: ZamanColors.black, 
+    color: GidroAtlasColors.black, 
     fontWeight: '600', 
     fontSize: 14,
   },
@@ -777,34 +777,34 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: ZamanColors.gray[400],
+    backgroundColor: GidroAtlasColors.gray[400],
   },
   statusDotActive: {
-    backgroundColor: ZamanColors.black,
+    backgroundColor: GidroAtlasColors.black,
   },
   messagesContainer: { 
     flex: 1, 
     padding: 24,
-    backgroundColor: ZamanColors.cloud,
+    backgroundColor: GidroAtlasColors.cloud,
   },
   videoPreviewContainer: {
     alignItems: 'center',
     marginBottom: 24,
     padding: 20,
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: ZamanColors.persianGreen,
+    borderColor: GidroAtlasColors.persianGreen,
   },
   videoLabel: {
     marginTop: 16,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: ZamanColors.persianGreen,
+    backgroundColor: GidroAtlasColors.persianGreen,
     borderRadius: 12,
   },
   videoLabelText: {
-    color: ZamanColors.white,
+    color: GidroAtlasColors.white,
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
@@ -818,19 +818,19 @@ const styles = StyleSheet.create({
   emptyIconContainer: { 
     marginBottom: 24,
     padding: 20,
-    backgroundColor: ZamanColors.cloud,
+    backgroundColor: GidroAtlasColors.cloud,
     borderRadius: 50,
   },
   emptyStateText: { 
     fontSize: 20, 
-    color: ZamanColors.black, 
+    color: GidroAtlasColors.black, 
     textAlign: 'center', 
     marginBottom: 12, 
     fontWeight: '600',
   },
   emptyStateSubtext: { 
     fontSize: 15, 
-    color: ZamanColors.gray[500], 
+    color: GidroAtlasColors.gray[500], 
     textAlign: 'center', 
     marginTop: 8,
     lineHeight: 22,
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 20,
     padding: 12,
-    backgroundColor: ZamanColors.cloud,
+    backgroundColor: GidroAtlasColors.cloud,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#f44336',
@@ -859,30 +859,30 @@ const styles = StyleSheet.create({
   },
   userBubble: { 
     alignSelf: 'flex-end', 
-    backgroundColor: ZamanColors.persianGreen,
+    backgroundColor: GidroAtlasColors.persianGreen,
   },
   aiBubble: { 
     alignSelf: 'flex-start', 
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
     borderWidth: 1,
-    borderColor: ZamanColors.gray[300],
+    borderColor: GidroAtlasColors.gray[300],
   },
   messageText: { 
-    color: ZamanColors.black, 
+    color: GidroAtlasColors.black, 
     fontSize: 16, 
     lineHeight: 24,
   },
   userMessageText: {
-    color: ZamanColors.white,
+    color: GidroAtlasColors.white,
   },
   activeIndicator: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
     borderTopWidth: 1,
-    borderTopColor: ZamanColors.gray[200],
+    borderTopColor: GidroAtlasColors.gray[200],
     gap: 20,
   },
   activeItem: {
@@ -891,12 +891,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   activeText: { 
-    color: ZamanColors.persianGreen, 
+    color: GidroAtlasColors.persianGreen, 
     fontSize: 14, 
     fontWeight: '600',
   },
   volumeText: { 
-    color: ZamanColors.gray[500], 
+    color: GidroAtlasColors.gray[500], 
     fontSize: 13,
     fontWeight: '500',
   },
@@ -904,32 +904,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'space-around', 
     padding: 24, 
-    backgroundColor: ZamanColors.white, 
+    backgroundColor: GidroAtlasColors.white, 
     borderTopWidth: 1, 
-    borderTopColor: ZamanColors.gray[200],
+    borderTopColor: GidroAtlasColors.gray[200],
   },
   controlButton: { 
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 16,
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
     borderWidth: 1,
-    borderColor: ZamanColors.gray[300],
+    borderColor: GidroAtlasColors.gray[300],
     opacity: 0.5,
     minWidth: 110,
   },
   controlButtonActive: { 
     opacity: 1, 
-    backgroundColor: ZamanColors.persianGreen,
-    borderColor: ZamanColors.persianGreen,
+    backgroundColor: GidroAtlasColors.persianGreen,
+    borderColor: GidroAtlasColors.persianGreen,
   },
   controlButtonText: { 
-    color: ZamanColors.black, 
+    color: GidroAtlasColors.black, 
     fontSize: 13, 
     fontWeight: '600',
   },
   controlButtonTextActive: {
-    color: ZamanColors.white,
+    color: GidroAtlasColors.white,
   },
 });

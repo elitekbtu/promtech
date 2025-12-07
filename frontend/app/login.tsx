@@ -2,9 +2,9 @@ import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, Modal, Imag
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import FaceCamera from '@/components/face-camera';
-import ZamanLogo from '@/components/zaman-logo';
+import GidroAtlasLogo from '@/components/gidroatlas-logo';
 import { Ionicons } from '@expo/vector-icons';
-import { ZamanColors } from '@/constants/theme';
+import { GidroAtlasColors } from '@/constants/theme';
 import { config } from '@/lib/config';
 import { TokenResponse, saveAuthResponse } from '@/lib/auth';
 
@@ -241,9 +241,9 @@ export default function LoginScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.logoMark}>
-            <ZamanLogo size={90} withAccent />
+            <GidroAtlasLogo size={90} withAccent />
           </View>
-          <Text style={styles.appName}>ZAMAN</Text>
+          <Text style={styles.appName}>GidroAtlas</Text>
           <Text style={styles.tagline}>Select your role</Text>
         </View>
 
@@ -253,7 +253,7 @@ export default function LoginScreen() {
             onPress={handleGuestLogin}
             disabled={isLoading}
           >
-            <Ionicons name="person-outline" size={32} color={ZamanColors.black} />
+            <Ionicons name="person-outline" size={32} color={GidroAtlasColors.black} />
             <Text style={styles.roleButtonText}>Enter as Guest</Text>
           </TouchableOpacity>
 
@@ -262,7 +262,7 @@ export default function LoginScreen() {
             onPress={() => setView('expert')}
             disabled={isLoading}
           >
-            <Ionicons name="briefcase-outline" size={32} color={ZamanColors.white} />
+            <Ionicons name="briefcase-outline" size={32} color={GidroAtlasColors.white} />
             <Text style={[styles.roleButtonText, styles.expertButtonText]}>Enter as Expert</Text>
           </TouchableOpacity>
         </View>
@@ -286,13 +286,13 @@ export default function LoginScreen() {
               style={styles.backButton} 
               onPress={() => setView('selection')}
             >
-              <Ionicons name="arrow-back" size={24} color={ZamanColors.black} />
+              <Ionicons name="arrow-back" size={24} color={GidroAtlasColors.black} />
             </TouchableOpacity>
             
             <View style={styles.logoMark}>
-              <ZamanLogo size={90} withAccent />
+              <GidroAtlasLogo size={90} withAccent />
             </View>
-            <Text style={styles.appName}>ZAMAN</Text>
+            <Text style={styles.appName}>GidroAtlas</Text>
             <Text style={styles.tagline}>
               {mode === 'login' ? 'Expert Login' : 'Expert Registration'}
             </Text>
@@ -323,7 +323,7 @@ export default function LoginScreen() {
                   onPress={() => setShowCamera(true)}
                   disabled={isLoading}
                 >
-                  <Ionicons name="camera-outline" size={24} color={ZamanColors.persianGreen} />
+                  <Ionicons name="camera-outline" size={24} color={GidroAtlasColors.persianGreen} />
                   <Text style={styles.captureButtonText}>
                     {mode === 'login' ? 'Scan face' : 'Capture face'}
                   </Text>
@@ -337,7 +337,7 @@ export default function LoginScreen() {
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    <ActivityIndicator color={ZamanColors.black} />
+                    <ActivityIndicator color={GidroAtlasColors.black} />
                   ) : (
                     <Text style={styles.primaryButtonText}>Verify & Login</Text>
                   )}
@@ -362,7 +362,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Email"
-                  placeholderTextColor={ZamanColors.gray[400]}
+                  placeholderTextColor={GidroAtlasColors.gray[400]}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -373,7 +373,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Password"
-                  placeholderTextColor={ZamanColors.gray[400]}
+                  placeholderTextColor={GidroAtlasColors.gray[400]}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -386,7 +386,7 @@ export default function LoginScreen() {
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    <ActivityIndicator color={ZamanColors.black} />
+                    <ActivityIndicator color={GidroAtlasColors.black} />
                   ) : (
                     <Text style={styles.primaryButtonText}>Login</Text>
                   )}
@@ -402,7 +402,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="First name"
-                  placeholderTextColor={ZamanColors.gray[400]}
+                  placeholderTextColor={GidroAtlasColors.gray[400]}
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
@@ -412,7 +412,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Last name"
-                  placeholderTextColor={ZamanColors.gray[400]}
+                  placeholderTextColor={GidroAtlasColors.gray[400]}
                   value={surname}
                   onChangeText={setSurname}
                   autoCapitalize="words"
@@ -422,7 +422,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Email"
-                  placeholderTextColor={ZamanColors.gray[400]}
+                  placeholderTextColor={GidroAtlasColors.gray[400]}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -433,7 +433,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Phone"
-                  placeholderTextColor={ZamanColors.gray[400]}
+                  placeholderTextColor={GidroAtlasColors.gray[400]}
                   value={phone}
                   onChangeText={setPhone}
                   keyboardType="phone-pad"
@@ -443,7 +443,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Password (min 8 characters)"
-                  placeholderTextColor={ZamanColors.gray[400]}
+                  placeholderTextColor={GidroAtlasColors.gray[400]}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
@@ -456,7 +456,7 @@ export default function LoginScreen() {
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    <ActivityIndicator color={ZamanColors.black} />
+                    <ActivityIndicator color={GidroAtlasColors.black} />
                   ) : (
                     <Text style={styles.primaryButtonText}>Create Account</Text>
                   )}
@@ -502,7 +502,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
   },
   keyboardView: {
     flex: 1,
@@ -531,12 +531,12 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '300',
     letterSpacing: 8,
-    color: ZamanColors.black,
+    color: GidroAtlasColors.black,
     marginBottom: 8,
   },
   tagline: {
     fontSize: 15,
-    color: ZamanColors.gray[500],
+    color: GidroAtlasColors.gray[500],
     fontWeight: '400',
   },
   content: {
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: ZamanColors.gray[600],
+    color: GidroAtlasColors.gray[600],
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 16,
@@ -558,16 +558,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
     borderWidth: 1,
-    borderColor: ZamanColors.gray[300],
+    borderColor: GidroAtlasColors.gray[300],
     borderRadius: 12,
     paddingVertical: 20,
     gap: 12,
   },
   captureButtonText: {
     fontSize: 16,
-    color: ZamanColors.persianGreen,
+    color: GidroAtlasColors.persianGreen,
     fontWeight: '500',
   },
   photoContainer: {
@@ -578,31 +578,31 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: ZamanColors.gray[100],
+    backgroundColor: GidroAtlasColors.gray[100],
     borderWidth: 2,
-    borderColor: ZamanColors.persianGreen,
+    borderColor: GidroAtlasColors.persianGreen,
   },
   linkButton: {
     paddingVertical: 8,
   },
   linkText: {
     fontSize: 15,
-    color: ZamanColors.persianGreen,
+    color: GidroAtlasColors.persianGreen,
     fontWeight: '500',
   },
   input: {
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
     borderWidth: 1,
-    borderColor: ZamanColors.gray[300],
+    borderColor: GidroAtlasColors.gray[300],
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: ZamanColors.black,
+    color: GidroAtlasColors.black,
     marginBottom: 12,
   },
   primaryButton: {
-    backgroundColor: ZamanColors.solar,
+    backgroundColor: GidroAtlasColors.solar,
     borderRadius: 12,
     paddingVertical: 18,
     alignItems: 'center',
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: ZamanColors.black,
+    color: GidroAtlasColors.black,
   },
   divider: {
     flexDirection: 'row',
@@ -622,12 +622,12 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: ZamanColors.gray[200],
+    backgroundColor: GidroAtlasColors.gray[200],
   },
   dividerText: {
     marginHorizontal: 16,
     fontSize: 13,
-    color: ZamanColors.gray[400],
+    color: GidroAtlasColors.gray[400],
     fontWeight: '400',
   },
   switchButton: {
@@ -638,20 +638,20 @@ const styles = StyleSheet.create({
   },
   switchText: {
     fontSize: 15,
-    color: ZamanColors.gray[600],
+    color: GidroAtlasColors.gray[600],
   },
   switchTextBold: {
     fontSize: 15,
-    color: ZamanColors.persianGreen,
+    color: GidroAtlasColors.persianGreen,
     fontWeight: '600',
   },
   roleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
     borderWidth: 1,
-    borderColor: ZamanColors.gray[300],
+    borderColor: GidroAtlasColors.gray[300],
     borderRadius: 16,
     paddingVertical: 24,
     marginBottom: 20,
@@ -665,14 +665,14 @@ const styles = StyleSheet.create({
   roleButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: ZamanColors.black,
+    color: GidroAtlasColors.black,
   },
   expertButton: {
-    backgroundColor: ZamanColors.black,
-    borderColor: ZamanColors.black,
+    backgroundColor: GidroAtlasColors.black,
+    borderColor: GidroAtlasColors.black,
   },
   expertButtonText: {
-    color: ZamanColors.white,
+    color: GidroAtlasColors.white,
   },
 });
 
