@@ -7,6 +7,7 @@ import { ZamanColors } from '@/constants/theme';
 import ZamanLogo from '@/components/zaman-logo';
 import { clearAuth, getUserData, UserData } from '@/lib/auth';
 import { authAPI } from '@/lib/api-services';
+import { AuroraBackground } from '@/components/ui/aurora-background';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -91,7 +92,13 @@ export default function HomeScreen() {
   ];
 
   return (
-    <View style={styles.container}>
+    <AuroraBackground
+      primaryColor={ZamanColors.persianGreen}
+      secondaryColor="#4FD1C5"
+      accentColor={ZamanColors.solar}
+      backgroundColor={ZamanColors.white}
+      intensity={0.35}
+    >
       {/* Logout Button - Top Right */}
       {user && (
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -147,7 +154,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </AuroraBackground>
   );
 }
 
