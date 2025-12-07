@@ -48,6 +48,19 @@ class SystemStatus(BaseModel):
     uptime: Optional[float] = Field(None, description="System uptime in seconds")
 
 
+class ExplainPriorityRequest(BaseModel):
+    """Request model for explaining priority."""
+    language: Optional[str] = Field("ru", description="Language for the explanation (ru/en)")
+
+
+class ExplainPriorityResponse(BaseModel):
+    """Response model for priority explanation."""
+    object_id: int = Field(..., description="ID of the water object")
+    priority: int = Field(..., description="Priority score")
+    priority_level: str = Field(..., description="Priority level (high/medium/low)")
+    explanation: str = Field(..., description="Explanation of the priority")
+
+
 class ToolStatus(BaseModel):
     """Individual tool status."""
     name: str = Field(..., description="Tool name")

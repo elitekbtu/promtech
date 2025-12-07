@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional, Dict, Any
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 import logging
 
 import sys
@@ -11,7 +12,10 @@ backend_dir = Path(__file__).parent.parent.parent
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
+from database import get_db
+from models import WaterObject
 from rag_agent.config.orchestrator import rag_system
+from rag_agent.schemas.schemas import ExplainPriorityRequest, ExplainPriorityResponse
 
 logger = logging.getLogger(__name__)
 
@@ -132,3 +136,48 @@ async def get_tools_status():
     except Exception as e:
         logger.error(f"Error getting tools status: {e}")
         raise HTTPException(status_code=500, detail=f"Error getting tools status: {str(e)}")
+
+
+@router.post("/explain-priority/{object_id}", response_model=ExplainPriorityResponse)
+async def explain_priority(
+    object_id: int,
+    request: ExplainPriorityRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Explain why a water object has a specific priority score.
+    """
+    # Get water object
+    water_object = db.query(WaterObject).filter(WaterObject.id == object_id).first()
+    if not water_object:
+        raise HTTPException(status_code=404, detail="Water object not found")
+    
+    # Initialize RAG if needed
+    if not rag_system.supervisor_agent:
+        rag_system.initialize()
+        
+    # Construct prompt
+    prompt = (
+        f"Explain why the water object '{water_object.name}' (ID: {water_object.id}) "
+        f"has a priority score of {water_object.priority} ({water_object.priority_level.value}). "
+        f"Its technical condition is {water_object.technical_condition} (1-5 scale, where 5 is worst). "
+        f"Passport date: {water_object.passport_date}. "
+        f"Please provide a concise explanation of the risk factors."
+    )
+    
+    if request.language == 'ru':
+        prompt += " Please answer in Russian."
+    
+    try:
+        result = rag_system.query(user_query=prompt)
+        explanation = result["response"]
+    except Exception as e:
+        logger.error(f"Error generating explanation: {e}")
+        explanation = "Could not generate explanation at this time."
+        
+    return ExplainPriorityResponse(
+        object_id=water_object.id,
+        priority=water_object.priority,
+        priority_level=water_object.priority_level.value,
+        explanation=explanation
+    )

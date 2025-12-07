@@ -181,7 +181,7 @@ export const prioritiesAPI = {
      * Get priority statistics (expert only)
      */
     async getStats(): Promise<PriorityStatistics> {
-        const url = `${config.backendURL}/api/priorities/stats`;
+        const url = `${config.backendURL}/api/priorities/statistics`;
         const headers = await getAuthHeaders();
 
         const response = await fetchWithTimeout(url, { headers });
