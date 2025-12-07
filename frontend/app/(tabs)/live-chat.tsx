@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Platform, Dimensions } from 'react-native';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useLiveAPIWithRAG } from '@/hooks/use-live-api-with-rag';
 import Constants from 'expo-constants';
 import { AudioRecorder } from '@/lib/audio-recorder';
@@ -22,7 +22,8 @@ const API_KEY = Constants.expoConfig?.extra?.GEMINI_API_KEY || process.env.EXPO_
 type Language = 'ru' | 'en';
 
 function LiveChatContent() {
-  const apiOptions = { apiKey: API_KEY || '' };
+  // Memoize apiOptions to prevent recreating client on every render
+  const apiOptions = useMemo(() => ({ apiKey: API_KEY || '' }), []);
   const { connected, connect, disconnect, client, volume, setConfig, ragToolsEnabled, ragToolsHealthy } = useLiveAPIWithRAG(apiOptions);
   const [messages, setMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'ai'}>>([]);
   const [isMicOn, setIsMicOn] = useState(false);
@@ -250,11 +251,31 @@ INSTRUCTIONS:
         audioRecorderRef.current = recorder;
 
         recorder.on('data', (base64Data: string) => {
-          if (connected) {
-            client.sendRealtimeInput([{
-              mimeType: 'audio/pcm',
-              data: base64Data
-            }]);
+          if (connected && client) {
+            // Check session directly before sending
+            const hasSession = !!client.session;
+            console.log('[Audio] Sending audio data, length:', base64Data.length, {
+              connected,
+              hasClient: !!client,
+              hasSession,
+              clientStatus: client.status
+            });
+            
+            if (!hasSession) {
+              console.warn('[Audio] ⚠️ Session not available, skipping audio chunk');
+              return;
+            }
+            
+            try {
+              client.sendRealtimeInput([{
+                mimeType: 'audio/pcm',
+                data: base64Data
+              }]);
+            } catch (error) {
+              console.error('[Audio] Error sending audio:', error);
+            }
+          } else {
+            console.warn('[Audio] Not sending audio - connected:', connected, 'client:', !!client);
           }
         });
 

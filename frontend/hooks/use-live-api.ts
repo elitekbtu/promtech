@@ -46,15 +46,20 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
   // register audio for streaming server -> speakers
   useEffect(() => {
     if (!audioStreamerRef.current) {
-      audioContext({ id: "audio-out" }).then((audioCtx: AudioContext) => {
+      audioContext({ id: "audio-out" }).then(async (audioCtx: AudioContext) => {
+        // Ensure audio context is resumed (browsers suspend it by default)
+        if (audioCtx.state === "suspended") {
+          console.log("[useLiveAPI] 🔄 Resuming suspended audio context");
+          await audioCtx.resume();
+        }
+        
         audioStreamerRef.current = new AudioStreamer(audioCtx);
-        audioStreamerRef.current
+        await audioStreamerRef.current
           .addWorklet<any>("vumeter-out", VolMeterWorket, (ev: any) => {
             setVolume(ev.data.volume);
-          })
-          .then(() => {
-            // Successfully added worklet
           });
+        
+        console.log("[useLiveAPI] ✅ Audio streamer initialized");
       });
     }
   }, [audioStreamerRef]);
@@ -72,10 +77,27 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
       console.error("error", error);
     };
 
-    const stopAudioStreamer = () => audioStreamerRef.current?.stop();
+    const stopAudioStreamer = () => {
+      console.log("[useLiveAPI] 🛑 Stopping audio streamer");
+      audioStreamerRef.current?.stop();
+    };
 
-    const onAudio = (data: ArrayBuffer) =>
-      audioStreamerRef.current?.addPCM16(new Uint8Array(data));
+    const onAudio = async (data: ArrayBuffer) => {
+      console.log("[useLiveAPI] 🔊 Audio response received, size:", data.byteLength);
+      if (audioStreamerRef.current) {
+        // Ensure audio context is resumed
+        const audioCtx = audioStreamerRef.current.context;
+        if (audioCtx.state === "suspended") {
+          console.log("[useLiveAPI] 🔄 Resuming audio context for playback");
+          await audioCtx.resume();
+        }
+        
+        audioStreamerRef.current.addPCM16(new Uint8Array(data));
+        console.log("[useLiveAPI] ✅ Audio added to streamer");
+      } else {
+        console.warn("[useLiveAPI] ⚠️ Audio streamer not available");
+      }
+    };
 
     client
       .on("error", onError)
@@ -90,8 +112,9 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
         .off("open", onOpen)
         .off("close", onClose)
         .off("interrupted", stopAudioStreamer)
-        .off("audio", onAudio)
-        .disconnect();
+        .off("audio", onAudio);
+      // NOTE: Do NOT call disconnect() here - it should be called explicitly
+      // Calling it in cleanup causes the connection to close when useEffect re-runs
     };
   }, [client]);
 

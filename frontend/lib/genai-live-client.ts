@@ -163,6 +163,7 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
 
   protected onerror(e: ErrorEvent) {
     this.log("server.error", e.message);
+    console.error("[GenAI Live] ❌ Error event:", e);
     this.emit("error", e);
   }
 
@@ -171,10 +172,32 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
       `server.close`,
       `disconnected ${e.reason ? `with reason: ${e.reason}` : ``}`
     );
+    console.log("[GenAI Live] 🔌 Connection closed:", {
+      code: e.code,
+      reason: e.reason,
+      wasClean: e.wasClean,
+      status: this._status,
+      hasSession: !!this._session
+    });
+    
+    // Reset status if connection was closed
+    if (this._status === "connected" || this._status === "connecting") {
+      this._status = "disconnected";
+      this._session = null;
+    }
+    
     this.emit("close", e);
   }
 
   protected async onmessage(message: LiveServerMessage) {
+    // Log all incoming messages for debugging
+    console.log("[GenAI Live] 📨 Received message:", JSON.stringify(message, null, 2));
+    console.log("[GenAI Live] 📊 Session state:", {
+      hasSession: !!this._session,
+      status: this._status,
+      model: this._model
+    });
+    
     if (message.setupComplete) {
       this.log("server.send", "setupComplete");
       this.emit("setupcomplete");
@@ -182,6 +205,7 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     }
     if (message.toolCall) {
       this.log("server.toolCall", message);
+      console.log("[GenAI Live] 🔧 Tool call received:", message.toolCall);
       this.emit("toolcall", message.toolCall);
       return;
     }
@@ -195,6 +219,8 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     // or contentUpdate { end_of_turn: true }
     if (message.serverContent) {
       const { serverContent } = message;
+      console.log("[GenAI Live] 📦 Server content received:", JSON.stringify(serverContent, null, 2));
+      
       if ("interrupted" in serverContent) {
         this.log("server.content", "interrupted");
         this.emit("interrupted");
@@ -202,11 +228,13 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
       }
       if ("turnComplete" in serverContent) {
         this.log("server.content", "turnComplete");
+        console.log("[GenAI Live] ✅ Turn complete");
         this.emit("turncomplete");
       }
 
       if ("modelTurn" in serverContent) {
         let parts: Part[] = serverContent.modelTurn?.parts || [];
+        console.log("[GenAI Live] 🎤 Model turn with", parts.length, "parts");
 
         // when its audio that is returned for modelTurn
         const audioParts = parts.filter(
@@ -214,29 +242,37 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
         );
         const base64s = audioParts.map((p) => p.inlineData?.data);
 
+        console.log("[GenAI Live] 🔊 Audio parts:", audioParts.length, "Text parts:", parts.length - audioParts.length);
+
         // strip the audio parts out of the modelTurn
         const otherParts = difference(parts, audioParts);
-        // console.log("otherParts", otherParts);
 
         base64s.forEach((b64) => {
           if (b64) {
             const data = base64ToArrayBuffer(b64);
             this.emit("audio", data);
             this.log(`server.audio`, `buffer (${data.byteLength})`);
+            console.log("[GenAI Live] 🔊 Audio data emitted, size:", data.byteLength);
           }
         });
-        if (!otherParts.length) {
+        
+        // Even if only audio, we should still emit the content event for logging
+        if (!otherParts.length && audioParts.length > 0) {
+          console.log("[GenAI Live] ✅ Audio-only response processed");
           return;
         }
 
         parts = otherParts;
 
-        const content: { modelTurn: Content } = { modelTurn: { parts } };
-        this.emit("content", content);
-        this.log(`server.content`, message);
+        if (parts.length > 0) {
+          const content: { modelTurn: Content } = { modelTurn: { parts } };
+          this.emit("content", content);
+          this.log(`server.content`, message);
+          console.log("[GenAI Live] 📝 Text content emitted:", parts);
+        }
       }
     } else {
-      console.log("received unmatched message", message);
+      console.log("[GenAI Live] ⚠️ Received unmatched message:", message);
     }
   }
 
@@ -244,18 +280,36 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
    * send realtimeInput, this is base64 chunks of "audio/pcm" and/or "image/jpg"
    */
   sendRealtimeInput(chunks: Array<{ mimeType: string; data: string }>) {
+    // Double-check session right before use
+    const session = this._session;
+    if (!session) {
+      console.warn("[GenAI Live] ⚠️ Cannot send realtime input: session not available", {
+        status: this._status,
+        hasSession: !!this._session,
+        sessionType: typeof this._session
+      });
+      return;
+    }
+    
     let hasAudio = false;
     let hasVideo = false;
     for (const ch of chunks) {
-      this.session?.sendRealtimeInput({ media: ch });
-      if (ch.mimeType.includes("audio")) {
-        hasAudio = true;
-      }
-      if (ch.mimeType.includes("image")) {
-        hasVideo = true;
-      }
-      if (hasAudio && hasVideo) {
-        break;
+      try {
+        session.sendRealtimeInput({ media: ch });
+        if (ch.mimeType.includes("audio")) {
+          hasAudio = true;
+          console.log("[GenAI Live] 🎤 Sending audio chunk, size:", ch.data?.length || 0);
+        }
+        if (ch.mimeType.includes("image")) {
+          hasVideo = true;
+          console.log("[GenAI Live] 📷 Sending image chunk, size:", ch.data?.length || 0);
+        }
+        if (hasAudio && hasVideo) {
+          break;
+        }
+      } catch (error) {
+        console.error("[GenAI Live] ❌ Error sending realtime input:", error);
+        this.emit("error", error as any);
       }
     }
     const message =
