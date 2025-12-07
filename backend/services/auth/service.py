@@ -1,12 +1,23 @@
-from fastapi import HTTPException, Depends, UploadFile
+from fastapi import HTTPException, Depends, UploadFile, status
+# TODO: Uncomment when frontend is ready for JWT authentication
+# from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from database import get_db
-from models.user import User
-from services.auth.schemas import UserRead
+from models.user import User, UserRole
+from services.auth.schemas import UserRead  # , Token, TokenData
 from typing import Optional
+from datetime import datetime, timedelta
 import os
 from pathlib import Path
+# TODO: Uncomment when frontend is ready for JWT authentication
+# import jwt
+
+# TODO: JWT Configuration - Uncomment when frontend is ready
+# SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+# ALGORITHM = "HS256"
+# ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -17,6 +28,155 @@ AVATARS_DIR.mkdir(parents=True, exist_ok=True)
 def verify_password(password: str, password_hash: str) -> bool:
     """Verify password against hash"""
     return pwd_context.verify(password, password_hash)
+
+
+# TODO: JWT Token Functions - Uncomment when frontend is ready for JWT authentication
+# def create_access_token(user_id: int, email: str, role: UserRole, expires_delta: Optional[timedelta] = None) -> str:
+#     """
+#     Create JWT access token
+#     
+#     Args:
+#         user_id: User's ID
+#         email: User's email
+#         role: User's role
+#         expires_delta: Optional custom expiration time
+#         
+#     Returns:
+#         Encoded JWT token
+#     """
+#     if expires_delta:
+#         expire = datetime.utcnow() + expires_delta
+#     else:
+#         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+#     
+#     to_encode = {
+#         "sub": str(user_id),
+#         "email": email,
+#         "role": role.value,
+#         "exp": expire
+#     }
+#     
+#     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+#     return encoded_jwt
+
+
+# TODO: Uncomment when frontend is ready for JWT authentication
+# def decode_access_token(token: str) -> TokenData:
+#     """
+#     Decode and validate JWT access token
+#     
+#     Args:
+#         token: JWT token string
+#         
+#     Returns:
+#         TokenData with user information
+#         
+#     Raises:
+#         HTTPException: If token is invalid or expired
+#     """
+#     credentials_exception = HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail="Could not validate credentials",
+#         headers={"WWW-Authenticate": "Bearer"},
+#     )
+#     
+#     try:
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#         user_id: int = int(payload.get("sub"))
+#         email: str = payload.get("email")
+#         role_str: str = payload.get("role")
+#         
+#         if user_id is None or email is None or role_str is None:
+#             raise credentials_exception
+#         
+#         # Convert role string to UserRole enum
+#         try:
+#             role = UserRole(role_str)
+#         except ValueError:
+#             raise credentials_exception
+#         
+#         return TokenData(user_id=user_id, email=email, role=role)
+#     except jwt.ExpiredSignatureError:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="Token has expired",
+#             headers={"WWW-Authenticate": "Bearer"},
+#         )
+#     except jwt.InvalidTokenError:
+#         raise credentials_exception
+
+
+# TODO: JWT Authentication Dependencies - Uncomment when frontend is ready
+# async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+#     """
+#     Dependency to get current authenticated user from JWT token
+#     
+#     Args:
+#         token: JWT token from Authorization header
+#         db: Database session
+#         
+#     Returns:
+#         Current authenticated User
+#         
+#     Raises:
+#         HTTPException: If token is invalid or user not found
+#     """
+#     token_data = decode_access_token(token)
+#     
+#     user = db.query(User).filter(User.id == token_data.user_id).first()
+#     
+#     if user is None:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="User not found",
+#             headers={"WWW-Authenticate": "Bearer"},
+#         )
+#     
+#     if user.deleted_at:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="User account is deleted",
+#             headers={"WWW-Authenticate": "Bearer"},
+#         )
+#     
+#     return user
+
+
+# TODO: Uncomment when frontend is ready for JWT authentication
+# def get_current_user_role(current_user: User = Depends(get_current_user)) -> UserRole:
+#     """
+#     Dependency to get current user's role
+#     
+#     Args:
+#         current_user: Current authenticated user
+#         
+#     Returns:
+#         User's role
+#     """
+#     return current_user.role
+
+
+# TODO: Uncomment when frontend is ready for JWT authentication
+# def require_expert(current_user: User = Depends(get_current_user)) -> User:
+#     """
+#     Dependency to require expert role
+#     
+#     Args:
+#         current_user: Current authenticated user
+#         
+#     Returns:
+#         Current user if they have expert role
+#         
+#     Raises:
+#         HTTPException: If user is not an expert
+#     """
+#     if current_user.role != UserRole.expert:
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="This operation requires expert role",
+#             headers={"WWW-Authenticate": "Bearer"}
+#         )
+#     return current_user
 
 
 def save_avatar_file(file_data: bytes, user_id: int) -> str:
@@ -61,7 +221,7 @@ async def create_user(
         db: Database session
         
     Returns:
-        Created user data
+        Created user data (with role field)
     """
     # Check if email already exists
     if db.query(User).filter(User.email == email).first():
@@ -71,14 +231,15 @@ async def create_user(
     if db.query(User).filter(User.phone == phone).first():
         raise HTTPException(status_code=400, detail="Phone already registered")
 
-    # Create user without avatar first
+    # Create user without avatar first (default role is guest)
     new_user = User(
         name=name,
         surname=surname,
         email=email,
         phone=phone,
         password_hash=pwd_context.hash(password),
-        avatar=None
+        avatar=None,
+        role=UserRole.guest  # Default to guest role
     )
 
     db.add(new_user)
@@ -102,7 +263,19 @@ async def create_user(
             # If avatar save fails, still return user but log error
             print(f"Error saving avatar for user {new_user.id}: {str(e)}")
 
-    return UserRead.from_orm(new_user)
+    # TODO: Generate JWT token when frontend is ready
+    # access_token = create_access_token(
+    #     user_id=new_user.id,
+    #     email=new_user.email,
+    #     role=new_user.role
+    # )
+    # return Token(
+    #     access_token=access_token,
+    #     token_type="bearer",
+    #     user=UserRead.model_validate(new_user)
+    # )
+    
+    return UserRead.model_validate(new_user)
 
 
 def login_user(email: str, password: str, db: Session = Depends(get_db)) -> UserRead:
@@ -115,7 +288,7 @@ def login_user(email: str, password: str, db: Session = Depends(get_db)) -> User
         db: Database session
         
     Returns:
-        User data if credentials are valid
+        User data (with role field)
     """
     user = db.query(User).filter(User.email == email).first()
     
@@ -125,7 +298,19 @@ def login_user(email: str, password: str, db: Session = Depends(get_db)) -> User
     if user.deleted_at:
         raise HTTPException(status_code=401, detail="User is deleted")
     
-    return UserRead.from_orm(user)
+    # TODO: Generate JWT token when frontend is ready
+    # access_token = create_access_token(
+    #     user_id=user.id,
+    #     email=user.email,
+    #     role=user.role
+    # )
+    # return Token(
+    #     access_token=access_token,
+    #     token_type="bearer",
+    #     user=UserRead.model_validate(user)
+    # )
+    
+    return UserRead.model_validate(user)
 
 
 def get_user(user_id: int, db: Session = Depends(get_db)) -> UserRead:

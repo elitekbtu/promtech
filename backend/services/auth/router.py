@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from services.auth.service import create_user, login_user, get_user, update_user_avatar
-from services.auth.schemas import UserLogin, UserRead
+from services.auth.schemas import UserLogin, UserRead  # TODO: Add Token when frontend ready
 from typing import Optional
 from pydantic import EmailStr, ValidationError
 import re
@@ -51,7 +51,10 @@ async def register(
     """
     Register a new user with optional avatar image for Face ID.
     
-    If an avatar is provided, it will be saved and used for face verification.
+    Returns user data with role field (default: guest).
+    New users are assigned the 'guest' role by default.
+    
+    TODO: Update to return JWT Token when frontend is ready to handle it.
     """
     # Validate inputs
     name = validate_name(name, "Name")
@@ -68,8 +71,6 @@ async def register(
         avatar_file=avatar,
         db=db
     )
-
-
 @router.post("/login", response_model=UserRead, tags=["auth"])
 async def login(
     credentials: UserLogin,
@@ -78,7 +79,10 @@ async def login(
     """
     Login with email and password.
     
-    Returns user information if credentials are valid.
+    Returns user data with role field if credentials are valid.
+    The role (guest or expert) can be used for client-side authorization logic.
+    
+    TODO: Update to return JWT Token when frontend is ready to handle it.
     """
     return login_user(
         email=credentials.email,

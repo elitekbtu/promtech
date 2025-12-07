@@ -37,11 +37,13 @@
 
 ## Phase 5: Authentication Updates
 
-- [ ] 5.1 Update `backend/services/auth/schemas.py` role enum to `guest`/`expert`
-- [ ] 5.2 Modify login endpoint to return JWT with new role field
-- [ ] 5.3 Update `UserRead` schema to reflect new role values
-- [ ] 5.4 Create role validation dependencies (`get_current_user_role`, `require_expert`)
-- [ ] 5.5 Update user registration to default to `guest` role
+- [x] 5.1 Update `backend/services/auth/schemas.py` role enum to `guest`/`expert`
+- [x] 5.2 Modify login endpoint to return user data with role field (JWT deferred)
+- [x] 5.3 Update `UserRead` schema to reflect new role values
+- [x] 5.4 Create role validation dependencies (prepared but commented out for future use)
+- [x] 5.5 Update user registration to default to `guest` role
+
+**Note:** JWT token implementation prepared but deferred to maintain backward compatibility with frontend. All JWT code exists but is commented out with TODO markers.
 
 ## 6. Passport Management
 

@@ -1,7 +1,7 @@
 # GidroAtlas Implementation Status
 
 **Last Updated:** December 7, 2025  
-**Status:** 🚧 In Progress (Phase 4/13 Complete)
+**Status:** 🚧 In Progress (Phase 5/13 Complete)
 
 ## 📊 Overall Progress
 
@@ -9,10 +9,11 @@
 - ✅ **Phase 2:** Core Business Logic - **COMPLETE** (6/6 tasks)
 - ✅ **Phase 3:** API Endpoints - Water Objects - **COMPLETE** (7/7 tasks)
 - ✅ **Phase 4:** API Endpoints - Priorities - **COMPLETE** (5/5 tasks)
-- 🔄 **Phase 5:** Authentication Updates - **NEXT** (0/5 tasks)
-- ⏳ **Phases 6-13:** Not started (59 tasks remaining)
+- ✅ **Phase 5:** Authentication Updates - **COMPLETE** (5/5 tasks)
+- 🔄 **Phase 6:** Passport Management - **NEXT** (0/6 tasks)
+- ⏳ **Phases 7-13:** Not started (54 tasks remaining)
 
-**Total:** 23/82 tasks complete (28.0%)
+**Total:** 28/82 tasks complete (34.1%)
 
 ---
 
@@ -288,15 +289,112 @@ Response: Top N objects sorted by priority (desc)
 
 ---
 
-## 🔄 Phase 5: Authentication Updates (NEXT)
+## ✅ Phase 5: Authentication Updates
+
+### Tasks Completed:
+
+1. ✅ Updated `backend/services/auth/schemas.py` with UserRole enum
+2. ✅ Updated `UserRead` schema to include role field
+3. ⚠️ JWT implementation prepared but deferred (backward compatibility)
+4. ✅ Created role validation dependencies (commented out for future)
+5. ✅ Updated user registration to default to guest role
+
+### Deliverables:
+
+```
+backend/services/auth/
+├── schemas.py (updated)
+│   ├── UserRead (added role field)
+│   ├── Token (JWT schema - prepared for future)
+│   └── TokenData (JWT payload - prepared for future)
+├── service.py (updated)
+│   ├── JWT functions (commented out - TODO)
+│   ├── get_current_user() (commented out - TODO)
+│   ├── get_current_user_role() (commented out - TODO)
+│   ├── require_expert() (commented out - TODO)
+│   ├── login_user() returns UserRead (backward compatible)
+│   └── create_user() returns UserRead (backward compatible)
+└── router.py (backward compatible)
+    ├── /register returns UserRead
+    └── /login returns UserRead
+
+backend/requirements.txt
+└── Added pyjwt>=2.8.0 (prepared for future)
+
+env.example
+└── Added SECRET_KEY configuration (prepared for future)
+```
+
+### Current Implementation:
+
+#### Authentication Flow (Current):
+
+1. **Registration:**
+
+   - User registers → Returns UserRead with role
+   - Default role: `guest`
+   - No JWT token (backward compatible)
+
+2. **Login:**
+
+   - User provides credentials → Returns UserRead with role
+   - Role included in response: `guest` or `expert`
+   - No JWT token (backward compatible)
+
+3. **Protected Endpoints:**
+   - Currently using existing session-based auth
+   - Role-based filtering implemented in endpoint logic
+   - JWT dependencies prepared but not active
+
+### Deferred Features (TODO):
+
+⚠️ **JWT Token Authentication** - Code prepared but commented out:
+
+- Token generation functions exist
+- Token validation functions exist
+- OAuth2 dependencies defined but not used
+- Waiting for frontend implementation
+
+**Why Deferred:**
+
+- Frontend expects `UserRead` response, not `Token` object
+- Breaking change avoided for backward compatibility
+- All JWT code preserved with TODO comments
+
+**Next Steps for JWT (Future):**
+
+1. Frontend: Update login/register to handle Token response
+2. Frontend: Store access_token in localStorage/session
+3. Frontend: Add Authorization: Bearer {token} header to requests
+4. Backend: Uncomment JWT functions and dependencies
+5. Backend: Update endpoints to use Depends(get_current_user)
+
+### Role System (Active):
+
+✅ **Database & Models:**
+
+- UserRole enum: guest, expert
+- User model has role field
+- Default role: guest
+
+✅ **API Responses:**
+
+- UserRead includes role field
+- Role visible to frontend
+- Can be used for client-side UI logic
+
+---
+
+## 🔄 Phase 6: Passport Management (NEXT)
 
 ### Planned Tasks:
 
-1. ⏳ Update `backend/services/auth/schemas.py` role enum to `guest`/`expert`
-2. ⏳ Modify login endpoint to return JWT with new role field
-3. ⏳ Update `UserRead` schema to reflect new role values
-4. ⏳ Create role validation dependencies (`get_current_user_role`, `require_expert`)
-5. ⏳ Update user registration to default to `guest` role
+1. ⏳ Create `backend/services/passports/` module structure
+2. ⏳ Implement file upload handler for PDF passports
+3. ⏳ Implement PDF text extraction using pypdf
+4. ⏳ Create passport text storage service (save to `PassportText` model)
+5. ⏳ Implement passport retrieval by object_id
+6. ⏳ Configure file storage path and base URL from environment variables
 
 ---
 

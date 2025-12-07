@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from typing import Optional
+from models.user import UserRole
 
 
 class UserCreate(BaseModel):
@@ -25,6 +26,7 @@ class UserRead(BaseModel):
     surname: str
     email: str  
     phone: str
+    role: UserRole = Field(default=UserRole.guest, description="User role (guest or expert)")
     avatar: Optional[str] = Field(None, description="Avatar filename (for Face ID)")
     created_at: datetime
     updated_at: datetime
@@ -32,3 +34,17 @@ class UserRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class Token(BaseModel):
+    """Schema for JWT token response"""
+    access_token: str = Field(..., description="JWT access token")
+    token_type: str = Field(default="bearer", description="Token type")
+    user: UserRead = Field(..., description="Authenticated user information")
+
+
+class TokenData(BaseModel):
+    """Schema for JWT token payload data"""
+    user_id: int
+    email: str
+    role: UserRole

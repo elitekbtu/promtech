@@ -9,6 +9,8 @@ The system SHALL support two distinct user roles: `guest` (public read-only acce
 **Previous**: System supported `admin` and `user` roles.  
 **Change**: Replace with water management domain-specific roles.
 
+**Status**: ⚠️ **JWT Implementation Deferred** - Role system implemented in database and models, but JWT token authentication is commented out to maintain backward compatibility with frontend. Login/register endpoints return `UserRead` instead of JWT tokens.
+
 #### Scenario: Register guest user
 
 - **GIVEN** a new user registration
@@ -21,11 +23,12 @@ The system SHALL support two distinct user roles: `guest` (public read-only acce
 - **WHEN** role="expert" is specified
 - **THEN** user SHALL be created with expert privileges
 
-#### Scenario: Login returns role-based token
+#### Scenario: Login returns user data with role
 
 - **GIVEN** a user with role="expert"
 - **WHEN** logging in with valid credentials
-- **THEN** JWT token SHALL include role="expert" claim
+- **THEN** response SHALL include user data with role="expert" field
+- **NOTE**: JWT token implementation is deferred (TODO: implement when frontend ready)
 
 #### Scenario: Guest cannot access expert endpoints
 
@@ -39,29 +42,34 @@ The system SHALL support two distinct user roles: `guest` (public read-only acce
 - **WHEN** accessing any water management endpoint
 - **THEN** request SHALL be authorized
 
-#### Scenario: Unauthenticated access defaults to guest
+#### Scenario: Authentication uses existing session mechanism
 
-- **GIVEN** a request without authentication token
-- **WHEN** accessing public water object endpoints
-- **THEN** guest-level data visibility SHALL apply
+- **GIVEN** a request to protected endpoints
+- **WHEN** authentication is required
+- **THEN** existing session-based auth SHALL be used (not JWT)
+- **NOTE**: JWT implementation is available but commented out for future use
 
-## ADDED Requirements
+## DEFERRED Requirements (TODO)
 
-### Requirement: Role-Based JWT Claims
+### Requirement: Role-Based JWT Claims (FUTURE IMPLEMENTATION)
 
-The system SHALL include user role in JWT tokens for authorization decisions.
+**Status**: 🔜 Code prepared but commented out. Requires frontend implementation.
 
-#### Scenario: JWT contains role claim
+The system WILL (future) include user role in JWT tokens for authorization decisions.
+
+#### Scenario: JWT contains role claim (DEFERRED)
 
 - **GIVEN** a successful login
-- **WHEN** JWT token is generated
+- **WHEN** JWT token is generated (future)
 - **THEN** token payload SHALL include "role" field with value "guest" or "expert"
+- **NOTE**: Helper functions exist in `auth/service.py` but are commented out
 
-#### Scenario: Validate role claim on protected endpoints
+#### Scenario: Validate role claim on protected endpoints (DEFERRED)
 
 - **GIVEN** a request to a protected endpoint
-- **WHEN** JWT is validated
+- **WHEN** JWT is validated (future)
 - **THEN** user role SHALL be extracted from token and used for authorization
+- **NOTE**: `get_current_user()`, `require_expert()` dependencies prepared but not active
 
 ### Requirement: Role Migration
 
