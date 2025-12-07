@@ -115,21 +115,15 @@ export default function MapScreen() {
             )}
           </View>
 
-          {/* Stats overlay */}
-          <View style={[styles.statsOverlay, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}>
-            <Ionicons name="water" size={20} color={theme.primary} />
-            <Text style={[styles.statsText, { color: theme.text }]}>
-              {waterObjects.length} объектов
-            </Text>
-          </View>
+          {/* Stats overlay removed as requested */}
 
           {/* Legend overlay */}
           <View style={[styles.legendOverlay, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}>
-            <Text style={[styles.legendTitle, { color: theme.text }]}>Легенда:</Text>
+            <Text style={[styles.legendTitle, { color: '#1F2937' }]}>Легенда:</Text>
             {Object.entries(conditionColors).map(([condition, color]) => (
               <View key={condition} style={styles.legendItem}>
                 <View style={[styles.legendColor, { backgroundColor: color }]} />
-                <Text style={[styles.legendText, { color: theme.text }]}>
+                <Text style={[styles.legendText, { color: '#1F2937' }]}>
                   {condition === '1' && 'Крит.'}
                   {condition === '2' && 'Плохое'}
                   {condition === '3' && 'Удовл.'}
