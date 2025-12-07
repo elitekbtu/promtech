@@ -100,10 +100,16 @@ async def get_priority_table(
     # Apply filters
     if priority_level:
         try:
+            # Try lookup by name (high, medium, low)
             level = PriorityLevel[priority_level.lower()]
             query = query.filter(WaterObject.priority_level == level)
         except KeyError:
-            pass  # Invalid priority level, ignore filter
+            try:
+                # Try lookup by value (высокий, средний, низкий)
+                level = PriorityLevel(priority_level)
+                query = query.filter(WaterObject.priority_level == level)
+            except ValueError:
+                pass  # Invalid priority level, ignore filter
     
     if min_priority is not None:
         query = query.filter(WaterObject.priority >= min_priority)

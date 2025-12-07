@@ -283,6 +283,6 @@ class WaterObjectService:
         ).group_by(WaterObject.priority_level).all()
         
         for priority_level, count in result:
-            counts[priority_level.value] = count
+            counts[priority_level.name] = count
         
         return counts
