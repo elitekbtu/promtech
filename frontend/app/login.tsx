@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, Modal, Image, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Modal, Image, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import FaceCamera from '@/components/face-camera';
@@ -9,6 +9,7 @@ import { config } from '@/lib/config';
 import { TokenResponse, saveAuthResponse } from '@/lib/auth';
 import { AuroraBackground } from '@/components/ui/aurora-background';
 import { AnimatedButton, AnimatedText, AnimatedContainer } from '@/components/ui/animated-button';
+import { Toast } from '@/components/ui/toast';
 
 interface FaceVerificationResult {
   success: boolean;
@@ -36,6 +37,19 @@ export default function LoginScreen() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    visible: false,
+    message: '',
+    type: 'info',
+  });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ visible: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, visible: false }));
+  };
   
   const resetForm = () => {
     setName('');
@@ -95,7 +109,7 @@ export default function LoginScreen() {
       router.replace('/(tabs)');
     } catch (error) {
       console.error('Error during guest login:', error);
-      Alert.alert('Ошибка', 'Не удалось войти как гость');
+      showToast('Не удалось войти как гость', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +117,7 @@ export default function LoginScreen() {
 
   async function handleFaceVerify() {
     if (!capturedPhoto) {
-      Alert.alert('Ошибка', 'Сначала сделайте фото');
+      showToast('Сначала сделайте фото', 'error');
       return;
     }
 
@@ -134,13 +148,13 @@ export default function LoginScreen() {
         await saveUserSession(result.token);
         router.replace('/(tabs)');
       } else if (result.success && !result.verified) {
-        Alert.alert('❌ Лицо не распознано', result.message || 'Совпадение не найдено.');
+        showToast(result.message || 'Совпадение не найдено', 'error');
       } else {
-        Alert.alert('❌ Ошибка входа', result.message || 'Не удалось проверить лицо.');
+        showToast(result.message || 'Не удалось проверить лицо', 'error');
       }
     } catch (error: any) {
       console.error('Error during face verification:', error);
-      Alert.alert('🔌 Ошибка соединения', 'Не удалось подключиться к серверу.');
+      showToast('Не удалось подключиться к серверу', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -148,12 +162,12 @@ export default function LoginScreen() {
 
   async function handleEmailPasswordLogin() {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('❌ Ошибка валидации', 'Введите email и пароль');
+      showToast('Введите email и пароль', 'error');
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('❌ Неверный email', 'Введите корректный email адрес');
+      showToast('Введите корректный email адрес', 'error');
       return;
     }
 
@@ -175,11 +189,11 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
       } else {
         const errorData = await loginResponse.json();
-        Alert.alert('❌ Ошибка входа', errorData.detail || 'Не удалось войти');
+        showToast(errorData.detail || 'Не удалось войти', 'error');
       }
     } catch (error) {
       console.error('Error during login:', error);
-      Alert.alert('🔌 Ошибка соединения', 'Не удалось подключиться к серверу.');
+      showToast('Не удалось подключиться к серверу', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -187,17 +201,17 @@ export default function LoginScreen() {
 
   async function handleRegister() {
     if (!name.trim() || !surname.trim() || !email.trim() || !phone.trim() || !password.trim()) {
-      Alert.alert('❌ Ошибка валидации', 'Заполните все обязательные поля');
+      showToast('Заполните все обязательные поля', 'error');
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('❌ Неверный email', 'Введите корректный email адрес');
+      showToast('Введите корректный email адрес', 'error');
       return;
     }
 
     if (!capturedPhoto) {
-      Alert.alert('❌ Требуется фото', 'Сделайте фото лица для регистрации Face ID');
+      showToast('Сделайте фото лица для регистрации Face ID', 'error');
       return;
     }
 
@@ -228,11 +242,11 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
       } else {
         const errorData = await registerResponse.json();
-        Alert.alert('❌ Ошибка регистрации', errorData.detail || 'Не удалось зарегистрироваться');
+        showToast(errorData.detail || 'Не удалось зарегистрироваться', 'error');
       }
     } catch (error) {
       console.error('Error during registration:', error);
-      Alert.alert('🔌 Ошибка соединения', 'Не удалось подключиться к серверу.');
+      showToast('Не удалось подключиться к серверу', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -557,6 +571,13 @@ export default function LoginScreen() {
           isVerifying={false}
         />
       </Modal>
+
+      <Toast 
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
     </AuroraBackground>
   );
 }

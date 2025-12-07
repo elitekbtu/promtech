@@ -15,9 +15,11 @@ import { useRouter } from 'expo-router';
 import Markdown from 'react-native-markdown-display';
 import { GidroAtlasColors } from '@/constants/theme';
 import { prioritiesAPI, ragAPI } from '@/lib/api-services';
+import { getUserData, UserData } from '@/lib/auth';
 import { PriorityLevel } from '@/lib/gidroatlas-types';
 import type { PriorityTableItem, PriorityStatistics, PriorityFilters } from '@/lib/gidroatlas-types';
 import { AuroraBackground } from '@/components/ui/aurora-background';
+import { Toast } from '@/components/ui/toast';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 768;
@@ -52,9 +54,41 @@ export default function PrioritiesScreen() {
   const [expandedItem, setExpandedItem] = useState<number | null>(null);
   const [explanations, setExplanations] = useState<Record<number, string>>({});
   const [loadingExplanation, setLoadingExplanation] = useState<number | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    visible: false,
+    message: '',
+    type: 'info',
+  });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ visible: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, visible: false }));
+  };
+
+  const checkUserRole = async () => {
+    try {
+      const user = await getUserData();
+      if (user?.role === 'guest') {
+        setIsGuest(true);
+        setLoading(false);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error checking user role:', error);
+      return false;
+    }
+  };
 
   const fetchData = useCallback(async (isRefresh = false) => {
     try {
+      const isExpert = await checkUserRole();
+      if (!isExpert) return;
+
       if (isRefresh) {
         setRefreshing(true);
       } else {
@@ -229,84 +263,111 @@ export default function PrioritiesScreen() {
           </View>
         </View>
 
-        {/* Error Message */}
-        {error && (
-          <View style={styles.errorContainer}>
-            <Ionicons name="lock-closed" size={20} color="#ef4444" />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={handleRefresh}>
-              <Text style={styles.retryText}>Повторить</Text>
+        {isGuest ? (
+          <View style={styles.guestContainer}>
+            <Ionicons name="lock-closed-outline" size={64} color={GidroAtlasColors.gray[300]} />
+            <Text style={styles.guestTitle}>Доступ ограничен</Text>
+            <Text style={styles.guestMessage}>
+              Аналитика приоритетов доступна только для экспертов. Пожалуйста, войдите в аккаунт эксперта для просмотра данных.
+            </Text>
+            <TouchableOpacity 
+              style={styles.loginButton}
+              onPress={() => {
+                router.replace('/login');
+              }}
+            >
+              <Text style={styles.loginButtonText}>Войти как эксперт</Text>
             </TouchableOpacity>
           </View>
-        )}
-
-        {/* Loading State */}
-        {loading && items.length === 0 ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={GidroAtlasColors.persianGreen} />
-            <Text style={styles.loadingText}>Загрузка данных приоритетов...</Text>
-          </View>
         ) : (
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                colors={[GidroAtlasColors.persianGreen]}
-                tintColor={GidroAtlasColors.persianGreen}
-              />
-            }
-          >
-            {/* Statistics Cards */}
-            {stats && (
-              <View style={styles.statsContainer}>
-                {renderStatCard('Высокий', stats.high, '#ef4444', 'alert-circle')}
-                {renderStatCard('Средний', stats.medium, '#f97316', 'warning')}
-                {renderStatCard('Низкий', stats.low, '#22c55e', 'checkmark-circle')}
-                {renderStatCard('Всего', stats.total, GidroAtlasColors.persianGreen, 'water')}
+          <>
+            {/* Error Message */}
+            {error && (
+              <View style={styles.errorContainer}>
+                <Ionicons name="lock-closed" size={20} color="#ef4444" />
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity onPress={handleRefresh}>
+                  <Text style={styles.retryText}>Повторить</Text>
+                </TouchableOpacity>
               </View>
             )}
 
-            {/* Filter Buttons */}
-            <View style={styles.filterContainer}>
-              {(['all', PriorityLevel.HIGH, PriorityLevel.MEDIUM, PriorityLevel.LOW] as const).map((filter) => (
-                <TouchableOpacity
-                  key={filter}
-                  style={[
-                    styles.filterButton,
-                    selectedFilter === filter && styles.filterButtonActive,
-                    selectedFilter === filter && { backgroundColor: filter === 'all' ? GidroAtlasColors.persianGreen : priorityColors[filter] },
-                  ]}
-                  onPress={() => handleFilterChange(filter)}
-                >
-                  <Text style={[
-                    styles.filterButtonText,
-                    selectedFilter === filter && styles.filterButtonTextActive,
-                  ]}>
-                    {filter === 'all' ? 'Все' : priorityLabels[filter]}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Priority Items */}
-            {items.length === 0 ? (
-              <View style={styles.emptyContainer}>
-                <Ionicons name="analytics-outline" size={64} color={GidroAtlasColors.gray[300]} />
-                <Text style={styles.emptyText}>Данные приоритетов недоступны</Text>
-                <Text style={styles.emptySubtext}>Требуется доступ эксперта</Text>
+            {/* Loading State */}
+            {loading && items.length === 0 ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={GidroAtlasColors.persianGreen} />
+                <Text style={styles.loadingText}>Загрузка данных приоритетов...</Text>
               </View>
             ) : (
-              <View style={styles.itemsList}>
-                {items.map(renderPriorityItem)}
-              </View>
+              <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
+                    colors={[GidroAtlasColors.persianGreen]}
+                    tintColor={GidroAtlasColors.persianGreen}
+                  />
+                }
+              >
+                {/* Statistics Cards */}
+                {stats && (
+                  <View style={styles.statsContainer}>
+                    {renderStatCard('Высокий', stats.high, '#ef4444', 'alert-circle')}
+                    {renderStatCard('Средний', stats.medium, '#f97316', 'warning')}
+                    {renderStatCard('Низкий', stats.low, '#22c55e', 'checkmark-circle')}
+                    {renderStatCard('Всего', stats.total, GidroAtlasColors.persianGreen, 'water')}
+                  </View>
+                )}
+
+                {/* Filter Buttons */}
+                <View style={styles.filterContainer}>
+                  {(['all', PriorityLevel.HIGH, PriorityLevel.MEDIUM, PriorityLevel.LOW] as const).map((filter) => (
+                    <TouchableOpacity
+                      key={filter}
+                      style={[
+                        styles.filterButton,
+                        selectedFilter === filter && styles.filterButtonActive,
+                        selectedFilter === filter && { backgroundColor: filter === 'all' ? GidroAtlasColors.persianGreen : priorityColors[filter] },
+                      ]}
+                      onPress={() => handleFilterChange(filter)}
+                    >
+                      <Text style={[
+                        styles.filterButtonText,
+                        selectedFilter === filter && styles.filterButtonTextActive,
+                      ]}>
+                        {filter === 'all' ? 'Все' : priorityLabels[filter]}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Priority Items */}
+                {items.length === 0 ? (
+                  <View style={styles.emptyContainer}>
+                    <Ionicons name="analytics-outline" size={64} color={GidroAtlasColors.gray[300]} />
+                    <Text style={styles.emptyText}>Данные приоритетов недоступны</Text>
+                    <Text style={styles.emptySubtext}>Требуется доступ эксперта</Text>
+                  </View>
+                ) : (
+                  <View style={styles.itemsList}>
+                    {items.map(renderPriorityItem)}
+                  </View>
+                )}
+              </ScrollView>
             )}
-          </ScrollView>
+          </>
         )}
       </View>
+
+      <Toast 
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
     </AuroraBackground>
   );
 }
@@ -564,6 +625,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: GidroAtlasColors.gray[400],
     marginTop: 4,
+  },
+  guestContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingTop: 100,
+  },
+  guestTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: GidroAtlasColors.black,
+    marginTop: 24,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  guestMessage: {
+    fontSize: 16,
+    color: GidroAtlasColors.gray[500],
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  loginButton: {
+    backgroundColor: GidroAtlasColors.persianGreen,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  loginButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

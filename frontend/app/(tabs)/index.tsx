@@ -1,4 +1,4 @@
-import { View, Text, Platform, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Platform, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,10 +8,12 @@ import GidroAtlasLogo from '@/components/gidroatlas-logo';
 import { clearAuth, getUserData, UserData } from '@/lib/auth';
 import { authAPI } from '@/lib/api-services';
 import { AuroraBackground } from '@/components/ui/aurora-background';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -39,25 +41,7 @@ export default function HomeScreen() {
   }
 
   function handleLogout() {
-    // On web, Alert.alert doesn't work, so use confirm
-    if (Platform.OS === 'web') {
-      if (window.confirm('Вы уверены, что хотите выйти?')) {
-        performLogout();
-      }
-    } else {
-      Alert.alert(
-        'Выход',
-        'Вы уверены, что хотите выйти?',
-        [
-          { text: 'Отмена', style: 'cancel' },
-          { 
-            text: 'Выйти', 
-            style: 'destructive',
-            onPress: () => performLogout()
-          }
-        ]
-      );
-    }
+    setLogoutModalVisible(true);
   }
 
   const features = [
@@ -153,6 +137,20 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <ConfirmModal
+        visible={logoutModalVisible}
+        title="Выход"
+        message="Вы уверены, что хотите выйти?"
+        onConfirm={() => {
+          setLogoutModalVisible(false);
+          performLogout();
+        }}
+        onCancel={() => setLogoutModalVisible(false)}
+        confirmText="Выйти"
+        cancelText="Отмена"
+        type="danger"
+      />
     </AuroraBackground>
   );
 }

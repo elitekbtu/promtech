@@ -10,7 +10,6 @@ import {
   Platform,
   RefreshControl,
   Linking,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -19,6 +18,7 @@ import { waterObjectsAPI } from '@/lib/api-services';
 import { config } from '@/lib/config';
 import type { WaterObject, WaterObjectFilters, ResourceType } from '@/lib/gidroatlas-types';
 import { AuroraBackground } from '@/components/ui/aurora-background';
+import { Toast } from '@/components/ui/toast';
 
 // Resource type icons mapping
 const resourceTypeIcons: Record<string, string> = {
@@ -35,7 +35,7 @@ const conditionColors: Record<number, string> = {
   2: '#f97316', // Orange - Poor
   3: '#eab308', // Yellow - Fair
   4: '#22c55e', // Green - Good
-  5: '#10b981', // Emerald - Excellent
+  5: '#22c55e', // Green - Excellent (Unified with Good)
 };
 
 const conditionLabels: Record<number, string> = {
@@ -44,6 +44,13 @@ const conditionLabels: Record<number, string> = {
   3: 'Удовлетворительное',
   4: 'Хорошее',
   5: 'Отличное',
+};
+
+// Priority level colors
+const priorityColors: Record<string, string> = {
+  'высокий': '#ef4444',
+  'средний': '#f97316',
+  'низкий': '#22c55e',
 };
 
 export default function WaterObjectsScreen() {
@@ -59,6 +66,19 @@ export default function WaterObjectsScreen() {
   });
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    visible: false,
+    message: '',
+    type: 'info',
+  });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ visible: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, visible: false }));
+  };
 
   const fetchObjects = useCallback(async (isRefresh = false) => {
     try {
@@ -138,18 +158,14 @@ export default function WaterObjectsScreen() {
             if (supported) {
               await Linking.openURL(fullUrl);
             } else {
-              Alert.alert('Error', 'Cannot open this passport file.');
+              showToast('Невозможно открыть файл паспорта', 'error');
             }
           } catch (err) {
             console.error('Error opening PDF:', err);
-            Alert.alert('Error', 'Failed to open passport.');
+            showToast('Ошибка при открытии паспорта', 'error');
           }
         } else {
-          if (Platform.OS === 'web') {
-            alert('There is no passport available for this water object.');
-          } else {
-            Alert.alert('No Passport', 'There is no passport available for this water object.');
-          }
+          showToast('Паспорт отсутствует для данного объекта', 'info');
         }
       }}
     >
@@ -206,8 +222,7 @@ export default function WaterObjectsScreen() {
       {item.priority !== undefined && (
         <View style={styles.cardFooter}>
           <View style={[styles.priorityBadge,
-            { backgroundColor: item.priority_level === 'высокий' ? '#ef4444' : 
-                              item.priority_level === 'средний' ? '#f97316' : '#22c55e' }
+            { backgroundColor: priorityColors[item.priority_level || 'низкий'] || '#9ca3af' }
           ]}>
             <Text style={styles.priorityText}>
               Приоритет: {item.priority.toFixed(1)} ({item.priority_level})
@@ -320,6 +335,13 @@ export default function WaterObjectsScreen() {
           </ScrollView>
         )}
       </View>
+
+      <Toast 
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
     </AuroraBackground>
   );
 }

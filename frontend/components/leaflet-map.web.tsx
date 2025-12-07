@@ -4,7 +4,7 @@ import type { WaterObject } from '@/lib/gidroatlas-types';
 // Dynamically import Leaflet only on client side
 let L: any = null;
 if (typeof window !== 'undefined') {
-  L = require('leaflet');
+  L = require('leaflet/dist/leaflet-src');
   
   // Fix default marker icon issue in Leaflet
   delete (L.Icon.Default.prototype as any)._getIconUrl;
