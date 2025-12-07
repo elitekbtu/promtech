@@ -15,7 +15,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ZamanColors } from '@/constants/theme';
+import { GidroAtlasColors } from '@/constants/theme';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -136,7 +136,7 @@ function DockItem({ item, isActive, isHovered, onHoverIn, onHoverOut }: DockItem
           <Ionicons
             name={item.icon}
             size={24}
-            color={isActive ? ZamanColors.white : ZamanColors.gray[700]}
+            color={isActive ? GidroAtlasColors.white : GidroAtlasColors.gray[700]}
           />
         </View>
         
@@ -184,9 +184,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   solidBackground: {
-    backgroundColor: ZamanColors.white,
+    backgroundColor: GidroAtlasColors.white,
     borderWidth: 1,
-    borderColor: ZamanColors.gray[200],
+    borderColor: GidroAtlasColors.gray[200],
   },
   itemsContainer: {
     flexDirection: 'row',
@@ -204,8 +204,8 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: `${ZamanColors.persianGreen}40`,
-    shadowColor: ZamanColors.persianGreen,
+    backgroundColor: `${GidroAtlasColors.persianGreen}40`,
+    shadowColor: GidroAtlasColors.persianGreen,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -224,8 +224,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   activeIconContainer: {
-    backgroundColor: ZamanColors.persianGreen,
-    shadowColor: ZamanColors.persianGreen,
+    backgroundColor: GidroAtlasColors.persianGreen,
+    shadowColor: GidroAtlasColors.persianGreen,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -243,24 +243,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 6,
     borderWidth: 2,
-    borderColor: ZamanColors.white,
+    borderColor: GidroAtlasColors.white,
   },
   badgeText: {
-    color: ZamanColors.white,
+    color: GidroAtlasColors.white,
     fontSize: 11,
     fontWeight: '700',
   },
   tooltip: {
     position: 'absolute',
     bottom: -40,
-    backgroundColor: ZamanColors.black,
+    backgroundColor: GidroAtlasColors.black,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     opacity: 0.9,
   },
   tooltipText: {
-    color: ZamanColors.white,
+    color: GidroAtlasColors.white,
     fontSize: 12,
     fontWeight: '500',
   },
