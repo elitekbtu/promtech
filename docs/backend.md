@@ -87,21 +87,25 @@ backend/
 ### 3.2 Core Components
 
 - **FastAPI Backend**
+
   - Routes: `/api/auth`, `/api/objects`, `/api/priorities`, `/api/passports`, `/api/rag`, `/api/faceid`
   - OpenAPI/Swagger documentation at `/docs`
   - Runs in Docker container
 
 - **PostgreSQL Database**
+
   - Supports models: User, WaterObject, PassportText
   - Migrations managed with Alembic
   - Runs via Docker Compose
 
 - **File Storage**
+
   - Local folder/Docker volume with serving via `FILE_STORAGE_BASE_URL`
   - Stores passport PDFs and avatars
   - Backend stores only `pdf_url` references
 
 - **Gemini API**
+
   - Primary LLM for chat/explain/search operations
   - Used through client wrapper in RAG system
 
@@ -125,6 +129,7 @@ backend/
 
 4. **AI / Agentic RAG**
    `/api/rag/query` → AI Agent:
+
    - Understands query
    - Decides whether to:
      - Filter SQL objects
@@ -132,13 +137,13 @@ backend/
    - Assembles context
    - Calls Gemini for final answer
 
-2. **Карточка объекта**
+5. **Карточка объекта**
    `/objects/{id}` → backend отдаёт все поля + `pdf_url` → фронт показывает карточку и кнопку “Открыть паспорт”.
 
-3. **Приоритезация**
+6. **Приоритезация**
    `/priorities/table` (только `expert`) → backend отдаёт таблицу с `priority`.
 
-4. **AI / Agentic RAG**
+7. **AI / Agentic RAG**
    `/ai/...` → **AI-агент**:
 
    - понимает запрос;

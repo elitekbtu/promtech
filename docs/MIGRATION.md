@@ -25,18 +25,21 @@ This guide covers deploying GidroAtlas from development to production environmen
 ### System Requirements
 
 **Minimum Hardware:**
+
 - CPU: 2 cores
 - RAM: 4GB
 - Disk: 20GB
 - Network: 1Gbps
 
 **Recommended Hardware:**
+
 - CPU: 4+ cores
 - RAM: 8GB+
 - Disk: 50GB+ SSD
 - Network: 1Gbps+
 
 **Software:**
+
 - Docker 20.10+
 - Docker Compose 2.0+
 - PostgreSQL 15+ (if not using Docker)
@@ -89,6 +92,7 @@ LOG_LEVEL=INFO
 ```
 
 **Generate SECRET_KEY:**
+
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
@@ -100,8 +104,9 @@ docker compose -f docker-compose.prod.yml build
 ```
 
 **Production docker-compose.prod.yml:**
+
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -188,11 +193,13 @@ curl https://gidroatlas.kz/docs
 ### Initial Setup
 
 **Apply all migrations:**
+
 ```bash
 docker compose -f docker-compose.prod.yml exec backend alembic upgrade head
 ```
 
 **Check current version:**
+
 ```bash
 docker compose -f docker-compose.prod.yml exec backend alembic current
 ```
@@ -202,6 +209,7 @@ docker compose -f docker-compose.prod.yml exec backend alembic current
 **Current Migrations:**
 
 1. **`933ade9f4842_add_water_management_models.py`** (Phase 1-8)
+
    - Creates `users`, `water_objects`, `passport_texts` tables
    - Sets up enums (with English values initially)
    - Adds indexes and constraints
@@ -214,17 +222,20 @@ docker compose -f docker-compose.prod.yml exec backend alembic current
 ### Creating New Migrations
 
 **Auto-generate migration:**
+
 ```bash
 # From backend directory
 alembic revision --autogenerate -m "Add new column to water_objects"
 ```
 
 **Manual migration:**
+
 ```bash
 alembic revision -m "Custom migration"
 ```
 
 **Edit migration file:**
+
 ```python
 # backend/alembic/versions/XXXX_description.py
 
@@ -236,6 +247,7 @@ def downgrade():
 ```
 
 **Apply migration:**
+
 ```bash
 alembic upgrade head
 ```
@@ -251,16 +263,19 @@ alembic upgrade head
 ### Rolling Back Migrations
 
 **Rollback last migration:**
+
 ```bash
 alembic downgrade -1
 ```
 
 **Rollback to specific version:**
+
 ```bash
 alembic downgrade 933ade9f4842
 ```
 
 **Rollback all:**
+
 ```bash
 alembic downgrade base
 ```
@@ -278,12 +293,14 @@ docker compose exec backend python scripts/import_objects.py
 ```
 
 **What it does:**
+
 - Reads from `backend/data/water_objects.csv`
 - Imports 25 water objects
 - Sets initial coordinates, types, characteristics
 - Calculates initial priorities
 
 **Expected Output:**
+
 ```
 Importing water objects...
 ✓ Imported: Бараккол (озеро, Улытауская область)
@@ -301,12 +318,14 @@ docker compose exec backend python scripts/import_passports.py
 ```
 
 **What it does:**
+
 - Copies PDF files to `uploads/passports/`
 - Creates `pdf_url` references in database
 - Extracts text content to `passport_texts` table
 - Sets up vector embeddings for RAG
 
 **Expected Output:**
+
 ```
 Importing passport documents...
 ✓ Uploaded: barakkol.pdf → /uploads/passports/barakkol.pdf
@@ -324,12 +343,14 @@ docker compose exec backend python scripts/enrich_data.py
 ```
 
 **What it does:**
+
 - Updates coordinates with accurate geospatial data
 - Fills in missing metadata (area, depth)
 - Validates data quality
 - Recalculates priorities
 
 **Expected Output:**
+
 ```
 Enriching water object data...
 ✓ Updated Бараккол: coordinates, area_ha, depth_m
@@ -376,6 +397,7 @@ with Session(engine) as session:
 ### Development vs Production
 
 **Development (`.env`):**
+
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/gidroatlas_dev
 SECRET_KEY=dev-secret-key-not-secure
@@ -385,6 +407,7 @@ LOG_LEVEL=DEBUG
 ```
 
 **Production (`.env.prod`):**
+
 ```env
 DATABASE_URL=postgresql://gidroatlas:${STRONG_PWD}@postgres:5432/gidroatlas_prod
 SECRET_KEY=${GENERATED_SECRET_32_CHARS}
@@ -399,15 +422,15 @@ See [Environment Variables Documentation](ENV_VARS.md) for complete reference.
 
 **Critical Variables:**
 
-| Variable                 | Required | Description                          |
-| ------------------------ | -------- | ------------------------------------ |
-| DATABASE_URL             | Yes      | PostgreSQL connection string         |
-| SECRET_KEY               | Yes      | JWT signing key (min 32 chars)       |
-| GEMINI_API_KEY           | Yes      | Google Gemini API key                |
-| CORS_ORIGINS             | Yes      | Allowed frontend origins             |
-| FILE_STORAGE_PATH        | No       | Upload directory (default: uploads)  |
-| FILE_STORAGE_BASE_URL    | No       | Public URL for uploads (default: /uploads) |
-| ACCESS_TOKEN_EXPIRE_MINUTES | No    | JWT expiration (default: 1440 = 24h) |
+| Variable                    | Required | Description                                |
+| --------------------------- | -------- | ------------------------------------------ |
+| DATABASE_URL                | Yes      | PostgreSQL connection string               |
+| SECRET_KEY                  | Yes      | JWT signing key (min 32 chars)             |
+| GEMINI_API_KEY              | Yes      | Google Gemini API key                      |
+| CORS_ORIGINS                | Yes      | Allowed frontend origins                   |
+| FILE_STORAGE_PATH           | No       | Upload directory (default: uploads)        |
+| FILE_STORAGE_BASE_URL       | No       | Public URL for uploads (default: /uploads) |
+| ACCESS_TOKEN_EXPIRE_MINUTES | No       | JWT expiration (default: 1440 = 24h)       |
 
 ---
 
@@ -416,21 +439,25 @@ See [Environment Variables Documentation](ENV_VARS.md) for complete reference.
 ### Database Backup
 
 **Full backup:**
+
 ```bash
 docker compose exec postgres pg_dump -U gidroatlas gidroatlas_prod > backup_$(date +%Y%m%d_%H%M%S).sql
 ```
 
 **Compressed backup:**
+
 ```bash
 docker compose exec postgres pg_dump -U gidroatlas gidroatlas_prod | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
 ```
 
 **Automated daily backups (cron):**
+
 ```bash
 0 2 * * * /usr/local/bin/backup-gidroatlas.sh
 ```
 
 **backup-gidroatlas.sh:**
+
 ```bash
 #!/bin/bash
 BACKUP_DIR="/var/backups/gidroatlas"
@@ -447,11 +474,13 @@ find "${BACKUP_DIR}" -name "db_*.sql.gz" -mtime +30 -delete
 ### File Storage Backup
 
 **Backup uploads directory:**
+
 ```bash
 tar -czf uploads_backup_$(date +%Y%m%d).tar.gz uploads/
 ```
 
 **Sync to S3:**
+
 ```bash
 aws s3 sync uploads/ s3://gidroatlas-backups/uploads/ --delete
 ```
@@ -459,6 +488,7 @@ aws s3 sync uploads/ s3://gidroatlas-backups/uploads/ --delete
 ### Database Restore
 
 **Restore from backup:**
+
 ```bash
 # Stop backend
 docker compose stop backend
@@ -472,6 +502,7 @@ docker compose start backend
 ```
 
 **Restore to new database:**
+
 ```bash
 # Create new database
 docker compose exec postgres createdb -U gidroatlas gidroatlas_restored
@@ -506,11 +537,13 @@ docker compose -f docker-compose.prod.yml up -d
 ### Database Rollback
 
 **Rollback last migration:**
+
 ```bash
 docker compose exec backend alembic downgrade -1
 ```
 
 **Rollback specific migration:**
+
 ```bash
 # Find current version
 docker compose exec backend alembic current
@@ -524,32 +557,38 @@ docker compose exec backend alembic downgrade 933ade9f4842
 **Emergency rollback procedure:**
 
 1. **Stop all services:**
+
 ```bash
 docker compose -f docker-compose.prod.yml down
 ```
 
 2. **Restore database backup:**
+
 ```bash
 gunzip < backup_latest.sql.gz | \
   docker compose exec -T postgres psql -U gidroatlas gidroatlas_prod
 ```
 
 3. **Restore file storage:**
+
 ```bash
 tar -xzf uploads_backup_latest.tar.gz
 ```
 
 4. **Checkout previous version:**
+
 ```bash
 git checkout tags/v1.2.0
 ```
 
 5. **Restart services:**
+
 ```bash
 docker compose -f docker-compose.prod.yml up -d
 ```
 
 6. **Verify:**
+
 ```bash
 curl https://gidroatlas.kz/api/health
 ```
@@ -561,11 +600,13 @@ curl https://gidroatlas.kz/api/health
 ### Application Monitoring
 
 **Check service status:**
+
 ```bash
 docker compose ps
 ```
 
 **View logs:**
+
 ```bash
 # All services
 docker compose logs -f
@@ -578,6 +619,7 @@ docker compose logs --tail=100 backend
 ```
 
 **Resource usage:**
+
 ```bash
 docker stats
 ```
@@ -585,16 +627,19 @@ docker stats
 ### Database Monitoring
 
 **Connection count:**
+
 ```sql
 SELECT count(*) FROM pg_stat_activity;
 ```
 
 **Database size:**
+
 ```sql
 SELECT pg_size_pretty(pg_database_size('gidroatlas_prod'));
 ```
 
 **Table sizes:**
+
 ```sql
 SELECT
     schemaname,
@@ -606,6 +651,7 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 ```
 
 **Slow queries:**
+
 ```sql
 SELECT
     query,
@@ -620,11 +666,13 @@ LIMIT 10;
 ### Health Checks
 
 **API Health Endpoint:**
+
 ```bash
 curl https://gidroatlas.kz/api/health
 ```
 
 **Expected Response:**
+
 ```json
 {
   "status": "healthy",
@@ -636,11 +684,13 @@ curl https://gidroatlas.kz/api/health
 ### Alerting
 
 **Setup monitoring (recommended):**
+
 - **Prometheus** — Metrics collection
 - **Grafana** — Visualization
 - **AlertManager** — Alerting
 
 **Key metrics to monitor:**
+
 - API response time
 - Database connection pool
 - Disk usage
@@ -656,11 +706,13 @@ curl https://gidroatlas.kz/api/health
 #### Issue 1: Database Connection Failed
 
 **Symptom:**
+
 ```
 sqlalchemy.exc.OperationalError: could not connect to server
 ```
 
 **Solution:**
+
 ```bash
 # Check PostgreSQL is running
 docker compose ps postgres
@@ -678,11 +730,13 @@ docker compose logs postgres
 #### Issue 2: Migration Failed
 
 **Symptom:**
+
 ```
 alembic.util.exc.CommandError: Target database is not up to date
 ```
 
 **Solution:**
+
 ```bash
 # Check current version
 alembic current
@@ -701,11 +755,13 @@ alembic upgrade head
 #### Issue 3: File Upload Failed
 
 **Symptom:**
+
 ```
 FileNotFoundError: [Errno 2] No such file or directory: '/uploads/passports'
 ```
 
 **Solution:**
+
 ```bash
 # Create upload directories
 mkdir -p uploads/passports
@@ -722,11 +778,13 @@ docker compose up -d
 #### Issue 4: JWT Token Invalid
 
 **Symptom:**
+
 ```
 {"detail": "Could not validate credentials"}
 ```
 
 **Solution:**
+
 ```bash
 # Verify SECRET_KEY is set
 echo $SECRET_KEY
@@ -744,6 +802,7 @@ echo $SECRET_KEY
 API returns `resource_type: "lake"` instead of `"озеро"`
 
 **Solution:**
+
 ```bash
 # Check migration was applied
 docker compose exec backend alembic current
@@ -760,6 +819,7 @@ docker compose restart backend
 ### Debug Mode
 
 **Enable debug logging:**
+
 ```bash
 # In .env
 LOG_LEVEL=DEBUG
@@ -832,10 +892,11 @@ except OperationalError as e:
 ## Contact
 
 For deployment support:
+
 - DevOps Team: devops@gidroatlas.kz
 - Technical Lead: tech@gidroatlas.kz
 - Emergency: +7 XXX XXX XXXX
 
 ---
 
-*Last updated: 2024*
+_Last updated: 2024_

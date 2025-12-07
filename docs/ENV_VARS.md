@@ -11,11 +11,13 @@ This document describes all environment variables used in the GidroAtlas backend
 Environment variables are defined in the `.env` file at the project root.
 
 **Create from template:**
+
 ```bash
 cp env.example .env
 ```
 
 **File location:**
+
 ```
 c:\work\promtech\.env
 ```
@@ -46,6 +48,7 @@ DATABASE_URL=postgresql://user:password@db.example.com:5432/gidroatlas?sslmode=r
 ```
 
 **Components:**
+
 - `username` — Database user (default: `user`)
 - `password` — Database password (default: `password`)
 - `host` — Database server hostname (default: `postgres` in Docker, `localhost` for local)
@@ -53,6 +56,7 @@ DATABASE_URL=postgresql://user:password@db.example.com:5432/gidroatlas?sslmode=r
 - `database` — Database name (default: `gidroatlas`)
 
 **Security Notes:**
+
 - ⚠️ **Never commit passwords to git**
 - 🔒 Use strong passwords in production (min 16 characters)
 - 🔐 Enable SSL for remote connections
@@ -93,6 +97,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 **Security Notes:**
+
 - 🔒 **Must be unique per environment**
 - ⚠️ **Changing this invalidates all existing JWT tokens**
 - 🔐 Store securely (use secrets manager in production)
@@ -126,11 +131,13 @@ ACCESS_TOKEN_EXPIRE_MINUTES=10080
 ```
 
 **Recommendations:**
+
 - **Development:** 24 hours (1440 minutes)
 - **Production:** 8 hours (480 minutes)
 - **High Security:** 1-2 hours (60-120 minutes)
 
 **Trade-offs:**
+
 - Shorter expiration = Better security, more frequent logins
 - Longer expiration = Better UX, higher security risk if token compromised
 
@@ -165,6 +172,7 @@ FILE_STORAGE_PATH=/app/uploads
 ```
 
 **Directory Structure:**
+
 ```
 uploads/
 ├── avatars/           # User profile pictures
@@ -172,6 +180,7 @@ uploads/
 ```
 
 **Setup:**
+
 ```bash
 # Create directories
 mkdir -p uploads/avatars
@@ -219,6 +228,7 @@ FILE_STORAGE_BASE_URL=https://storage.example.com/gidroatlas
 **How It Works:**
 
 When a passport PDF is uploaded:
+
 1. File saved to: `{FILE_STORAGE_PATH}/passports/barakkol.pdf`
 2. Database stores: `{FILE_STORAGE_BASE_URL}/passports/barakkol.pdf`
 3. Frontend requests: `https://gidroatlas.kz/uploads/passports/barakkol.pdf`
@@ -226,16 +236,20 @@ When a passport PDF is uploaded:
 **Production Options:**
 
 **Option 1: Backend Serving (Simple)**
+
 ```env
 FILE_STORAGE_BASE_URL=/uploads
 ```
+
 - Backend serves files directly
 - Easy setup, no external dependencies
 
 **Option 2: Nginx Serving (Better Performance)**
+
 ```env
 FILE_STORAGE_BASE_URL=/uploads
 ```
+
 ```nginx
 # nginx.conf
 location /uploads {
@@ -246,9 +260,11 @@ location /uploads {
 ```
 
 **Option 3: CDN (Best Performance)**
+
 ```env
 FILE_STORAGE_BASE_URL=https://cdn.gidroatlas.kz/uploads
 ```
+
 - Best for high traffic
 - Requires CDN setup (CloudFront, Cloudflare, etc.)
 
@@ -271,12 +287,14 @@ GEMINI_API_KEY=AIzaSyC1234567890abcdefghijklmnopqrstuvwxyz
 ```
 
 **Obtain API Key:**
+
 1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Sign in with Google account
 3. Click "Create API Key"
 4. Copy key to `.env` file
 
 **Security Notes:**
+
 - 🔒 **Never commit API key to git**
 - 🔐 Restrict key usage by IP/domain in production
 - 📊 Monitor API quota and usage
@@ -311,13 +329,14 @@ GEMINI_MODEL=gemini-1.0-pro
 
 **Model Comparison:**
 
-| Model                  | Speed | Quality | Cost | Use Case                |
-| ---------------------- | ----- | ------- | ---- | ----------------------- |
-| gemini-2.0-flash-exp   | ⚡⚡⚡  | ⭐⭐⭐   | 💰   | Development, testing    |
-| gemini-1.5-pro         | ⚡⚡    | ⭐⭐⭐⭐  | 💰💰 | Production, accuracy    |
-| gemini-1.5-flash       | ⚡⚡⚡  | ⭐⭐     | 💰   | Production, high volume |
+| Model                | Speed  | Quality  | Cost | Use Case                |
+| -------------------- | ------ | -------- | ---- | ----------------------- |
+| gemini-2.0-flash-exp | ⚡⚡⚡ | ⭐⭐⭐   | 💰   | Development, testing    |
+| gemini-1.5-pro       | ⚡⚡   | ⭐⭐⭐⭐ | 💰💰 | Production, accuracy    |
+| gemini-1.5-flash     | ⚡⚡⚡ | ⭐⭐     | 💰   | Production, high volume |
 
 **Recommendations:**
+
 - **Development:** `gemini-2.0-flash-exp` (latest features)
 - **Production:** `gemini-1.5-pro` (stable, accurate)
 - **High Traffic:** `gemini-1.5-flash` (fast, cost-effective)
@@ -357,6 +376,7 @@ CORS_ORIGINS=http://localhost:8081,http://localhost:3000,https://gidroatlas.kz
 ⚠️ **Never use `*` in production!**
 
 ✅ **Production Configuration:**
+
 ```env
 # Whitelist specific domains only
 CORS_ORIGINS=https://gidroatlas.kz,https://www.gidroatlas.kz
@@ -412,12 +432,12 @@ LOG_LEVEL=ERROR
 
 **Log Level Hierarchy:**
 
-| Level   | Description                          | Use Case                |
-| ------- | ------------------------------------ | ----------------------- |
-| DEBUG   | Detailed debugging information       | Development, debugging  |
-| INFO    | General informational messages       | Production (default)    |
-| WARNING | Warning messages (potential issues)  | Production (minimal)    |
-| ERROR   | Error messages (failures)            | Critical systems        |
+| Level   | Description                         | Use Case               |
+| ------- | ----------------------------------- | ---------------------- |
+| DEBUG   | Detailed debugging information      | Development, debugging |
+| INFO    | General informational messages      | Production (default)   |
+| WARNING | Warning messages (potential issues) | Production (minimal)   |
+| ERROR   | Error messages (failures)           | Critical systems       |
 
 **Example Log Output:**
 
@@ -436,6 +456,7 @@ LOG_LEVEL=ERROR
 ```
 
 **Recommendations:**
+
 - **Development:** `DEBUG` (see everything)
 - **Staging:** `INFO` (moderate detail)
 - **Production:** `INFO` or `WARNING` (performance vs visibility)
@@ -457,6 +478,7 @@ These variables are used by the PostgreSQL Docker container.
 **Format:** String (alphanumeric, underscores)
 
 **Example:**
+
 ```env
 POSTGRES_USER=gidroatlas
 ```
@@ -474,11 +496,13 @@ POSTGRES_USER=gidroatlas
 **Format:** String
 
 **Example:**
+
 ```env
 POSTGRES_PASSWORD=SecureP@ssw0rd123!
 ```
 
 **Security:**
+
 - 🔒 Minimum 16 characters
 - 🔐 Include uppercase, lowercase, numbers, symbols
 - ⚠️ Never commit to git
@@ -496,6 +520,7 @@ POSTGRES_PASSWORD=SecureP@ssw0rd123!
 **Format:** String (alphanumeric, underscores)
 
 **Example:**
+
 ```env
 POSTGRES_DB=gidroatlas_prod
 ```
@@ -619,17 +644,20 @@ LOG_LEVEL=INFO
 ### Issue: Database Connection Failed
 
 **Symptom:**
+
 ```
 sqlalchemy.exc.OperationalError: could not connect to server
 ```
 
 **Check:**
+
 ```bash
 echo $DATABASE_URL
 # Verify: correct username, password, hostname, port, database name
 ```
 
 **Common Fixes:**
+
 - Docker: Use `postgres` as hostname (not `localhost`)
 - Local: Use `localhost` as hostname (not `postgres`)
 - Check PostgreSQL is running: `docker compose ps postgres`
@@ -639,17 +667,20 @@ echo $DATABASE_URL
 ### Issue: JWT Token Invalid
 
 **Symptom:**
+
 ```
 {"detail": "Could not validate credentials"}
 ```
 
 **Check:**
+
 ```bash
 echo $SECRET_KEY
 # Should be set and at least 32 characters
 ```
 
 **Fix:**
+
 - If SECRET_KEY changed, all users must re-login
 - Generate new key: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
 
@@ -658,17 +689,20 @@ echo $SECRET_KEY
 ### Issue: File Upload Failed
 
 **Symptom:**
+
 ```
 FileNotFoundError: [Errno 2] No such file or directory: 'uploads/passports'
 ```
 
 **Check:**
+
 ```bash
 echo $FILE_STORAGE_PATH
 ls -la uploads/
 ```
 
 **Fix:**
+
 ```bash
 mkdir -p uploads/avatars
 mkdir -p uploads/passports
@@ -680,17 +714,20 @@ chmod -R 755 uploads/
 ### Issue: CORS Error in Browser
 
 **Symptom:**
+
 ```
-Access to fetch at 'http://localhost:8000/api/objects' from origin 'http://localhost:8081' 
+Access to fetch at 'http://localhost:8000/api/objects' from origin 'http://localhost:8081'
 has been blocked by CORS policy
 ```
 
 **Check:**
+
 ```bash
 echo $CORS_ORIGINS
 ```
 
 **Fix:**
+
 ```env
 # Add frontend origin
 CORS_ORIGINS=http://localhost:8081,http://localhost:3000
@@ -725,7 +762,7 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 
 services:
   backend:
@@ -748,4 +785,4 @@ services:
 
 ---
 
-*Last updated: 2024*
+_Last updated: 2024_

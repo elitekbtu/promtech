@@ -11,6 +11,7 @@ GidroAtlas implements a two-tier role system to control access to sensitive wate
 **Purpose:** Public access for general viewing of water resource data
 
 **Permissions:**
+
 - ✅ View water objects on map
 - ✅ View basic object information (name, location, type, characteristics)
 - ✅ Access RAG system for general queries
@@ -22,6 +23,7 @@ GidroAtlas implements a two-tier role system to control access to sensitive wate
 - ❌ **Cannot get AI priority explanations**
 
 **Use Cases:**
+
 - Public officials viewing infrastructure
 - Citizens checking local water resources
 - Educational purposes
@@ -34,6 +36,7 @@ GidroAtlas implements a two-tier role system to control access to sensitive wate
 **Purpose:** Full access for water resource management professionals
 
 **Permissions:**
+
 - ✅ All Guest permissions
 - ✅ **View priority scores and priority levels**
 - ✅ **Access prioritization dashboard**
@@ -44,6 +47,7 @@ GidroAtlas implements a two-tier role system to control access to sensitive wate
 - ✅ Export priority reports
 
 **Use Cases:**
+
 - Government water resource managers
 - Infrastructure engineers
 - Environmental scientists
@@ -54,25 +58,25 @@ GidroAtlas implements a two-tier role system to control access to sensitive wate
 
 ## API Endpoint Access Matrix
 
-| Endpoint                          | Guest | Expert | Notes                                   |
-| --------------------------------- | ----- | ------ | --------------------------------------- |
-| **Authentication**                |       |        |                                         |
-| POST /api/auth/login              | ✅    | ✅     | Anyone can authenticate                 |
-| POST /api/auth/register           | ✅    | ✅     | Self-registration allowed               |
-| **Water Objects**                 |       |        |                                         |
-| GET /api/objects                  | ✅ *  | ✅     | * Guest doesn't see priority fields     |
-| GET /api/objects/{id}             | ✅ *  | ✅     | * Guest doesn't see priority fields     |
-| **Priorities**                    |       |        |                                         |
-| GET /api/priorities/table         | ❌    | ✅     | Expert only - full prioritization table |
-| GET /api/priorities/stats         | ❌    | ✅     | Expert only - statistics dashboard      |
-| **Passports**                     |       |        |                                         |
-| POST /api/passports/upload        | ❌    | ✅     | Expert only - document management       |
-| GET /api/passports/{id}           | ✅    | ✅     | Anyone can view if object is visible    |
-| **RAG System**                    |       |        |                                         |
-| POST /api/rag/query               | ✅    | ✅     | Both roles, but expert gets more detail |
-| GET /api/rag/explain-priority/{id}| ❌    | ✅     | Expert only - priority explanations     |
-| **Face ID**                       |       |        |                                         |
-| POST /api/faceid/verify           | ✅    | ✅     | Both roles for security                 |
+| Endpoint                           | Guest | Expert | Notes                                   |
+| ---------------------------------- | ----- | ------ | --------------------------------------- |
+| **Authentication**                 |       |        |                                         |
+| POST /api/auth/login               | ✅    | ✅     | Anyone can authenticate                 |
+| POST /api/auth/register            | ✅    | ✅     | Self-registration allowed               |
+| **Water Objects**                  |       |        |                                         |
+| GET /api/objects                   | ✅ \* | ✅     | \* Guest doesn't see priority fields    |
+| GET /api/objects/{id}              | ✅ \* | ✅     | \* Guest doesn't see priority fields    |
+| **Priorities**                     |       |        |                                         |
+| GET /api/priorities/table          | ❌    | ✅     | Expert only - full prioritization table |
+| GET /api/priorities/stats          | ❌    | ✅     | Expert only - statistics dashboard      |
+| **Passports**                      |       |        |                                         |
+| POST /api/passports/upload         | ❌    | ✅     | Expert only - document management       |
+| GET /api/passports/{id}            | ✅    | ✅     | Anyone can view if object is visible    |
+| **RAG System**                     |       |        |                                         |
+| POST /api/rag/query                | ✅    | ✅     | Both roles, but expert gets more detail |
+| GET /api/rag/explain-priority/{id} | ❌    | ✅     | Expert only - priority explanations     |
+| **Face ID**                        |       |        |                                         |
+| POST /api/faceid/verify            | ✅    | ✅     | Both roles for security                 |
 
 ---
 
@@ -83,6 +87,7 @@ GidroAtlas implements a two-tier role system to control access to sensitive wate
 When a **Guest** queries `/api/objects` or `/api/objects/{id}`, the response **excludes** priority-related fields:
 
 **Guest Response:**
+
 ```json
 {
   "id": 1,
@@ -102,6 +107,7 @@ When a **Guest** queries `/api/objects` or `/api/objects/{id}`, the response **e
 ```
 
 **Expert Response:**
+
 ```json
 {
   "id": 1,
@@ -123,6 +129,7 @@ When a **Guest** queries `/api/objects` or `/api/objects/{id}`, the response **e
 ```
 
 **Excluded Fields for Guest:**
+
 - `priority` — Integer priority score
 - `priority_level` — Text priority level (высокий/средний/низкий)
 
@@ -133,6 +140,7 @@ When a **Guest** queries `/api/objects` or `/api/objects/{id}`, the response **e
 ### 1. Login
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -140,6 +148,7 @@ curl -X POST http://localhost:8000/api/auth/login \
 ```
 
 **Response:**
+
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -168,6 +177,7 @@ curl http://localhost:8000/api/priorities/table \
 ```
 
 **Token Contents:**
+
 - `sub` — User's login
 - `role` — User's role (`guest` or `expert`)
 - `exp` — Token expiration timestamp
@@ -209,13 +219,13 @@ def get_priority_table(user: dict = Depends(require_expert)):
 def get_water_object(id: int, token: Optional[str] = None):
     """Get water object with role-based field filtering"""
     obj = db.query(WaterObject).filter_by(id=id).first()
-    
+
     # Check if user is expert
     is_expert = False
     if token:
         payload = decode_jwt(token)
         is_expert = payload.get("role") == "expert"
-    
+
     # Build response based on role
     response = {
         "id": obj.id,
@@ -223,12 +233,12 @@ def get_water_object(id: int, token: Optional[str] = None):
         "region": obj.region,
         # ... basic fields ...
     }
-    
+
     # Add priority fields only for experts
     if is_expert:
         response["priority"] = obj.priority
         response["priority_level"] = obj.priority_level
-    
+
     return response
 ```
 
@@ -251,6 +261,7 @@ curl -X POST http://localhost:8000/api/auth/register \
 ```
 
 **Role Options:**
+
 - `guest` — Default for public users
 - `expert` — Requires approval (implementation-dependent)
 
@@ -260,13 +271,13 @@ curl -X POST http://localhost:8000/api/auth/register \
 
 ```sql
 -- Promote user to expert
-UPDATE users 
-SET role = 'expert' 
+UPDATE users
+SET role = 'expert'
 WHERE login = 'username';
 
 -- Demote user to guest
-UPDATE users 
-SET role = 'guest' 
+UPDATE users
+SET role = 'guest'
 WHERE login = 'username';
 ```
 
@@ -286,12 +297,14 @@ WHERE login = 'username';
 ### Role Verification
 
 **Backend verifies role on every request:**
+
 - ✅ JWT token validated
 - ✅ Role extracted from token payload
 - ✅ Role checked against endpoint requirements
 - ✅ Response fields filtered based on role
 
 **Frontend role handling:**
+
 - JWT token stored securely
 - Role displayed in UI
 - Role-specific features shown/hidden
@@ -306,6 +319,7 @@ WHERE login = 'username';
 If migrating from an older system with different roles:
 
 **Old Roles:**
+
 - `admin` → Maps to `expert`
 - `user` → Maps to `guest`
 
@@ -313,12 +327,12 @@ If migrating from an older system with different roles:
 
 ```sql
 -- Update old role names to new ones
-UPDATE users 
-SET role = 'expert' 
+UPDATE users
+SET role = 'expert'
 WHERE role = 'admin';
 
-UPDATE users 
-SET role = 'guest' 
+UPDATE users
+SET role = 'guest'
 WHERE role = 'user';
 ```
 
@@ -331,6 +345,7 @@ WHERE role = 'user';
 Located at `backend/scripts/test_rbac.py`
 
 **Tests:**
+
 1. Login as guest and expert
 2. Verify guest can access `/api/objects` (without priority fields)
 3. Verify expert can access `/api/objects` (with priority fields)
@@ -340,6 +355,7 @@ Located at `backend/scripts/test_rbac.py`
 7. Verify expert can access `/api/priorities/stats`
 
 **Run Tests:**
+
 ```bash
 cd backend/scripts
 python test_rbac.py
@@ -354,6 +370,7 @@ python test_rbac.py
 **User Type:** Guest (not logged in or logged in as guest)
 
 **Actions:**
+
 1. Opens map in frontend
 2. Browses to local region
 3. Clicks on lake marker
@@ -370,6 +387,7 @@ python test_rbac.py
 **User Type:** Expert (logged in with expert credentials)
 
 **Actions:**
+
 1. Logs in with expert account
 2. Opens prioritization dashboard (`/api/priorities/table`)
 3. Views all objects sorted by priority (highest first)
@@ -388,6 +406,7 @@ python test_rbac.py
 **User Type:** Guest with API access
 
 **Actions:**
+
 1. Authenticates as guest
 2. Queries `/api/objects?water_type=пресная&region=Акмолинская область`
 3. Gets list of fresh water objects in region
@@ -402,17 +421,20 @@ python test_rbac.py
 ## Role Enhancement Roadmap
 
 ### Phase 1: Current Implementation ✅
+
 - Two roles: guest and expert
 - Field-level access control
 - Endpoint-level protection
 
 ### Phase 2: Planned Features
+
 - Admin role for user management
 - Role approval workflow
 - Audit logging for expert actions
 - Time-limited expert sessions
 
 ### Phase 3: Future Enhancements
+
 - Organization-based roles (Ministry A, Ministry B)
 - Granular permissions (view priority, edit priority, upload docs)
 - Regional access control (experts limited to specific regions)
@@ -455,6 +477,7 @@ python test_rbac.py
 ### Q: Can I have more than two roles?
 
 **A:** Current implementation supports exactly two roles. Adding more roles requires:
+
 1. Update `UserRole` enum in `models/user.py`
 2. Update role checking logic in route dependencies
 3. Update frontend role handling
@@ -465,9 +488,10 @@ python test_rbac.py
 ## Contact
 
 For role-related issues or access requests:
+
 - System Administrator: admin@gidroatlas.kz
 - Technical Support: support@gidroatlas.kz
 
 ---
 
-*Last updated: 2024*
+_Last updated: 2024_

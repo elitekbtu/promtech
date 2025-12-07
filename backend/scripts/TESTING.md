@@ -9,6 +9,7 @@ This document describes the automated tests implemented for the GidroAtlas water
 ### 11.1 Test Data ✅
 
 The system already contains **25 water objects** with varying priorities:
+
 - 5 reference objects from seed data
 - 20 objects imported from passport PDFs
 - Priority range: 3 to 76
@@ -26,6 +27,7 @@ Priority Levels: high (>=10), medium (6-9), low (<=5)
 ```
 
 **Test Cases:**
+
 1. Minimum priority (condition=5, age=2y) → priority=5, level=LOW
 2. Maximum priority (condition=1, age=75y) → priority=90, level=HIGH
 3. Boundary high/medium (condition=3, age=1y) → priority=10, level=HIGH
@@ -36,6 +38,7 @@ Priority Levels: high (>=10), medium (6-9), low (<=5)
 8. Perfect condition, fresh (condition=5, age=0y) → priority=3, level=LOW
 
 **Usage:**
+
 ```bash
 docker exec promtech-backend-1 python scripts/test_priority_calculation.py
 ```
@@ -47,11 +50,13 @@ docker exec promtech-backend-1 python scripts/test_priority_calculation.py
 **Script:** `backend/scripts/test_rbac.py`
 
 Tests that role-based access control works correctly:
+
 - Guest users cannot access priority endpoints
 - Expert users can access all endpoints
 - Priority fields hidden from guest responses
 
 **Test Cases:**
+
 1. Guest login and token retrieval
 2. Expert login and token retrieval
 3. GET /api/objects (accessible to both, priority fields filtered for guests)
@@ -59,6 +64,7 @@ Tests that role-based access control works correctly:
 5. GET /api/priorities/stats (experts only → 403 for guests)
 
 **Usage:**
+
 ```bash
 python backend/scripts/test_rbac.py
 ```
@@ -72,27 +78,32 @@ python backend/scripts/test_rbac.py
 Tests comprehensive filtering, sorting, and pagination:
 
 **Pagination Tests:**
+
 - First page (5 items, offset=0)
 - Second page (5 items, offset=5)
 - Large page (10 items)
 
 **Filtering Tests:**
+
 - By region (Алматинская, Улытауская, etc.)
 - By resource_type (озеро, канал, водохранилище)
 - By water_type (пресная, непресная)
 - By priority_level (высокий, средний, низкий)
 
 **Sorting Tests:**
+
 - By name (ascending)
 - By priority (descending)
 - By passport_date (descending)
 - By technical_condition (ascending/descending)
 
 **Combined Tests:**
+
 - Filter + Sort (e.g., озеро + sort by priority desc)
 - Filter + Pagination (e.g., region filter with limit/offset)
 
 **Usage:**
+
 ```bash
 python backend/scripts/test_filtering_sorting.py
 ```
@@ -102,6 +113,7 @@ python backend/scripts/test_filtering_sorting.py
 **Tested via:** Manual testing and seed scripts
 
 **Verification:**
+
 - 20 passport PDFs successfully imported
 - Text extraction working with pypdf
 - Metadata parsing (name, region, coordinates, dates)
@@ -109,6 +121,7 @@ python backend/scripts/test_filtering_sorting.py
 - 88% passport coverage (22/25 objects)
 
 **Test Command:**
+
 ```bash
 curl -X POST "http://localhost:8000/api/passports/upload" \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -123,6 +136,7 @@ curl -X POST "http://localhost:8000/api/passports/upload" \
 Tests RAG system with water-specific queries:
 
 **Test Cases:**
+
 1. Basic RAG query (Озеро Балхаш)
 2. Query with context filters (region filter)
 3. Priority explanation endpoint (/api/rag/explain-priority/{id})
@@ -130,6 +144,7 @@ Tests RAG system with water-specific queries:
 5. Russian language support
 
 **Sample Queries:**
+
 ```json
 {"query": "Расскажи об озере Балхаш"}
 {"query": "Какие водоемы в Алматинской области?", "region": "Алматинская"}
@@ -138,6 +153,7 @@ Tests RAG system with water-specific queries:
 ```
 
 **Usage:**
+
 ```bash
 python backend/scripts/test_rag_integration.py
 ```
@@ -147,12 +163,14 @@ python backend/scripts/test_rag_integration.py
 **Verified via:** RAG integration tests
 
 **Tools Tested:**
+
 - `vector_search_tool` - Searches passport documents and object metadata
 - `web_search_tool` - Fallback for external information
 - Tool orchestration and result aggregation
 - Source citation and metadata tracking
 
 **Vector Store Contents:**
+
 - 22 passport text documents indexed
 - 25 water object metadata entries
 - Structured sections (general_info, technical_params, ecological_state)
@@ -163,16 +181,19 @@ python backend/scripts/test_rag_integration.py
 **Endpoint:** `http://localhost:8000/docs`
 
 **Verification:**
+
 ```bash
 curl -s http://localhost:8000/docs | grep 'GidroAtlas API'
 ```
 
 **Available Documentation:**
+
 - Interactive Swagger UI at `/docs`
 - ReDoc alternative at `/redoc`
 - OpenAPI JSON schema at `/openapi.json`
 
 **Documented Endpoints:**
+
 - `/api/auth/*` - Authentication (login, register, user management)
 - `/api/objects` - Water objects (list, get by id, get passport)
 - `/api/priorities/*` - Priority dashboard (table, stats)
@@ -207,16 +228,16 @@ python backend/scripts/test_rag_integration.py
 
 ## Test Results Summary
 
-| Test | Status | Notes |
-|------|--------|-------|
-| 11.1 Test Data | ✅ | 25 objects with varying priorities |
-| 11.2 Priority Calculation | ✅ | All 8 edge cases pass |
-| 11.3 RBAC | ✅ | Requires user accounts |
-| 11.4 Filtering/Sorting | ✅ | Requires authentication |
-| 11.5 Passport Upload | ✅ | 20 PDFs imported successfully |
-| 11.6 RAG Endpoints | ✅ | Russian queries working |
-| 11.7 RAG Tools | ✅ | Vector search operational |
-| 11.8 OpenAPI Docs | ✅ | /docs accessible |
+| Test                      | Status | Notes                              |
+| ------------------------- | ------ | ---------------------------------- |
+| 11.1 Test Data            | ✅     | 25 objects with varying priorities |
+| 11.2 Priority Calculation | ✅     | All 8 edge cases pass              |
+| 11.3 RBAC                 | ✅     | Requires user accounts             |
+| 11.4 Filtering/Sorting    | ✅     | Requires authentication            |
+| 11.5 Passport Upload      | ✅     | 20 PDFs imported successfully      |
+| 11.6 RAG Endpoints        | ✅     | Russian queries working            |
+| 11.7 RAG Tools            | ✅     | Vector search operational          |
+| 11.8 OpenAPI Docs         | ✅     | /docs accessible                   |
 
 ## Known Issues
 

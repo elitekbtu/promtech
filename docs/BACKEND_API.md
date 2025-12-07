@@ -114,16 +114,17 @@ backend/
 
 **Table:** `users`
 
-| Field          | Type    | Description                              |
-| -------------- | ------- | ---------------------------------------- |
-| id             | int     | Primary key                              |
-| login          | string  | Login username (unique)                  |
-| password_hash  | string  | Hashed password                          |
-| role           | enum    | `guest` or `expert`                      |
-| avatar_url     | string  | URL to user's avatar (optional)          |
-| face_encoding  | binary  | Face encoding for Face ID (optional)     |
+| Field         | Type   | Description                          |
+| ------------- | ------ | ------------------------------------ |
+| id            | int    | Primary key                          |
+| login         | string | Login username (unique)              |
+| password_hash | string | Hashed password                      |
+| role          | enum   | `guest` or `expert`                  |
+| avatar_url    | string | URL to user's avatar (optional)      |
+| face_encoding | binary | Face encoding for Face ID (optional) |
 
 **Roles:**
+
 - **guest** — Read-only access to maps and objects (no priority information)
 - **expert** — Full access including priorities, passport management, RAG system
 
@@ -131,24 +132,24 @@ backend/
 
 **Table:** `water_objects`
 
-| Field               | Type   | Nullable | Description                                    |
-| ------------------- | ------ | -------- | ---------------------------------------------- |
-| id                  | int    | No       | Primary key                                    |
-| name                | string | No       | Object name                                    |
-| region              | string | No       | Region/Oblast                                  |
-| resource_type       | enum   | No       | озеро, канал, водохранилище, река, другое      |
-| water_type          | enum   | No       | пресная, непресная                             |
-| fauna               | enum   | Yes      | рыбопродуктивная, нерыбопродуктивная           |
-| passport_date       | date   | Yes      | Passport document date                         |
-| technical_condition | int    | Yes      | Technical condition (1-5, lower is worse)      |
-| latitude            | float  | No       | Latitude coordinate                            |
-| longitude           | float  | No       | Longitude coordinate                           |
-| pdf_url             | string | Yes      | URL to passport PDF document                   |
-| priority            | int    | Yes      | Priority score (calculated)                    |
-| priority_level      | enum   | Yes      | высокий, средний, низкий                       |
-| osm_id              | bigint | Yes      | OpenStreetMap ID (if imported from OSM)        |
-| area_ha             | float  | Yes      | Area in hectares                               |
-| depth_m             | float  | Yes      | Depth in meters                                |
+| Field               | Type   | Nullable | Description                               |
+| ------------------- | ------ | -------- | ----------------------------------------- |
+| id                  | int    | No       | Primary key                               |
+| name                | string | No       | Object name                               |
+| region              | string | No       | Region/Oblast                             |
+| resource_type       | enum   | No       | озеро, канал, водохранилище, река, другое |
+| water_type          | enum   | No       | пресная, непресная                        |
+| fauna               | enum   | Yes      | рыбопродуктивная, нерыбопродуктивная      |
+| passport_date       | date   | Yes      | Passport document date                    |
+| technical_condition | int    | Yes      | Technical condition (1-5, lower is worse) |
+| latitude            | float  | No       | Latitude coordinate                       |
+| longitude           | float  | No       | Longitude coordinate                      |
+| pdf_url             | string | Yes      | URL to passport PDF document              |
+| priority            | int    | Yes      | Priority score (calculated)               |
+| priority_level      | enum   | Yes      | высокий, средний, низкий                  |
+| osm_id              | bigint | Yes      | OpenStreetMap ID (if imported from OSM)   |
+| area_ha             | float  | Yes      | Area in hectares                          |
+| depth_m             | float  | Yes      | Depth in meters                           |
 
 **Enum Definitions (Russian Values):**
 
@@ -178,12 +179,12 @@ class PriorityLevel(str, Enum):
 
 **Table:** `passport_texts`
 
-| Field     | Type   | Description                          |
-| --------- | ------ | ------------------------------------ |
-| id        | int    | Primary key                          |
-| object_id | int    | Foreign key to `water_objects.id`    |
-| text      | text   | Full text content of passport        |
-| section   | string | Logical section (phys, bio, etc.)    |
+| Field     | Type   | Description                       |
+| --------- | ------ | --------------------------------- |
+| id        | int    | Primary key                       |
+| object_id | int    | Foreign key to `water_objects.id` |
+| text      | text   | Full text content of passport     |
+| section   | string | Logical section (phys, bio, etc.) |
 
 ---
 
@@ -209,16 +210,16 @@ class PriorityLevel(str, Enum):
 
 ### Role-Based Access Control
 
-| Endpoint                          | Guest | Expert |
-| --------------------------------- | ----- | ------ |
-| GET /api/objects                  | ✅ *  | ✅     |
-| GET /api/objects/{id}             | ✅ *  | ✅     |
-| GET /api/priorities/table         | ❌    | ✅     |
-| GET /api/priorities/stats         | ❌    | ✅     |
-| POST /api/passports/upload        | ❌    | ✅     |
-| POST /api/rag/query               | ✅    | ✅     |
-| GET /api/rag/explain-priority/{id}| ❌    | ✅     |
-| POST /api/faceid/verify           | ✅    | ✅     |
+| Endpoint                           | Guest | Expert |
+| ---------------------------------- | ----- | ------ |
+| GET /api/objects                   | ✅ \* | ✅     |
+| GET /api/objects/{id}              | ✅ \* | ✅     |
+| GET /api/priorities/table          | ❌    | ✅     |
+| GET /api/priorities/stats          | ❌    | ✅     |
+| POST /api/passports/upload         | ❌    | ✅     |
+| POST /api/rag/query                | ✅    | ✅     |
+| GET /api/rag/explain-priority/{id} | ❌    | ✅     |
+| POST /api/faceid/verify            | ✅    | ✅     |
 
 \* Guests see water objects but **without** priority fields
 
@@ -246,6 +247,7 @@ http://localhost:8000/api
 **Description:** Authenticate user and receive JWT token
 
 **Request Body:**
+
 ```json
 {
   "login": "expert1",
@@ -254,6 +256,7 @@ http://localhost:8000/api
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -263,6 +266,7 @@ http://localhost:8000/api
 ```
 
 **Response (401 Unauthorized):**
+
 ```json
 {
   "detail": "Incorrect login or password"
@@ -270,6 +274,7 @@ http://localhost:8000/api
 ```
 
 **Example (curl):**
+
 ```bash
 curl -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -283,6 +288,7 @@ curl -X POST http://localhost:8000/api/auth/login \
 **Description:** Register new user account
 
 **Request Body:**
+
 ```json
 {
   "login": "newuser",
@@ -292,6 +298,7 @@ curl -X POST http://localhost:8000/api/auth/login \
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "id": 5,
@@ -301,6 +308,7 @@ curl -X POST http://localhost:8000/api/auth/login \
 ```
 
 **Response (400 Bad Request):**
+
 ```json
 {
   "detail": "Login already exists"
@@ -319,27 +327,28 @@ curl -X POST http://localhost:8000/api/auth/login \
 
 **Query Parameters:**
 
-| Parameter                | Type    | Description                              | Example              |
-| ------------------------ | ------- | ---------------------------------------- | -------------------- |
-| limit                    | int     | Number of items per page (default: 20)   | 10                   |
-| offset                   | int     | Number of items to skip (default: 0)     | 20                   |
-| region                   | string  | Filter by region                         | Улытауская область   |
-| resource_type            | string  | Filter by type (озеро, канал, etc.)      | озеро                |
-| water_type               | string  | Filter by water type (пресная, непресная)| пресная              |
-| fauna                    | string  | Filter by fauna type                     | рыбопродуктивная     |
-| passport_date_from       | date    | Filter passports from this date          | 2020-01-01           |
-| passport_date_to         | date    | Filter passports to this date            | 2024-01-01           |
-| technical_condition_min  | int     | Minimum technical condition (1-5)        | 3                    |
-| technical_condition_max  | int     | Maximum technical condition (1-5)        | 5                    |
-| priority_min             | int     | Minimum priority (expert only)           | 10                   |
-| priority_max             | int     | Maximum priority (expert only)           | 20                   |
-| priority_level           | string  | Filter by priority level (expert only)   | высокий              |
-| sort_by                  | string  | Field to sort by                         | priority             |
-| sort_order               | string  | Sort direction (asc, desc)               | desc                 |
+| Parameter               | Type   | Description                               | Example            |
+| ----------------------- | ------ | ----------------------------------------- | ------------------ |
+| limit                   | int    | Number of items per page (default: 20)    | 10                 |
+| offset                  | int    | Number of items to skip (default: 0)      | 20                 |
+| region                  | string | Filter by region                          | Улытауская область |
+| resource_type           | string | Filter by type (озеро, канал, etc.)       | озеро              |
+| water_type              | string | Filter by water type (пресная, непресная) | пресная            |
+| fauna                   | string | Filter by fauna type                      | рыбопродуктивная   |
+| passport_date_from      | date   | Filter passports from this date           | 2020-01-01         |
+| passport_date_to        | date   | Filter passports to this date             | 2024-01-01         |
+| technical_condition_min | int    | Minimum technical condition (1-5)         | 3                  |
+| technical_condition_max | int    | Maximum technical condition (1-5)         | 5                  |
+| priority_min            | int    | Minimum priority (expert only)            | 10                 |
+| priority_max            | int    | Maximum priority (expert only)            | 20                 |
+| priority_level          | string | Filter by priority level (expert only)    | высокий            |
+| sort_by                 | string | Field to sort by                          | priority           |
+| sort_order              | string | Sort direction (asc, desc)                | desc               |
 
 **Sortable Fields:** name, region, resource_type, water_type, fauna, passport_date, technical_condition, priority
 
 **Response (200 OK) - Expert:**
+
 ```json
 {
   "items": [
@@ -368,6 +377,7 @@ curl -X POST http://localhost:8000/api/auth/login \
 ```
 
 **Response (200 OK) - Guest:**
+
 ```json
 {
   "items": [
@@ -396,6 +406,7 @@ curl -X POST http://localhost:8000/api/auth/login \
 **Note:** Guests do **not** see `priority` and `priority_level` fields.
 
 **Example (curl):**
+
 ```bash
 # List all objects
 curl http://localhost:8000/api/objects
@@ -417,9 +428,11 @@ curl "http://localhost:8000/api/objects?sort_by=priority&sort_order=desc&limit=1
 **Authentication:** Optional (role affects response fields)
 
 **Path Parameters:**
+
 - `id` (int) — Water object ID
 
 **Response (200 OK) - Expert:**
+
 ```json
 {
   "id": 1,
@@ -442,6 +455,7 @@ curl "http://localhost:8000/api/objects?sort_by=priority&sort_order=desc&limit=1
 ```
 
 **Response (404 Not Found):**
+
 ```json
 {
   "detail": "Water object not found"
@@ -449,6 +463,7 @@ curl "http://localhost:8000/api/objects?sort_by=priority&sort_order=desc&limit=1
 ```
 
 **Example (curl):**
+
 ```bash
 curl http://localhost:8000/api/objects/1
 ```
@@ -466,6 +481,7 @@ curl http://localhost:8000/api/objects/1
 **Query Parameters:** Same as `/api/objects` (filtering, sorting, pagination)
 
 **Response (200 OK):**
+
 ```json
 {
   "items": [
@@ -493,6 +509,7 @@ curl http://localhost:8000/api/objects/1
 ```
 
 **Response (403 Forbidden) - Guest:**
+
 ```json
 {
   "detail": "Access forbidden: expert role required"
@@ -500,6 +517,7 @@ curl http://localhost:8000/api/objects/1
 ```
 
 **Example (curl):**
+
 ```bash
 curl http://localhost:8000/api/priorities/table \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
@@ -514,6 +532,7 @@ curl http://localhost:8000/api/priorities/table \
 **Authentication:** Required (expert only)
 
 **Response (200 OK):**
+
 ```json
 {
   "total_objects": 25,
@@ -532,6 +551,7 @@ curl http://localhost:8000/api/priorities/table \
 ```
 
 **Example (curl):**
+
 ```bash
 curl http://localhost:8000/api/priorities/stats \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
@@ -548,10 +568,12 @@ curl http://localhost:8000/api/priorities/stats \
 **Authentication:** Required (expert only)
 
 **Request (multipart/form-data):**
+
 - `object_id` (int) — Water object ID
 - `file` (file) — PDF file
 
 **Response (200 OK):**
+
 ```json
 {
   "object_id": 1,
@@ -561,6 +583,7 @@ curl http://localhost:8000/api/priorities/stats \
 ```
 
 **Example (curl):**
+
 ```bash
 curl -X POST http://localhost:8000/api/passports/upload \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -579,6 +602,7 @@ curl -X POST http://localhost:8000/api/passports/upload \
 **Authentication:** Optional (expert gets more detailed responses)
 
 **Request Body:**
+
 ```json
 {
   "query": "Какие озера с высоким приоритетом находятся в Улытауской области?",
@@ -589,6 +613,7 @@ curl -X POST http://localhost:8000/api/passports/upload \
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "status": "success",
@@ -616,6 +641,7 @@ curl -X POST http://localhost:8000/api/passports/upload \
 ```
 
 **Example (curl):**
+
 ```bash
 curl -X POST http://localhost:8000/api/rag/query \
   -H "Content-Type: application/json" \
@@ -634,9 +660,11 @@ curl -X POST http://localhost:8000/api/rag/query \
 **Authentication:** Required (expert only)
 
 **Path Parameters:**
+
 - `id` (int) — Water object ID
 
 **Response (200 OK):**
+
 ```json
 {
   "object_id": 1,
@@ -648,6 +676,7 @@ curl -X POST http://localhost:8000/api/rag/query \
 ```
 
 **Example (curl):**
+
 ```bash
 curl http://localhost:8000/api/rag/explain-priority/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
@@ -664,9 +693,11 @@ curl http://localhost:8000/api/rag/explain-priority/1 \
 **Authentication:** Required
 
 **Request (multipart/form-data):**
+
 - `image` (file) — Photo of user's face
 
 **Response (200 OK):**
+
 ```json
 {
   "verified": true,
@@ -677,6 +708,7 @@ curl http://localhost:8000/api/rag/explain-priority/1 \
 ```
 
 **Response (401 Unauthorized):**
+
 ```json
 {
   "verified": false,
@@ -685,6 +717,7 @@ curl http://localhost:8000/api/rag/explain-priority/1 \
 ```
 
 **Example (curl):**
+
 ```bash
 curl -X POST http://localhost:8000/api/faceid/verify \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -699,20 +732,20 @@ All enum values in API responses are returned in **Russian** for better UX with 
 
 ### Enum Translations
 
-| English Value      | Russian Value        | Field            |
-| ------------------ | -------------------- | ---------------- |
-| lake               | озеро                | resource_type    |
-| canal              | канал                | resource_type    |
-| reservoir          | водохранилище        | resource_type    |
-| river              | река                 | resource_type    |
-| other              | другое               | resource_type    |
-| fresh              | пресная              | water_type       |
-| non_fresh          | непресная            | water_type       |
-| fish_bearing       | рыбопродуктивная     | fauna            |
-| non_fish_bearing   | нерыбопродуктивная   | fauna            |
-| high               | высокий              | priority_level   |
-| medium             | средний              | priority_level   |
-| low                | низкий               | priority_level   |
+| English Value    | Russian Value      | Field          |
+| ---------------- | ------------------ | -------------- |
+| lake             | озеро              | resource_type  |
+| canal            | канал              | resource_type  |
+| reservoir        | водохранилище      | resource_type  |
+| river            | река               | resource_type  |
+| other            | другое             | resource_type  |
+| fresh            | пресная            | water_type     |
+| non_fresh        | непресная          | water_type     |
+| fish_bearing     | рыбопродуктивная   | fauna          |
+| non_fish_bearing | нерыбопродуктивная | fauna          |
+| high             | высокий            | priority_level |
+| medium           | средний            | priority_level |
+| low              | низкий             | priority_level |
 
 ### Database Migration
 
@@ -752,6 +785,7 @@ where:
 ### Examples
 
 **Example 1: High Priority**
+
 - Technical condition: 5 (poor)
 - Passport date: 2015-03-15
 - Current year: 2024
@@ -759,6 +793,7 @@ where:
 - **Priority: 12 (высокий)**
 
 **Example 2: Medium Priority**
+
 - Technical condition: 3 (fair)
 - Passport date: 2020-06-10
 - Current year: 2024
@@ -766,6 +801,7 @@ where:
 - **Priority: 13 (высокий)** ← Actually high, not medium!
 
 **Example 3: Low Priority**
+
 - Technical condition: 2 (good)
 - Passport date: 2022-01-01
 - Current year: 2024
@@ -773,6 +809,7 @@ where:
 - **Priority: 14 (высокий)** ← Actually high!
 
 **Correct Example for Low Priority:**
+
 - Technical condition: 1 (excellent)
 - Passport date: 2023-01-01
 - Current year: 2024
@@ -780,6 +817,7 @@ where:
 - **Priority: 16 (высокий)** ← Still high!
 
 **Actually Low Priority:**
+
 - Technical condition: 1 (excellent)
 - Passport date: 2024-01-01
 - Current year: 2024
@@ -787,26 +825,31 @@ where:
 - **Priority: 15 (высокий)**
 
 **Let me fix this - for LOW priority:**
+
 - Technical condition: 2 (good)
 - Passport date: 2023-06-01
 - Current year: 2024
 - Calculation: `(6 - 2) * 3 + (2024 - 2023) = 4 * 3 + 1 = 13`
 
 Actually, to get LOW priority (< 6), you need:
+
 - Technical condition: 1 (excellent)
 - Passport date: 2024-01-01 (current year)
 - Calculation: `(6 - 1) * 3 + 0 = 15`... still not low!
 
 The formula heavily favors high priorities. To get priority < 6:
+
 - Technical condition must be 1 or 2
 - Passport must be very recent (< 1 year old)
 
 **Real Low Priority Example:**
+
 - This formula design means LOW priority is rare, which makes sense for aging infrastructure!
 
 ### Recalculation
 
 Priority is automatically recalculated whenever:
+
 - Technical condition is updated
 - Passport date is updated
 - Annually for all objects (to update passport age)
@@ -843,27 +886,36 @@ User Query → Agent → Tools → Context Assembly → Gemini → Response
 ### Example Queries
 
 **Query 1: Information Request**
+
 ```
 "Расскажи об озере Балхаш"
 ```
+
 Agent actions:
+
 - Uses `filter_objects_tool` to find objects named "Балхаш"
 - Uses `vector_search_tool` to find passport content about Balkhash
 - Assembles context and requests Gemini to summarize
 
 **Query 2: Filtered Search**
+
 ```
 "Какие водохранилища в Акмолинской области?"
 ```
+
 Agent actions:
+
 - Uses `filter_objects_tool` with filters: `resource_type=водохранилище`, `region=Акмолинская область`
 - Returns list of matching objects
 
 **Query 3: Priority Explanation**
+
 ```
 "Почему у озера Бараккол высокий приоритет?"
 ```
+
 Agent actions:
+
 - Uses `get_object_details_tool` for object ID 1
 - Uses `explain_priority_tool` to calculate priority breakdown
 - Uses `vector_search_tool` to find relevant passport excerpts
@@ -876,29 +928,34 @@ Agent actions:
 ### Environment Variables
 
 **Database:**
+
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/gidroatlas
 ```
 
 **Authentication:**
+
 ```env
 SECRET_KEY=your-secret-key-here-min-32-chars
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 ```
 
 **File Storage:**
+
 ```env
 FILE_STORAGE_PATH=uploads
 FILE_STORAGE_BASE_URL=/uploads
 ```
 
 **AI/Gemini:**
+
 ```env
 GEMINI_API_KEY=your-gemini-api-key
 GEMINI_MODEL=gemini-2.0-flash-exp
 ```
 
 **CORS (Development):**
+
 ```env
 CORS_ORIGINS=http://localhost:8081,http://localhost:3000
 ```
@@ -906,11 +963,13 @@ CORS_ORIGINS=http://localhost:8081,http://localhost:3000
 ### Running the Backend
 
 **With Docker:**
+
 ```bash
 docker compose up -d
 ```
 
 **Locally:**
+
 ```bash
 cd backend
 pip install -r requirements.txt
@@ -921,16 +980,19 @@ uvicorn main:app --reload
 ### Database Migrations
 
 **Create new migration:**
+
 ```bash
 alembic revision --autogenerate -m "description"
 ```
 
 **Apply migrations:**
+
 ```bash
 alembic upgrade head
 ```
 
 **Rollback migration:**
+
 ```bash
 alembic downgrade -1
 ```
@@ -951,12 +1013,14 @@ Located in `backend/scripts/`:
 ### Running Tests
 
 **All tests:**
+
 ```bash
 cd backend/scripts
 python run_all_tests.py
 ```
 
 **Individual test:**
+
 ```bash
 python test_priority_calculation.py
 ```
@@ -964,6 +1028,7 @@ python test_priority_calculation.py
 ### Test Coverage
 
 Current test results:
+
 - ✅ Priority calculation: 8/8 tests passed
 - ✅ OpenAPI docs: Accessible
 - ✅ Database: 25 water objects
@@ -987,16 +1052,16 @@ See `backend/scripts/TESTING.md` for detailed test documentation.
 
 ### HTTP Status Codes
 
-| Code | Meaning               | When Used                           |
-| ---- | --------------------- | ----------------------------------- |
-| 200  | OK                    | Successful request                  |
-| 201  | Created               | Resource created successfully       |
-| 400  | Bad Request           | Invalid input data                  |
-| 401  | Unauthorized          | Missing or invalid authentication   |
-| 403  | Forbidden             | Insufficient permissions            |
-| 404  | Not Found             | Resource does not exist             |
-| 422  | Unprocessable Entity  | Validation error                    |
-| 500  | Internal Server Error | Server-side error                   |
+| Code | Meaning               | When Used                         |
+| ---- | --------------------- | --------------------------------- |
+| 200  | OK                    | Successful request                |
+| 201  | Created               | Resource created successfully     |
+| 400  | Bad Request           | Invalid input data                |
+| 401  | Unauthorized          | Missing or invalid authentication |
+| 403  | Forbidden             | Insufficient permissions          |
+| 404  | Not Found             | Resource does not exist           |
+| 422  | Unprocessable Entity  | Validation error                  |
+| 500  | Internal Server Error | Server-side error                 |
 
 ---
 
@@ -1052,6 +1117,7 @@ See `backend/scripts/TESTING.md` for detailed test documentation.
 ### Sample Data
 
 Current database contains:
+
 - **25 water objects** across Kazakhstan
 - **22 passport documents** (88% coverage)
 - **Priority distribution:**
@@ -1064,10 +1130,11 @@ Current database contains:
 ## Support
 
 For issues and questions:
+
 - GitHub Issues: https://github.com/your-org/gidroatlas
 - Documentation: `/docs`
 - API Docs: `http://localhost:8000/docs`
 
 ---
 
-*Last updated: 2024*
+_Last updated: 2024_
