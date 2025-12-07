@@ -15,7 +15,8 @@ import { useRouter } from 'expo-router';
 import Markdown from 'react-native-markdown-display';
 import { GidroAtlasColors } from '@/constants/theme';
 import { prioritiesAPI, ragAPI } from '@/lib/api-services';
-import type { PriorityTableItem, PriorityStatistics, PriorityFilters, PriorityLevel } from '@/lib/gidroatlas-types';
+import { PriorityLevel } from '@/lib/gidroatlas-types';
+import type { PriorityTableItem, PriorityStatistics, PriorityFilters } from '@/lib/gidroatlas-types';
 import { AuroraBackground } from '@/components/ui/aurora-background';
 
 const { width } = Dimensions.get('window');
@@ -29,9 +30,9 @@ const priorityColors: Record<string, string> = {
 };
 
 const priorityLabels: Record<string, string> = {
-  'высокий': 'High',
-  'средний': 'Medium',
-  'низкий': 'Low',
+  'высокий': 'Высокий',
+  'средний': 'Средний',
+  'низкий': 'Низкий',
 };
 
 export default function PrioritiesScreen() {
@@ -75,7 +76,7 @@ export default function PrioritiesScreen() {
       setItems(tableResponse.items);
       setStats(statsResponse);
     } catch (err: any) {
-      setError(err.message || 'Failed to load priority data. Expert access required.');
+      setError(err.message || 'Не удалось загрузить данные приоритетов. Требуется доступ эксперта.');
       console.error('Error fetching priorities:', err);
     } finally {
       setLoading(false);
@@ -114,7 +115,7 @@ export default function PrioritiesScreen() {
     } catch (err: any) {
       setExplanations(prev => ({
         ...prev,
-        [objectId]: 'Unable to load explanation. Please try again.',
+        [objectId]: 'Не удалось загрузить объяснение. Попробуйте ещё раз.',
       }));
       console.error('Error fetching explanation:', err);
     } finally {
@@ -162,20 +163,20 @@ export default function PrioritiesScreen() {
           <View style={styles.itemDetails}>
             <View style={styles.detailItem}>
               <Ionicons name="construct-outline" size={14} color={GidroAtlasColors.gray[400]} />
-              <Text style={styles.detailText}>Condition: {item.technical_condition}/5</Text>
+              <Text style={styles.detailText}>Состояние: {item.technical_condition}/5</Text>
             </View>
             {item.passport_date && (
               <View style={styles.detailItem}>
                 <Ionicons name="document-outline" size={14} color={GidroAtlasColors.gray[400]} />
                 <Text style={styles.detailText}>
-                  Passport: {new Date(item.passport_date).toLocaleDateString()}
+                  Паспорт: {new Date(item.passport_date).toLocaleDateString()}
                 </Text>
               </View>
             )}
             <View style={styles.detailItem}>
               <Ionicons name="flag-outline" size={14} color={priorityColor} />
               <Text style={[styles.detailText, { color: priorityColor, fontWeight: '600' }]}>
-                {priorityLabels[item.priority_level] || item.priority_level} Priority
+                {priorityLabels[item.priority_level] || item.priority_level} приоритет
               </Text>
             </View>
           </View>
@@ -186,16 +187,16 @@ export default function PrioritiesScreen() {
             {loadingExplanation === item.id ? (
               <View style={styles.explanationLoading}>
                 <ActivityIndicator size="small" color={GidroAtlasColors.persianGreen} />
-                <Text style={styles.explanationLoadingText}>Generating AI explanation...</Text>
+                <Text style={styles.explanationLoadingText}>Генерация AI-объяснения...</Text>
               </View>
             ) : (
               <View style={styles.explanationContent}>
                 <View style={styles.explanationHeader}>
                   <Ionicons name="bulb" size={18} color={GidroAtlasColors.persianGreen} />
-                  <Text style={styles.explanationTitle}>AI Priority Explanation</Text>
+                  <Text style={styles.explanationTitle}>AI-объяснение приоритета</Text>
                 </View>
                 <Markdown style={markdownStyles}>
-                  {explanations[item.id] || 'No explanation available'}
+                  {explanations[item.id] || 'Недоступно.'}
                 </Markdown>
               </View>
             )}
@@ -223,8 +224,8 @@ export default function PrioritiesScreen() {
             <Ionicons name="arrow-back" size={24} color={GidroAtlasColors.persianGreen} />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Priority Table</Text>
-            <Text style={styles.headerSubtitle}>Expert Analysis Dashboard</Text>
+            <Text style={styles.headerTitle}>Таблица приоритетов</Text>
+            <Text style={styles.headerSubtitle}>Экспертная панель анализа</Text>
           </View>
         </View>
 
@@ -234,7 +235,7 @@ export default function PrioritiesScreen() {
             <Ionicons name="lock-closed" size={20} color="#ef4444" />
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity onPress={handleRefresh}>
-              <Text style={styles.retryText}>Retry</Text>
+              <Text style={styles.retryText}>Повторить</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -243,7 +244,7 @@ export default function PrioritiesScreen() {
         {loading && items.length === 0 ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={GidroAtlasColors.persianGreen} />
-            <Text style={styles.loadingText}>Loading priority data...</Text>
+            <Text style={styles.loadingText}>Загрузка данных приоритетов...</Text>
           </View>
         ) : (
           <ScrollView
@@ -262,16 +263,16 @@ export default function PrioritiesScreen() {
             {/* Statistics Cards */}
             {stats && (
               <View style={styles.statsContainer}>
-                {renderStatCard('High', stats.high, '#ef4444', 'alert-circle')}
-                {renderStatCard('Medium', stats.medium, '#f97316', 'warning')}
-                {renderStatCard('Low', stats.low, '#22c55e', 'checkmark-circle')}
-                {renderStatCard('Total', stats.total, GidroAtlasColors.persianGreen, 'water')}
+                {renderStatCard('Высокий', stats.high, '#ef4444', 'alert-circle')}
+                {renderStatCard('Средний', stats.medium, '#f97316', 'warning')}
+                {renderStatCard('Низкий', stats.low, '#22c55e', 'checkmark-circle')}
+                {renderStatCard('Всего', stats.total, GidroAtlasColors.persianGreen, 'water')}
               </View>
             )}
 
             {/* Filter Buttons */}
             <View style={styles.filterContainer}>
-              {(['all', 'высокий', 'средний', 'низкий'] as const).map((filter) => (
+              {(['all', PriorityLevel.HIGH, PriorityLevel.MEDIUM, PriorityLevel.LOW] as const).map((filter) => (
                 <TouchableOpacity
                   key={filter}
                   style={[
@@ -285,7 +286,7 @@ export default function PrioritiesScreen() {
                     styles.filterButtonText,
                     selectedFilter === filter && styles.filterButtonTextActive,
                   ]}>
-                    {filter === 'all' ? 'All' : priorityLabels[filter]}
+                    {filter === 'all' ? 'Все' : priorityLabels[filter]}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -295,8 +296,8 @@ export default function PrioritiesScreen() {
             {items.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <Ionicons name="analytics-outline" size={64} color={GidroAtlasColors.gray[300]} />
-                <Text style={styles.emptyText}>No priority data available</Text>
-                <Text style={styles.emptySubtext}>Expert access is required</Text>
+                <Text style={styles.emptyText}>Данные приоритетов недоступны</Text>
+                <Text style={styles.emptySubtext}>Требуется доступ эксперта</Text>
               </View>
             ) : (
               <View style={styles.itemsList}>

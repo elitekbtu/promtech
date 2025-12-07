@@ -143,11 +143,11 @@ export default function ExploreScreen() {
     } catch (error: any) {
       console.error('Error sending message:', error);
       
-      let errorMessage = 'Failed to send message';
+      let errorMessage = 'Не удалось отправить сообщение';
       if (error.message === 'Failed to fetch') {
-        errorMessage = '🔌 Backend not running. Please start: cd backend && uvicorn main:app --reload';
+        errorMessage = '🔌 Сервер не запущен. Запустите: cd backend && uvicorn main:app --reload';
       } else {
-        errorMessage = error.message || 'Unknown error occurred';
+        errorMessage = error.message || 'Произошла неизвестная ошибка';
       }
       
       setChatState(prev => ({ 
@@ -279,7 +279,7 @@ export default function ExploreScreen() {
                       <View style={styles.metadataLabelRow}>
                         <Ionicons name="git-network-outline" size={14} color={GidroAtlasColors.gray[600]} />
                         <Text style={styles.metadataLabel}>
-                          Agents:
+                          Агенты:
                         </Text>
                       </View>
                       <View style={styles.agentsList}>
@@ -353,7 +353,7 @@ export default function ExploreScreen() {
             style={styles.input}
             value={chatState.input}
             onChangeText={(text) => setChatState(prev => ({ ...prev, input: text }))}
-            placeholder={`Message ${AI_CHARACTER_NAME}...`}
+            placeholder={`Сообщение для ${AI_CHARACTER_NAME}...`}
             placeholderTextColor={GidroAtlasColors.gray[400]}
             multiline
             editable={!chatState.loading}

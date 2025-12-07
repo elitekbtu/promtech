@@ -89,13 +89,13 @@ apiClient.interceptors.response.use(
                     router.replace('/login');
                 }, 0);
 
-                return Promise.reject(new Error('Authentication expired. Please log in again.'));
+                return Promise.reject(new Error('Сессия истекла. Пожалуйста, войдите снова.'));
             }
 
             // Handle 403 Forbidden (insufficient permissions)
             if (status === 403) {
                 console.warn('[API] 403 Forbidden - Insufficient permissions');
-                return Promise.reject(new Error('You do not have permission to perform this action.'));
+                return Promise.reject(new Error('У вас нет прав для выполнения этого действия.'));
             }
 
             // Log other errors in development
@@ -140,9 +140,9 @@ export function getErrorMessage(error: any): string {
     if (axios.isAxiosError(error)) {
         const data = error.response?.data;
         if (typeof data === 'object' && data !== null) {
-            return data.detail || data.message || 'An error occurred';
+            return data.detail || data.message || 'Произошла ошибка';
         }
-        return error.message || 'Network error';
+        return error.message || 'Ошибка сети';
     }
-    return 'An unexpected error occurred';
+    return 'Произошла неожиданная ошибка';
 }

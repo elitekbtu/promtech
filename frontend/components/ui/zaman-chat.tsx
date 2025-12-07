@@ -85,7 +85,7 @@ function MessageBubble({ message }: MessageBubbleProps) {
         {message.isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={ZamanColors.persianGreen} />
-            <Text style={styles.loadingText}>Thinking...</Text>
+            <Text style={styles.loadingText}>Думаю...</Text>
           </View>
         ) : (
           <Text style={[styles.messageText, isUser ? styles.userText : styles.aiText]}>
@@ -112,7 +112,7 @@ export default function ZamanChat() {
   useEffect(() => {
     const greeting: ChatMessage = {
       id: 'greeting',
-      text: "I'm Zaman. Your future self asked me to help you get there.",
+      text: "Я Zaman. Ваше будущее я попросил меня помочь вам добраться до него.",
       sender: 'ai',
       timestamp: new Date(),
     };
@@ -174,7 +174,7 @@ export default function ZamanChat() {
         const filtered = prev.filter(m => !m.isLoading);
         return [...filtered, {
           id: `ai-error-${Date.now()}`,
-          text: "Sorry, I couldn't process your request. Please try again.",
+          text: "Извините, не удалось обработать ваш запрос. Попробуйте ещё раз.",
           sender: 'ai',
           timestamp: new Date(),
         }];
@@ -187,19 +187,19 @@ export default function ZamanChat() {
   const quickStarters = [
     {
       icon: 'bulb-outline' as const,
-      text: 'What Islamic banking products does Zaman offer?',
+      text: 'Каков текущий статус озера Балхаш?',
     },
     {
       icon: 'shield-checkmark-outline' as const,
-      text: 'How does Zaman ensure Sharia compliance in its services?',
+      text: 'Покажи водные объекты высокого риска',
     },
     {
       icon: 'wallet-outline' as const,
-      text: 'How can I open a halal savings account with Zaman?',
+      text: 'Как зарегистрировать новый водный паспорт?',
     },
     {
       icon: 'trending-up-outline' as const,
-      text: 'What investment opportunities are available in Islamic banking?',
+      text: 'Какие последние гидрологические предупреждения?',
     },
   ];
 
@@ -210,12 +210,12 @@ export default function ZamanChat() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Chat with Zaman</Text>
-          <Text style={styles.headerSubtitle}>Your AI Wellness Coach</Text>
+          <Text style={styles.headerTitle}>Чат с Zaman</Text>
+          <Text style={styles.headerSubtitle}>Ваш AI-ассистент</Text>
         </View>
         <View style={styles.statusBadge}>
           <View style={[styles.statusDot, isConnected && styles.statusDotConnected]} />
-          <Text style={styles.statusText}>{isConnected ? 'Ready' : 'Offline'}</Text>
+          <Text style={styles.statusText}>{isConnected ? 'Готов' : 'Оффлайн'}</Text>
         </View>
       </View>
 
@@ -252,7 +252,7 @@ export default function ZamanChat() {
           {/* Quick Starters */}
           {showEmptyState && (
             <Animated.View entering={FadeInUp.delay(300).duration(500)} style={styles.quickStartersSection}>
-              <Text style={styles.quickStartersTitle}>QUICK STARTERS:</Text>
+              <Text style={styles.quickStartersTitle}>БЫСТРЫЙ СТАРТ:</Text>
               {quickStarters.map((starter, index) => (
                 <QuickStarter
                   key={index}
@@ -271,7 +271,7 @@ export default function ZamanChat() {
             <TextInput
               ref={inputRef}
               style={styles.textInput}
-              placeholder="Message Zaman..."
+              placeholder="Сообщение для Zaman..."
               placeholderTextColor={ZamanColors.gray[400]}
               value={inputText}
               onChangeText={setInputText}

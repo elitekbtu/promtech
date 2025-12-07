@@ -60,10 +60,10 @@ async function fetchWithTimeout(
 
         // Handle different error types
         if (error.name === 'AbortError') {
-            throw new Error('Request timeout - please check your connection');
+            throw new Error('Таймаут запроса - проверьте подключение');
         }
         if (error.message === 'Network request failed' || error.message?.includes('fetch')) {
-            throw new Error('Network error - please check your connection');
+            throw new Error('Ошибка сети - проверьте подключение');
         }
         throw error;
     }
@@ -112,13 +112,13 @@ async function handleResponse<T>(response: Response): Promise<T> {
                 status_code: response.status,
             };
         }
-        throw new Error(error.detail || `API Error: ${response.status}`);
+        throw new Error(error.detail || `Ошибка API: ${response.status}`);
     }
 
     try {
         return await response.json();
     } catch (parseError) {
-        throw new Error('Failed to parse response JSON');
+        throw new Error('Не удалось обработать ответ сервера');
     }
 }
 

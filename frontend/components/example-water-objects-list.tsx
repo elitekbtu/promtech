@@ -36,7 +36,7 @@ export default function WaterObjectsScreen() {
       setObjects(response.items);
     } catch (error) {
       console.error('Failed to load objects:', error);
-      Alert.alert('Error', getErrorMessage(error));
+      Alert.alert('Ошибка', getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -59,28 +59,28 @@ export default function WaterObjectsScreen() {
       
       // Add to list
       setObjects([newObject, ...objects]);
-      Alert.alert('Success', 'Water object created!');
+      Alert.alert('Успешно', 'Водный объект создан!');
     } catch (error) {
-      Alert.alert('Error', getErrorMessage(error));
+      Alert.alert('Ошибка', getErrorMessage(error));
     }
   }
 
   async function handleDeleteObject(id: number) {
     Alert.alert(
-      'Confirm Delete',
-      'Are you sure you want to delete this object?',
+      'Подтвердите удаление',
+      'Вы уверены, что хотите удалить этот объект?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Отмена', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Удалить',
           style: 'destructive',
           onPress: async () => {
             try {
               await WaterObjectsAPI.delete(id);
               setObjects(objects.filter(obj => obj.id !== id));
-              Alert.alert('Success', 'Object deleted');
+              Alert.alert('Успешно', 'Объект удалён');
             } catch (error) {
-              Alert.alert('Error', getErrorMessage(error));
+              Alert.alert('Ошибка', getErrorMessage(error));
             }
           },
         },
@@ -106,14 +106,14 @@ export default function WaterObjectsScreen() {
           )}
         </View>
 
-        <Text style={styles.itemDetail}>Region: {item.region}</Text>
-        <Text style={styles.itemDetail}>Type: {item.resource_type}</Text>
-        <Text style={styles.itemDetail}>Condition: {item.technical_condition}/5</Text>
+        <Text style={styles.itemDetail}>Регион: {item.region}</Text>
+        <Text style={styles.itemDetail}>Тип: {item.resource_type}</Text>
+        <Text style={styles.itemDetail}>Состояние: {item.technical_condition}/5</Text>
 
         {/* Expert users see priority score */}
         {isExpert && item.priority_score !== undefined && (
           <Text style={styles.itemDetail}>
-            Priority Score: {item.priority_score}
+            Приоритет: {item.priority_score}
           </Text>
         )}
 
@@ -123,7 +123,7 @@ export default function WaterObjectsScreen() {
             style={styles.deleteButton}
             onPress={() => handleDeleteObject(item.id)}
           >
-            <Text style={styles.deleteButtonText}>Delete</Text>
+            <Text style={styles.deleteButtonText}>Удалить</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -134,7 +134,7 @@ export default function WaterObjectsScreen() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
-        <Text>Loading...</Text>
+        <Text>Загрузка...</Text>
       </View>
     );
   }
@@ -143,9 +143,9 @@ export default function WaterObjectsScreen() {
     <View style={styles.container}>
       {/* Role indicator */}
       <View style={styles.header}>
-        <Text style={styles.title}>Water Objects</Text>
+        <Text style={styles.title}>Водные объекты</Text>
         <Text style={styles.roleText}>
-          Role: {role === 'expert' ? '👨‍🔬 Expert' : '👤 Guest'}
+          Роль: {role === 'expert' ? '👨‍🔬 Эксперт' : '👤 Гость'}
         </Text>
       </View>
 
@@ -153,7 +153,7 @@ export default function WaterObjectsScreen() {
       {!isExpert && (
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
-            ℹ️ You're viewing as Guest. Priority information is hidden.
+            ℹ️ Вы просматриваете как гость. Информация о приоритетах скрыта.
           </Text>
         </View>
       )}
@@ -164,7 +164,7 @@ export default function WaterObjectsScreen() {
           style={styles.createButton}
           onPress={handleCreateObject}
         >
-          <Text style={styles.createButtonText}>+ Create Object</Text>
+          <Text style={styles.createButtonText}>+ Создать объект</Text>
         </TouchableOpacity>
       )}
 
@@ -176,7 +176,7 @@ export default function WaterObjectsScreen() {
         onRefresh={handleRefresh}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text>No water objects found</Text>
+            <Text>Водные объекты не найдены</Text>
           </View>
         }
       />

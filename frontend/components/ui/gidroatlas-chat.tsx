@@ -112,7 +112,7 @@ function MessageBubble({ message }: MessageBubbleProps) {
         {message.isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={GidroAtlasColors.persianGreen} />
-            <Text style={styles.loadingText}>GidroAtlas is thinking...</Text>
+            <Text style={styles.loadingText}>GidroAtlas думает...</Text>
           </View>
         ) : (
           <Text style={[styles.messageText, isUser ? styles.userText : styles.aiText]}>

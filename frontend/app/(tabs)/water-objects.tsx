@@ -39,11 +39,11 @@ const conditionColors: Record<number, string> = {
 };
 
 const conditionLabels: Record<number, string> = {
-  1: 'Critical',
-  2: 'Poor',
-  3: 'Fair',
-  4: 'Good',
-  5: 'Excellent',
+  1: 'Критическое',
+  2: 'Плохое',
+  3: 'Удовлетворительное',
+  4: 'Хорошее',
+  5: 'Отличное',
 };
 
 export default function WaterObjectsScreen() {
@@ -86,7 +86,7 @@ export default function WaterObjectsScreen() {
       setTotalCount(response.total);
       setHasMore(response.items.length === filters.page_size);
     } catch (err: any) {
-      setError(err.message || 'Failed to load water objects');
+      setError(err.message || 'Не удалось загрузить водные объекты');
       console.error('Error fetching water objects:', err);
     } finally {
       setLoading(false);
@@ -178,24 +178,24 @@ export default function WaterObjectsScreen() {
 
       <View style={styles.cardBody}>
         <View style={styles.cardRow}>
-          <Text style={styles.cardLabel}>Type:</Text>
+          <Text style={styles.cardLabel}>Тип:</Text>
           <Text style={styles.cardValue}>{item.resource_type}</Text>
         </View>
         {item.water_type && (
           <View style={styles.cardRow}>
-            <Text style={styles.cardLabel}>Water:</Text>
+            <Text style={styles.cardLabel}>Вода:</Text>
             <Text style={styles.cardValue}>{item.water_type}</Text>
           </View>
         )}
         {item.fauna && (
           <View style={styles.cardRow}>
-            <Text style={styles.cardLabel}>Fauna:</Text>
+            <Text style={styles.cardLabel}>Фауна:</Text>
             <Text style={styles.cardValue}>{item.fauna}</Text>
           </View>
         )}
         {item.passport_date && (
           <View style={styles.cardRow}>
-            <Text style={styles.cardLabel}>Passport:</Text>
+            <Text style={styles.cardLabel}>Паспорт:</Text>
             <Text style={styles.cardValue}>
               {new Date(item.passport_date).toLocaleDateString()}
             </Text>
@@ -205,13 +205,12 @@ export default function WaterObjectsScreen() {
 
       {item.priority !== undefined && (
         <View style={styles.cardFooter}>
-          <View style={[
-            styles.priorityBadge,
+          <View style={[styles.priorityBadge,
             { backgroundColor: item.priority_level === 'высокий' ? '#ef4444' : 
                               item.priority_level === 'средний' ? '#f97316' : '#22c55e' }
           ]}>
             <Text style={styles.priorityText}>
-              Priority: {item.priority.toFixed(1)} ({item.priority_level})
+              Приоритет: {item.priority.toFixed(1)} ({item.priority_level})
             </Text>
           </View>
         </View>
@@ -236,8 +235,8 @@ export default function WaterObjectsScreen() {
           >
             <Ionicons name="arrow-back" size={24} color={GidroAtlasColors.persianGreen} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Water Objects</Text>
-          <Text style={styles.headerCount}>{totalCount} total</Text>
+          <Text style={styles.headerTitle}>Водные объекты</Text>
+          <Text style={styles.headerCount}>Всего: {totalCount}</Text>
         </View>
 
         {/* Search Bar */}
@@ -245,7 +244,7 @@ export default function WaterObjectsScreen() {
           <Ionicons name="search" size={20} color={GidroAtlasColors.gray[400]} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by name or region..."
+            placeholder="Поиск по названию или региону..."
             placeholderTextColor={GidroAtlasColors.gray[400]}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -268,7 +267,7 @@ export default function WaterObjectsScreen() {
             <Ionicons name="alert-circle" size={20} color="#ef4444" />
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity onPress={handleRefresh}>
-              <Text style={styles.retryText}>Retry</Text>
+              <Text style={styles.retryText}>Повторить</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -277,7 +276,7 @@ export default function WaterObjectsScreen() {
         {loading && objects.length === 0 ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={GidroAtlasColors.persianGreen} />
-            <Text style={styles.loadingText}>Loading water objects...</Text>
+            <Text style={styles.loadingText}>Загрузка водных объектов...</Text>
           </View>
         ) : (
           /* Objects List */
@@ -305,8 +304,8 @@ export default function WaterObjectsScreen() {
             {objects.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <Ionicons name="water-outline" size={64} color={GidroAtlasColors.gray[300]} />
-                <Text style={styles.emptyText}>No water objects found</Text>
-                <Text style={styles.emptySubtext}>Try adjusting your search</Text>
+                <Text style={styles.emptyText}>Водные объекты не найдены</Text>
+                <Text style={styles.emptySubtext}>Попробуйте изменить поисковый запрос</Text>
               </View>
             ) : (
               <>
