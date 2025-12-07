@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { GidroAtlasColors } from '@/constants/theme';
 import { config } from '@/lib/config';
 import { TokenResponse, saveAuthResponse } from '@/lib/auth';
+import { AuroraBackground } from '@/components/ui/aurora-background';
+import { AnimatedButton, AnimatedText, AnimatedContainer } from '@/components/ui/animated-button';
 
 interface FaceVerificationResult {
   success: boolean;
@@ -238,40 +240,62 @@ export default function LoginScreen() {
 
   if (view === 'selection') {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.logoMark}>
-            <GidroAtlasLogo size={90} withAccent />
+      <AuroraBackground
+        primaryColor={GidroAtlasColors.persianGreen}
+        secondaryColor="#4FD1C5"
+        accentColor={GidroAtlasColors.solar}
+        backgroundColor={GidroAtlasColors.white}
+        intensity={0.5}
+      >
+        <View style={styles.selectionContainer}>
+          {/* Animated Header */}
+          <AnimatedContainer delay={100} style={styles.header}>
+            <View style={styles.logoMark}>
+              <GidroAtlasLogo size={90} withAccent />
+            </View>
+          </AnimatedContainer>
+          
+          <AnimatedText variant="title" delay={200} style={styles.appName}>
+            GidroAtlas
+          </AnimatedText>
+          
+          <AnimatedText variant="subtitle" delay={300} style={styles.tagline}>
+            Select your role
+          </AnimatedText>
+
+          {/* Animated Buttons */}
+          <View style={styles.buttonContainer}>
+            <AnimatedButton
+              title="Enter as Guest"
+              icon="person-outline"
+              variant="default"
+              delay={500}
+              onPress={handleGuestLogin}
+              disabled={isLoading}
+            />
+
+            <AnimatedButton
+              title="Enter as Expert"
+              icon="briefcase-outline"
+              variant="dark"
+              delay={650}
+              onPress={() => setView('expert')}
+              disabled={isLoading}
+            />
           </View>
-          <Text style={styles.appName}>GidroAtlas</Text>
-          <Text style={styles.tagline}>Select your role</Text>
         </View>
-
-        <View style={styles.content}>
-          <TouchableOpacity 
-            style={styles.roleButton}
-            onPress={handleGuestLogin}
-            disabled={isLoading}
-          >
-            <Ionicons name="person-outline" size={32} color={GidroAtlasColors.black} />
-            <Text style={styles.roleButtonText}>Enter as Guest</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.roleButton, styles.expertButton]}
-            onPress={() => setView('expert')}
-            disabled={isLoading}
-          >
-            <Ionicons name="briefcase-outline" size={32} color={GidroAtlasColors.white} />
-            <Text style={[styles.roleButtonText, styles.expertButtonText]}>Enter as Expert</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </AuroraBackground>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <AuroraBackground
+      primaryColor={GidroAtlasColors.persianGreen}
+      secondaryColor="#4FD1C5"
+      accentColor={GidroAtlasColors.solar}
+      backgroundColor={GidroAtlasColors.white}
+      intensity={0.4}
+    >
       <KeyboardAvoidingView 
         style={styles.keyboardView} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -280,205 +304,243 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header with Back Button */}
-          <View style={styles.header}>
-            <TouchableOpacity 
-              style={styles.backButton} 
-              onPress={() => setView('selection')}
-            >
-              <Ionicons name="arrow-back" size={24} color={GidroAtlasColors.black} />
-            </TouchableOpacity>
-            
-            <View style={styles.logoMark}>
-              <GidroAtlasLogo size={90} withAccent />
-            </View>
-            <Text style={styles.appName}>GidroAtlas</Text>
-            <Text style={styles.tagline}>
-              {mode === 'login' ? 'Expert Login' : 'Expert Registration'}
-            </Text>
-          </View>
+          {/* Back Button */}
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => setView('selection')}
+          >
+            <Ionicons name="arrow-back" size={24} color={GidroAtlasColors.black} />
+          </TouchableOpacity>
 
-          {/* Content */}
-          <View style={styles.content}>
-            {/* Face ID Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>
-                {mode === 'login' ? 'Face ID' : 'Face ID (Required)'}
-              </Text>
-              
+          {/* Centered Content */}
+          <View style={styles.authContainer}>
+            {/* Header */}
+            <AnimatedContainer delay={100} style={styles.authHeader}>
+              <View style={styles.logoMark}>
+                <GidroAtlasLogo size={70} withAccent />
+              </View>
+            </AnimatedContainer>
+            
+            <AnimatedText variant="title" delay={150} style={styles.authTitle}>
+              {mode === 'login' ? 'Welcome back' : 'Create account'}
+            </AnimatedText>
+            
+            <AnimatedText variant="subtitle" delay={200} style={styles.authSubtitle}>
+              {mode === 'login' 
+                ? 'Sign in to continue to GidroAtlas' 
+                : 'Join GidroAtlas as an expert'}
+            </AnimatedText>
+
+            {/* Face ID Button - Primary Auth */}
+            <AnimatedContainer delay={300} style={styles.faceIdSection}>
               {capturedPhoto ? (
-                <View style={styles.photoContainer}>
-                  <Image source={{ uri: capturedPhoto }} style={styles.photo} />
-                  <TouchableOpacity 
-                    style={styles.linkButton}
-                    onPress={() => setShowCamera(true)}
-                    disabled={isLoading}
-                  >
-                    <Text style={styles.linkText}>Retake</Text>
-                  </TouchableOpacity>
+                <View style={styles.capturedPhotoSection}>
+                  <Image source={{ uri: capturedPhoto }} style={styles.capturedPhoto} />
+                  <View style={styles.photoActions}>
+                    <TouchableOpacity 
+                      style={styles.retakeButton}
+                      onPress={() => setShowCamera(true)}
+                      disabled={isLoading}
+                    >
+                      <Ionicons name="refresh-outline" size={20} color={GidroAtlasColors.persianGreen} />
+                      <Text style={styles.retakeText}>Retake</Text>
+                    </TouchableOpacity>
+                    
+                    {mode === 'login' && (
+                      <TouchableOpacity 
+                        style={styles.faceLoginButton}
+                        onPress={handleFaceVerify}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <ActivityIndicator color={GidroAtlasColors.white} />
+                        ) : (
+                          <>
+                            <Ionicons name="scan-outline" size={20} color={GidroAtlasColors.white} />
+                            <Text style={styles.faceLoginButtonText}>Verify Face ID</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
               ) : (
                 <TouchableOpacity 
-                  style={styles.captureButton}
+                  style={styles.faceIdButton}
                   onPress={() => setShowCamera(true)}
                   disabled={isLoading}
                 >
-                  <Ionicons name="camera-outline" size={24} color={GidroAtlasColors.persianGreen} />
-                  <Text style={styles.captureButtonText}>
-                    {mode === 'login' ? 'Scan face' : 'Capture face'}
-                  </Text>
+                  <View style={styles.faceIdIconContainer}>
+                    <Ionicons name="scan" size={32} color={GidroAtlasColors.white} />
+                  </View>
+                  <View style={styles.faceIdTextContainer}>
+                    <Text style={styles.faceIdButtonTitle}>
+                      {mode === 'login' ? 'Sign in with Face ID' : 'Capture Face ID'}
+                    </Text>
+                    <Text style={styles.faceIdButtonSubtitle}>
+                      {mode === 'login' ? 'Quick and secure authentication' : 'Required for expert verification'}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={24} color={GidroAtlasColors.gray[400]} />
                 </TouchableOpacity>
               )}
-
-              {mode === 'login' && capturedPhoto && (
-                <TouchableOpacity 
-                  style={styles.primaryButton}
-                  onPress={handleFaceVerify}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color={GidroAtlasColors.black} />
-                  ) : (
-                    <Text style={styles.primaryButtonText}>Verify & Login</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
+            </AnimatedContainer>
 
             {/* Divider */}
             {mode === 'login' && (
-              <View style={styles.divider}>
+              <AnimatedContainer delay={400} style={styles.dividerContainer}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or</Text>
+                <Text style={styles.dividerText}>or continue with email</Text>
                 <View style={styles.dividerLine} />
-              </View>
+              </AnimatedContainer>
             )}
 
-            {/* Email/Password Login */}
+            {/* Login Form */}
             {mode === 'login' && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Email & Password</Text>
+              <AnimatedContainer delay={500} style={styles.formSection}>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="mail-outline" size={20} color={GidroAtlasColors.gray[400]} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.modernInput}
+                    placeholder="Email address"
+                    placeholderTextColor={GidroAtlasColors.gray[400]}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!isLoading}
+                  />
+                </View>
                 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email"
-                  placeholderTextColor={GidroAtlasColors.gray[400]}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  editable={!isLoading}
-                />
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password"
-                  placeholderTextColor={GidroAtlasColors.gray[400]}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  editable={!isLoading}
-                />
+                <View style={styles.inputContainer}>
+                  <Ionicons name="lock-closed-outline" size={20} color={GidroAtlasColors.gray[400]} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.modernInput}
+                    placeholder="Password"
+                    placeholderTextColor={GidroAtlasColors.gray[400]}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    editable={!isLoading}
+                  />
+                </View>
                 
                 <TouchableOpacity 
-                  style={styles.primaryButton}
+                  style={styles.submitButton}
                   onPress={handleEmailPasswordLogin}
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <ActivityIndicator color={GidroAtlasColors.black} />
                   ) : (
-                    <Text style={styles.primaryButtonText}>Login</Text>
+                    <Text style={styles.submitButtonText}>Sign in</Text>
                   )}
                 </TouchableOpacity>
-              </View>
+              </AnimatedContainer>
             )}
 
             {/* Register Form */}
             {mode === 'register' && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Personal Information</Text>
+              <AnimatedContainer delay={400} style={styles.formSection}>
+                <View style={styles.nameRow}>
+                  <View style={[styles.inputContainer, styles.halfInput]}>
+                    <TextInput
+                      style={styles.modernInput}
+                      placeholder="First name"
+                      placeholderTextColor={GidroAtlasColors.gray[400]}
+                      value={name}
+                      onChangeText={setName}
+                      autoCapitalize="words"
+                      editable={!isLoading}
+                    />
+                  </View>
+                  
+                  <View style={[styles.inputContainer, styles.halfInput]}>
+                    <TextInput
+                      style={styles.modernInput}
+                      placeholder="Last name"
+                      placeholderTextColor={GidroAtlasColors.gray[400]}
+                      value={surname}
+                      onChangeText={setSurname}
+                      autoCapitalize="words"
+                      editable={!isLoading}
+                    />
+                  </View>
+                </View>
                 
-                <TextInput
-                  style={styles.input}
-                  placeholder="First name"
-                  placeholderTextColor={GidroAtlasColors.gray[400]}
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                  editable={!isLoading}
-                />
+                <View style={styles.inputContainer}>
+                  <Ionicons name="mail-outline" size={20} color={GidroAtlasColors.gray[400]} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.modernInput}
+                    placeholder="Email address"
+                    placeholderTextColor={GidroAtlasColors.gray[400]}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!isLoading}
+                  />
+                </View>
                 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Last name"
-                  placeholderTextColor={GidroAtlasColors.gray[400]}
-                  value={surname}
-                  onChangeText={setSurname}
-                  autoCapitalize="words"
-                  editable={!isLoading}
-                />
+                <View style={styles.inputContainer}>
+                  <Ionicons name="call-outline" size={20} color={GidroAtlasColors.gray[400]} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.modernInput}
+                    placeholder="Phone number"
+                    placeholderTextColor={GidroAtlasColors.gray[400]}
+                    value={phone}
+                    onChangeText={setPhone}
+                    keyboardType="phone-pad"
+                    editable={!isLoading}
+                  />
+                </View>
                 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email"
-                  placeholderTextColor={GidroAtlasColors.gray[400]}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  editable={!isLoading}
-                />
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Phone"
-                  placeholderTextColor={GidroAtlasColors.gray[400]}
-                  value={phone}
-                  onChangeText={setPhone}
-                  keyboardType="phone-pad"
-                  editable={!isLoading}
-                />
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password (min 8 characters)"
-                  placeholderTextColor={GidroAtlasColors.gray[400]}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  editable={!isLoading}
-                />
+                <View style={styles.inputContainer}>
+                  <Ionicons name="lock-closed-outline" size={20} color={GidroAtlasColors.gray[400]} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.modernInput}
+                    placeholder="Password (min 8 characters)"
+                    placeholderTextColor={GidroAtlasColors.gray[400]}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    editable={!isLoading}
+                  />
+                </View>
 
                 <TouchableOpacity 
-                  style={styles.primaryButton}
+                  style={[styles.submitButton, !capturedPhoto && styles.submitButtonDisabled]}
                   onPress={handleRegister}
-                  disabled={isLoading}
+                  disabled={isLoading || !capturedPhoto}
                 >
                   {isLoading ? (
                     <ActivityIndicator color={GidroAtlasColors.black} />
                   ) : (
-                    <Text style={styles.primaryButtonText}>Create Account</Text>
+                    <Text style={styles.submitButtonText}>Create Account</Text>
                   )}
                 </TouchableOpacity>
-              </View>
+                
+                {!capturedPhoto && (
+                  <Text style={styles.faceIdRequiredText}>
+                    * Face ID capture is required for registration
+                  </Text>
+                )}
+              </AnimatedContainer>
             )}
 
             {/* Switch Mode */}
-            <TouchableOpacity 
-              style={styles.switchButton}
-              onPress={switchMode}
-              disabled={isLoading}
-            >
-              <Text style={styles.switchText}>
+            <AnimatedContainer delay={600} style={styles.switchModeContainer}>
+              <Text style={styles.switchModeText}>
                 {mode === 'login' 
                   ? "Don't have an account? " 
                   : 'Already have an account? '}
               </Text>
-              <Text style={styles.switchTextBold}>
-                {mode === 'login' ? 'Sign up' : 'Sign in'}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={switchMode} disabled={isLoading}>
+                <Text style={styles.switchModeLink}>
+                  {mode === 'login' ? 'Sign up' : 'Sign in'}
+                </Text>
+              </TouchableOpacity>
+            </AnimatedContainer>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -495,7 +557,7 @@ export default function LoginScreen() {
           isVerifying={false}
         />
       </Modal>
-    </View>
+    </AuroraBackground>
   );
 }
 
@@ -503,6 +565,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: GidroAtlasColors.white,
+  },
+  selectionContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  buttonContainer: {
+    width: '100%',
+    maxWidth: 340,
+    marginTop: 48,
+    gap: 12,
   },
   keyboardView: {
     flex: 1,
@@ -512,7 +586,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: Platform.OS === 'ios' ? 80 : 60,
-    paddingBottom: 40,
+    paddingBottom: 20,
     paddingHorizontal: 32,
     alignItems: 'center',
     position: 'relative',
@@ -524,20 +598,22 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   logoMark: {
-    marginBottom: 20,
+    marginBottom: 16,
     alignItems: 'center',
   },
   appName: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: '300',
-    letterSpacing: 8,
+    letterSpacing: 10,
     color: GidroAtlasColors.black,
-    marginBottom: 8,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   tagline: {
-    fontSize: 15,
+    fontSize: 17,
     color: GidroAtlasColors.gray[500],
-    fontWeight: '400',
+    fontWeight: '300',
+    textAlign: 'center',
   },
   content: {
     paddingHorizontal: 32,
@@ -673,6 +749,215 @@ const styles = StyleSheet.create({
   },
   expertButtonText: {
     color: GidroAtlasColors.white,
+  },
+  
+  // New Auth Styles
+  authContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'ios' ? 100 : 80,
+    paddingBottom: 40,
+  },
+  authHeader: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  authTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: GidroAtlasColors.black,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  authSubtitle: {
+    fontSize: 16,
+    color: GidroAtlasColors.gray[500],
+    fontWeight: '400',
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  
+  // Face ID Section
+  faceIdSection: {
+    width: '100%',
+    maxWidth: 400,
+  },
+  faceIdButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: GidroAtlasColors.white,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: GidroAtlasColors.gray[100],
+  },
+  faceIdIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: GidroAtlasColors.persianGreen,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  faceIdTextContainer: {
+    flex: 1,
+  },
+  faceIdButtonTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: GidroAtlasColors.black,
+    marginBottom: 4,
+  },
+  faceIdButtonSubtitle: {
+    fontSize: 13,
+    color: GidroAtlasColors.gray[500],
+  },
+  capturedPhotoSection: {
+    alignItems: 'center',
+    backgroundColor: GidroAtlasColors.white,
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  capturedPhoto: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: GidroAtlasColors.persianGreen,
+  },
+  photoActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  retakeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: GidroAtlasColors.persianGreen,
+    gap: 6,
+  },
+  retakeText: {
+    fontSize: 14,
+    color: GidroAtlasColors.persianGreen,
+    fontWeight: '500',
+  },
+  faceLoginButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: GidroAtlasColors.persianGreen,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    gap: 8,
+  },
+  faceLoginButtonText: {
+    fontSize: 14,
+    color: GidroAtlasColors.white,
+    fontWeight: '600',
+  },
+  
+  // Divider
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
+    marginVertical: 24,
+  },
+  
+  // Form Section
+  formSection: {
+    width: '100%',
+    maxWidth: 400,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: GidroAtlasColors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: GidroAtlasColors.gray[200],
+    marginBottom: 12,
+    paddingHorizontal: 16,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  modernInput: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: GidroAtlasColors.black,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfInput: {
+    flex: 1,
+  },
+  submitButton: {
+    backgroundColor: GidroAtlasColors.solar,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    shadowColor: GidroAtlasColors.solar,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  submitButtonDisabled: {
+    backgroundColor: GidroAtlasColors.gray[200],
+    shadowOpacity: 0,
+  },
+  submitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: GidroAtlasColors.black,
+  },
+  faceIdRequiredText: {
+    fontSize: 13,
+    color: GidroAtlasColors.gray[500],
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  
+  // Switch Mode
+  switchModeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  switchModeText: {
+    fontSize: 15,
+    color: GidroAtlasColors.gray[600],
+  },
+  switchModeLink: {
+    fontSize: 15,
+    color: GidroAtlasColors.persianGreen,
+    fontWeight: '600',
   },
 });
 
