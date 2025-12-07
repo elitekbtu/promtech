@@ -33,6 +33,11 @@ export default function TabLayout() {
       onPress: () => router.push('/(tabs)/'),
     },
     {
+      icon: 'map' as const,
+      label: 'Карта',
+      onPress: () => router.push('/(tabs)/map'),
+    },
+    {
       icon: 'compass' as const,
       label: 'Обзор',
       onPress: () => router.push('/(tabs)/explore'),
@@ -47,8 +52,9 @@ export default function TabLayout() {
   // Determine active index based on pathname
   const getActiveIndex = () => {
     if (pathname === '/(tabs)' || pathname === '/(tabs)/index') return 0;
-    if (pathname.includes('explore')) return 1;
-    if (pathname.includes('live-chat')) return 2;
+    if (pathname.includes('map')) return 1;
+    if (pathname.includes('explore')) return 2;
+    if (pathname.includes('live-chat')) return 3;
     return 0;
   };
 
@@ -60,6 +66,7 @@ export default function TabLayout() {
           tabBarStyle: { display: 'none' }, // Hide default tab bar
         }}>
         <Tabs.Screen name="index" />
+        <Tabs.Screen name="map" />
         <Tabs.Screen name="explore" />
         <Tabs.Screen name="live-chat" />
         <Tabs.Screen name="water-objects" />
