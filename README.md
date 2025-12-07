@@ -4,8 +4,9 @@
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.124.0-green.svg)](https://fastapi.tiangolo.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
+[![React Native](https://img.shields.io/badge/React_Native-Expo-blue.svg)](https://expo.dev/)
 
-GidroAtlas is a comprehensive water resource and hydrotechnical structures management system for Kazakhstan, featuring passport management, priority-based inspection scheduling, and AI-powered RAG (Retrieval-Augmented Generation) for intelligent querying.
+GidroAtlas is a full-stack water resource and hydrotechnical structures management system for Kazakhstan, featuring passport management, priority-based inspection scheduling, AI-powered RAG (Retrieval-Augmented Generation), and a native mobile application.
 
 ## 🌊 Features
 
@@ -27,7 +28,7 @@ GidroAtlas is a comprehensive water resource and hydrotechnical structures manag
 
 - **Guest role**: View water objects (priority fields hidden)
 - **Expert role**: Full access including priorities, statistics, and management features
-- **JWT authentication**: Secure token-based authentication
+- **JWT authentication**: Secure token-based authentication with expo-secure-store
 
 ### AI-Powered RAG System
 
@@ -36,22 +37,24 @@ GidroAtlas is a comprehensive water resource and hydrotechnical structures manag
 - **Priority explanations**: AI-generated explanations for priority scores
 - **Multi-tool orchestration**: Combines local knowledge base and web search
 
-### Face Verification
+### Mobile Application
 
-- **Biometric authentication**: Face recognition for secure access
-- **Anti-spoofing**: Verification threshold configuration
+- **React Native Expo**: Cross-platform mobile app (iOS/Android)
+- **Type-safe API integration**: Full backend connectivity with TypeScript types
+- **Offline-first auth**: Secure JWT token storage with SecureStore
+- **Face verification**: Biometric authentication support
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Full Stack Setup
 
-- Docker & Docker Compose
-- Python 3.12+ (for local development)
-- PostgreSQL 15+ (managed via Docker)
-- Google API key (for Gemini AI)
-- Tavily API key (for web search)
+#### Prerequisites
 
-### Installation
+- **Backend**: Docker & Docker Compose, Python 3.12+, PostgreSQL 15+
+- **Frontend**: Node.js 18+, npm/yarn, Expo CLI
+- **API Keys**: Google API key (Gemini AI), Tavily API key (web search)
+
+#### Installation
 
 1. **Clone the repository**
 
@@ -60,7 +63,7 @@ git clone https://github.com/elitekbtu/promtech.git
 cd promtech
 ```
 
-2. **Configure environment variables**
+2. **Configure backend environment**
 
 ```bash
 cp env.example .env
@@ -75,9 +78,24 @@ GOOGLE_API_KEY=your-google-api-key
 TAVILY_API_KEY=your-tavily-api-key
 ```
 
-3. **Start services**
+3. **Configure frontend environment**
 
 ```bash
+cd frontend
+cp .env.example .env  # Create if doesn't exist
+```
+
+Edit `frontend/.env`:
+
+```env
+EXPO_PUBLIC_BACKEND_URL=http://localhost:8000
+EXPO_PUBLIC_GEMINI_API_KEY=your-google-api-key
+```
+
+4. **Start backend services**
+
+```bash
+cd .. # Back to project root
 docker compose up -d
 ```
 

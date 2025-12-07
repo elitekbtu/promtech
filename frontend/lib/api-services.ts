@@ -1,242 +1,359 @@
 /**
- * Water Objects API Service
+ * GidroAtlas API Services
  * 
- * Example service demonstrating how to use the axios client
- * with automatic JWT authentication for API requests.
+ * Type-safe API service layer for all GidroAtlas backend endpoints
  */
 
-import apiClient, { getErrorMessage } from './axios-client';
+import { config } from './config';
+import { getAuthToken } from './auth';
+import type {
+    WaterObject,
+    WaterObjectList,
+    WaterObjectFilters,
+    PriorityTable,
+    PriorityStatistics,
+    PriorityFilters,
+    PassportMetadata,
+    PassportUploadRequest,
+    PassportUploadResponse,
+    RAGQuery,
+    RAGResponse,
+    RAGExplainPriorityRequest,
+    RAGExplainPriorityResponse,
+    FaceVerifyRequest,
+    FaceVerifyResponse,
+    LoginRequest,
+    RegisterRequest,
+    TokenResponse,
+    APIError,
+} from './gidroatlas-types';
 
-// Type definitions matching backend schemas
-export interface WaterObject {
-    id: number;
-    name: string;
-    region: string;
-    latitude?: number;
-    longitude?: number;
-    resource_type: string;
-    water_type?: string;
-    fauna?: string;
-    technical_condition: number;
-    passport_date?: string;
-    passport_pdf_url?: string;
-    created_at: string;
-    updated_at: string;
-    // Expert-only fields (included if user is expert)
-    priority_score?: number;
-    priority_level?: string;
-    passport_age_years?: number;
-}
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
-export interface WaterObjectListResponse {
-    items: WaterObject[];
-    total: number;
-    limit: number;
-    offset: number;
-}
+/**
+ * Default request timeout in milliseconds
+ */
+const DEFAULT_TIMEOUT = 50000; // 50 seconds
 
-export interface WaterObjectCreate {
-    name: string;
-    region: string;
-    latitude?: number;
-    longitude?: number;
-    resource_type: string;
-    water_type?: string;
-    fauna?: string;
-    technical_condition: number;
-    passport_date?: string;
-    passport_pdf_url?: string;
+/**
+ * Fetch with timeout support
+ */
+async function fetchWithTimeout(
+    url: string,
+    options: RequestInit = {},
+    timeout: number = DEFAULT_TIMEOUT
+): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error: any) {
+        clearTimeout(timeoutId);
+
+        // Handle different error types
+        if (error.name === 'AbortError') {
+            throw new Error('Request timeout - please check your connection');
+        }
+        if (error.message === 'Network request failed' || error.message?.includes('fetch')) {
+            throw new Error('Network error - please check your connection');
+        }
+        throw error;
+    }
 }
 
 /**
- * Water Objects API Service
+ * Build query string from filters object
  */
-export const WaterObjectsAPI = {
-    /**
-     * Get list of water objects with optional filters
-     * Authentication: Required (guest or expert)
-     * Role-based: Guests see limited data, experts see full data with priorities
-     */
-    async getList(params?: {
-        region?: string;
-        resource_type?: string;
-        limit?: number;
-        offset?: number;
-        sort_by?: string;
-        sort_order?: 'asc' | 'desc';
-    }): Promise<WaterObjectListResponse> {
-        try {
-            const response = await apiClient.get<WaterObjectListResponse>('/api/objects', {
-                params,
-            });
-            return response.data;
-        } catch (error) {
-            console.error('[API] Error fetching water objects:', getErrorMessage(error));
-            throw error;
+function buildQueryString(filters?: Record<string, any>): string {
+    if (!filters) return '';
+
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+            params.append(key, String(value));
         }
+    });
+
+    const queryString = params.toString();
+    return queryString ? `?${queryString}` : '';
+}
+
+/**
+ * Get authorization headers with JWT token
+ */
+async function getAuthHeaders(): Promise<HeadersInit> {
+    const token = await getAuthToken();
+    return {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    };
+}
+
+/**
+ * Handle API response with proper error handling
+ */
+async function handleResponse<T>(response: Response): Promise<T> {
+    if (!response.ok) {
+        let error: APIError;
+        try {
+            error = await response.json();
+        } catch {
+            // If response body isn't valid JSON, create generic error
+            error = {
+                detail: `HTTP Error ${response.status}: ${response.statusText}`,
+                status_code: response.status,
+            };
+        }
+        throw new Error(error.detail || `API Error: ${response.status}`);
+    }
+
+    try {
+        return await response.json();
+    } catch (parseError) {
+        throw new Error('Failed to parse response JSON');
+    }
+}
+
+// ============================================================================
+// Water Objects API
+// ============================================================================
+
+export const waterObjectsAPI = {
+    /**
+     * List water objects with optional filters
+     */
+    async list(filters?: WaterObjectFilters): Promise<WaterObjectList> {
+        const url = `${config.backendURL}/api/objects${buildQueryString(filters)}`;
+        const headers = await getAuthHeaders();
+
+        const response = await fetchWithTimeout(url, { headers });
+        return handleResponse<WaterObjectList>(response);
     },
 
     /**
      * Get single water object by ID
-     * Authentication: Required
-     * Role-based: Response differs based on role
      */
     async getById(id: number): Promise<WaterObject> {
-        try {
-            const response = await apiClient.get<WaterObject>(`/api/objects/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error(`[API] Error fetching water object ${id}:`, getErrorMessage(error));
-            throw error;
-        }
+        const url = `${config.backendURL}/api/objects/${id}`;
+        const headers = await getAuthHeaders();
+
+        const response = await fetchWithTimeout(url, { headers });
+        return handleResponse<WaterObject>(response);
     },
 
     /**
-     * Create new water object
-     * Authentication: Required
-     * Role: Expert only (403 if guest)
+     * Get passport metadata for water object
      */
-    async create(data: WaterObjectCreate): Promise<WaterObject> {
-        try {
-            const response = await apiClient.post<WaterObject>('/api/objects', data);
-            return response.data;
-        } catch (error) {
-            console.error('[API] Error creating water object:', getErrorMessage(error));
-            throw error;
-        }
+    async getPassport(objectId: number): Promise<PassportMetadata> {
+        const url = `${config.backendURL}/api/objects/${objectId}/passport`;
+        const headers = await getAuthHeaders();
+
+        const response = await fetchWithTimeout(url, { headers });
+        return handleResponse<PassportMetadata>(response);
+    },
+};
+
+// ============================================================================
+// Priorities API (Expert Only)
+// ============================================================================
+
+export const prioritiesAPI = {
+    /**
+     * Get priority table (expert only)
+     */
+    async getTable(filters?: PriorityFilters): Promise<PriorityTable> {
+        const url = `${config.backendURL}/api/priorities/table${buildQueryString(filters)}`;
+        const headers = await getAuthHeaders();
+
+        const response = await fetchWithTimeout(url, { headers });
+        return handleResponse<PriorityTable>(response);
     },
 
     /**
-     * Update water object
-     * Authentication: Required
-     * Role: Expert only
+     * Get priority statistics (expert only)
      */
-    async update(id: number, data: Partial<WaterObjectCreate>): Promise<WaterObject> {
-        try {
-            const response = await apiClient.put<WaterObject>(`/api/objects/${id}`, data);
-            return response.data;
-        } catch (error) {
-            console.error(`[API] Error updating water object ${id}:`, getErrorMessage(error));
-            throw error;
-        }
+    async getStats(): Promise<PriorityStatistics> {
+        const url = `${config.backendURL}/api/priorities/stats`;
+        const headers = await getAuthHeaders();
+
+        const response = await fetchWithTimeout(url, { headers });
+        return handleResponse<PriorityStatistics>(response);
+    },
+};
+
+// ============================================================================
+// Passports API
+// ============================================================================
+
+export const passportsAPI = {
+    /**
+     * Get passport metadata
+     */
+    async get(objectId: number): Promise<PassportMetadata> {
+        const url = `${config.backendURL}/api/passports/${objectId}`;
+        const headers = await getAuthHeaders();
+
+        const response = await fetchWithTimeout(url, { headers });
+        return handleResponse<PassportMetadata>(response);
     },
 
     /**
-     * Delete water object
-     * Authentication: Required
-     * Role: Expert only
+     * Upload passport document (expert only)
      */
-    async delete(id: number): Promise<void> {
+    async upload(request: PassportUploadRequest): Promise<PassportUploadResponse> {
+        const url = `${config.backendURL}/api/passports/upload`;
+        const token = await getAuthToken();
+
+        const formData = new FormData();
+        formData.append('object_id', String(request.object_id));
+        formData.append('file', request.file);
+
+        // Note: Don't set Content-Type for FormData - browser sets it automatically with boundary
+        const response = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                // Content-Type is intentionally omitted for multipart/form-data
+            },
+            body: formData,
+        });
+
+        return handleResponse<PassportUploadResponse>(response);
+    },
+};
+
+// ============================================================================
+// RAG System API
+// ============================================================================
+
+export const ragAPI = {
+    /**
+     * Send natural language query to RAG system
+     */
+    async query(request: RAGQuery): Promise<RAGResponse> {
+        const url = `${config.backendURL}/api/rag/query`;
+        const headers = await getAuthHeaders();
+
+        const response = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(request),
+        });
+
+        return handleResponse<RAGResponse>(response);
+    },
+
+    /**
+     * Get AI explanation for priority score (expert only)
+     */
+    async explainPriority(
+        objectId: number,
+        request?: RAGExplainPriorityRequest
+    ): Promise<RAGExplainPriorityResponse> {
+        const url = `${config.backendURL}/api/rag/explain-priority/${objectId}`;
+        const headers = await getAuthHeaders();
+
+        const response = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(request || { language: 'ru' }),
+        });
+
+        return handleResponse<RAGExplainPriorityResponse>(response);
+    },
+};
+
+// ============================================================================
+// Authentication API
+// ============================================================================
+
+export const authAPI = {
+    /**
+     * Login with email and password
+     */
+    async login(credentials: LoginRequest): Promise<TokenResponse> {
+        const url = `${config.backendURL}/api/auth/login`;
+
+        const response = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials),
+        });
+
+        return handleResponse<TokenResponse>(response);
+    },
+
+    /**
+     * Register new user
+     */
+    async register(userData: RegisterRequest): Promise<TokenResponse> {
+        const url = `${config.backendURL}/api/auth/register`;
+
+        const response = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData),
+        });
+
+        return handleResponse<TokenResponse>(response);
+    },
+
+    /**
+     * Logout (clears local token, optionally calls backend)
+     */
+    async logout(): Promise<void> {
+        const url = `${config.backendURL}/api/auth/logout`;
+        const headers = await getAuthHeaders();
+
         try {
-            await apiClient.delete(`/api/objects/${id}`);
+            await fetchWithTimeout(url, { method: 'POST', headers });
         } catch (error) {
-            console.error(`[API] Error deleting water object ${id}:`, getErrorMessage(error));
-            throw error;
+            console.warn('[Auth] Logout API call failed:', error);
+            // Continue with local logout even if API fails
         }
     },
 };
 
-/**
- * Priorities API Service (Expert only)
- */
-export const PrioritiesAPI = {
-    /**
-     * Get priority statistics
-     * Authentication: Required
-     * Role: Expert only
-     */
-    async getStatistics(): Promise<{
-        high: number;
-        medium: number;
-        low: number;
-        total: number;
-    }> {
-        try {
-            const response = await apiClient.get('/api/priorities/statistics');
-            return response.data;
-        } catch (error) {
-            console.error('[API] Error fetching priority statistics:', getErrorMessage(error));
-            throw error;
-        }
-    },
+// ============================================================================
+// Face ID API
+// ============================================================================
 
+export const faceIdAPI = {
     /**
-     * Get priority table data
-     * Authentication: Required
-     * Role: Expert only
+     * Verify face for authentication
      */
-    async getTable(params?: {
-        priority_level?: string;
-        limit?: number;
-        offset?: number;
-    }): Promise<any> {
-        try {
-            const response = await apiClient.get('/api/priorities/table', { params });
-            return response.data;
-        } catch (error) {
-            console.error('[API] Error fetching priority table:', getErrorMessage(error));
-            throw error;
-        }
+    async verify(request: FaceVerifyRequest): Promise<FaceVerifyResponse> {
+        const url = `${config.backendURL}/api/faceid/verify`;
+
+        const response = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+        });
+
+        return handleResponse<FaceVerifyResponse>(response);
     },
 };
 
-/**
- * Passports API Service
- */
-export const PassportsAPI = {
-    /**
-     * Upload passport PDF
-     * Authentication: Required
-     * Role: Expert only
-     */
-    async uploadPDF(objectId: number, file: Blob): Promise<any> {
-        try {
-            const formData = new FormData();
-            // @ts-ignore - FormData accepts Blob with filename
-            formData.append('file', file, 'passport.pdf');
+// ============================================================================
+// Unified API Export
+// ============================================================================
 
-            const response = await apiClient.post(
-                `/api/passports/${objectId}/upload`,
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                }
-            );
-            return response.data;
-        } catch (error) {
-            console.error('[API] Error uploading passport:', getErrorMessage(error));
-            throw error;
-        }
-    },
-
-    /**
-     * Get passport text
-     * Authentication: Required
-     * Role: Both guest and expert
-     */
-    async getText(objectId: number): Promise<any> {
-        try {
-            const response = await apiClient.get(`/api/passports/${objectId}/text`);
-            return response.data;
-        } catch (error) {
-            console.error('[API] Error fetching passport text:', getErrorMessage(error));
-            throw error;
-        }
-    },
-
-    /**
-     * Delete passport
-     * Authentication: Required
-     * Role: Expert only
-     */
-    async delete(objectId: number): Promise<void> {
-        try {
-            await apiClient.delete(`/api/passports/${objectId}`);
-        } catch (error) {
-            console.error('[API] Error deleting passport:', getErrorMessage(error));
-            throw error;
-        }
-    },
+export const gidroatlasAPI = {
+    waterObjects: waterObjectsAPI,
+    priorities: prioritiesAPI,
+    passports: passportsAPI,
+    rag: ragAPI,
+    auth: authAPI,
+    faceId: faceIdAPI,
 };
+
+export default gidroatlasAPI;

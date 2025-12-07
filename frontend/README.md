@@ -1,11 +1,12 @@
-# Frontend - ZamanBank with RAG Integration
+# Frontend - GidroAtlas
 
-React Native Expo application with Gemini Live integration and RAG tools.
+React Native Expo application for water infrastructure monitoring with AI-powered RAG system.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 - Expo CLI
 
@@ -21,48 +22,88 @@ npm start
 
 ### Environment Configuration
 
-Create a `.env` file in the frontend directory (if not using app.json defaults):
+Create a `.env` file in the frontend directory:
 
 ```bash
-# Backend API URL (defaults to server if not set)
-EXPO_PUBLIC_BACKEND_URL=http://46.101.175.118:8000
+# Backend API URL (defaults to localhost:8000 if not set)
+EXPO_PUBLIC_BACKEND_URL=http://localhost:8000
 
-# Gemini API Key
+# Gemini API Key (for RAG features)
 EXPO_PUBLIC_GEMINI_API_KEY=your-gemini-api-key-here
 ```
 
-**Note**: The app is pre-configured to use the production server at `http://46.101.175.118:8000`. You only need to set `EXPO_PUBLIC_BACKEND_URL` if you want to use a different backend.
+**Note**: The app defaults to `http://localhost:8000` for local development. Set `EXPO_PUBLIC_BACKEND_URL` to connect to a different backend server.
 
 ## 📱 Features
 
-### 1. Live Chat with RAG
-- **Voice interaction** with Gemini Live
-- **RAG tools integration**: vector_search and web_search
-- **Multimodal**: Camera and screen sharing support
-- **Multi-language**: English and Russian
+### 1. Water Infrastructure Monitoring
 
-### 2. Face Verification
-- Face ID registration
-- Face verification with confidence scores
-- Real-time camera capture
+- **Browse water objects**: List, filter, and sort hydro-technical structures
+- **Priority system**: Expert-only view of risk priorities
+- **Passport documents**: Upload and view infrastructure passports
+- **Role-based access**: Guest (read-only) and Expert (full access)
 
-### 3. E-commerce
-- Product browsing
-- Shopping cart
-- Transactions
+### 2. AI-Powered RAG System
+
+- **Natural language queries**: Ask questions about water infrastructure
+- **Priority explanations**: Get AI explanations for priority scores (expert only)
+- **Vector search**: Find relevant documents and data
+- **Multi-language**: Russian primary, English supported
+
+### 3. Authentication
+
+- **JWT-based authentication**: Secure token storage with expo-secure-store
+- **Face ID verification**: Biometric authentication
+- **Role management**: Guest and Expert user roles
 
 ## 🔧 Configuration
+
+### Backend Integration
+
+The app uses a type-safe API service layer (`lib/api-services.ts`) that connects to the FastAPI backend:
+
+- **Configuration**: Backend URL is resolved via `lib/config.ts` (uses `EXPO_PUBLIC_BACKEND_URL` or defaults to localhost:8000)
+- **Authentication**: JWT tokens stored securely with expo-secure-store
+- **Type Safety**: All API types defined in `lib/gidroatlas-types.ts` matching backend Pydantic schemas
+
+### API Services
+
+Import and use the unified API:
+
+```typescript
+import gidroatlasAPI from "@/lib/api-services";
+
+// List water objects
+const objects = await gidroatlasAPI.waterObjects.list({
+  water_type: "Река",
+  limit: 20,
+});
+
+// Login
+const { access_token, user } = await gidroatlasAPI.auth.login({
+  email: "user@example.com",
+  password: "password123",
+});
+
+// Query RAG system
+const response = await gidroatlasAPI.rag.query({
+  query: "Какие объекты требуют срочного ремонта?",
+  language: "ru",
+});
+```
 
 ### Backend URL
 
 The backend URL is configured in multiple places (in priority order):
 
 1. **Environment variable** (`.env` file):
+
    ```bash
    EXPO_PUBLIC_BACKEND_URL=http://46.101.175.118:8000
    ```
 
 2. **App config** (`app.json`):
+
    ```json
    {
      "expo": {
@@ -110,6 +151,7 @@ The Live Chat is integrated with the backend RAG system:
 ### RAG Health Indicator
 
 Look for the **🧠 RAG** indicator in the Live Chat header:
+
 - **Green**: RAG tools are healthy and ready
 - **Red**: RAG tools have issues (check backend)
 
@@ -181,16 +223,19 @@ Look for these logs in the browser/expo console:
 ### Common Issues
 
 **RAG tools not loading:**
+
 - Check backend is running
 - Verify backend URL in config
 - Check network connectivity
 
 **Gemini not calling tools:**
+
 - Verify tools are registered (check logs)
 - Ensure Gemini API key is valid
 - Check system prompts include tool instructions
 
 **Face verification not working:**
+
 - Check camera permissions
 - Verify backend faceid endpoint is accessible
 - Check API URL configuration
@@ -198,11 +243,13 @@ Look for these logs in the browser/expo console:
 ## 🌐 Environment Modes
 
 ### Development (Local)
+
 ```bash
 EXPO_PUBLIC_BACKEND_URL=http://localhost:8000
 ```
 
 ### Production (Server)
+
 ```bash
 EXPO_PUBLIC_BACKEND_URL=http://46.101.175.118:8000
 ```
