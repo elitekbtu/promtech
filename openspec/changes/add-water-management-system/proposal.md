@@ -39,11 +39,10 @@ This change implements the complete water management domain specified in the tec
 
 ### RAG System Customization
 
-- **ADDED**: Water object search tool for RAG agents
-- **ADDED**: Passport content retrieval tool for RAG agents
-- **ADDED**: Priority calculation explanation tool
 - **MODIFIED**: System prompts to hydro-engineering and water management domain
-- **MODIFIED**: Vector store to index passport documents instead of generic content
+- **MODIFIED**: Vector store to index water management data: passport documents with metadata (object_id, name, region, resource_type, sections) and structured water object information (including priority explanations)
+- **MODIFIED**: Existing vector_search tool leverages water-specific metadata for filtering and semantic search
+- **NO NEW TOOLS**: All water queries handled through existing vector_search with enriched water management data
 
 ### Data Seeding
 
@@ -74,10 +73,9 @@ This change implements the complete water management domain specified in the tec
 - `backend/models/user.py` - Modify role enum
 - `backend/main.py` - Update app title and route registration
 - `backend/services/auth/` - Update role validation logic
-- `backend/rag_agent/tools/` - Add water-specific tools (water_search, passport_retrieval, priority_explainer)
 - `backend/rag_agent/config/orchestrator.py` - Configure water domain prompts
 - `backend/rag_agent/routes/router.py` - Add priority explanation endpoint
-- `backend/rag_agent/utils/vector_store.py` - Modify to index passport documents
+- `backend/rag_agent/utils/vector_store.py` - Modify to index water management data (passports + objects with metadata)
 - New modules:
   - `backend/services/objects/` - Water object CRUD and filtering
   - `backend/services/priorities/` - Priority calculation and dashboard
@@ -95,7 +93,8 @@ This change implements the complete water management domain specified in the tec
 ### Migration Required
 
 - Existing users need role migration: `admin` → `expert`, `user` → `guest`
-- RAG vector store needs to be rebuilt with passport documents
+- Existing users need role migration: `admin` → `expert`, `user` → `guest`
+- RAG vector store needs to be rebuilt with water management data (passports + object metadata)
 - Frontend needs updates to consume new water object APIs
 
 ### Dependencies

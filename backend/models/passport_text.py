@@ -30,6 +30,11 @@ class PassportText(Base):
     # Timestamps
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    @property
+    def object_id(self):
+        """Alias for water_object_id for backward compatibility with schemas"""
+        return self.water_object_id
 
     def __repr__(self):
         return f"<PassportText(id={self.id}, water_object_id={self.water_object_id}, title='{self.document_title}')>"

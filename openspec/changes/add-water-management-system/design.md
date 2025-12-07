@@ -136,27 +136,42 @@ def get_objects(role: str, ...):
 - Store text in vector DB only: Loses structured section information
 - Parse on-demand: Too slow, unnecessary I/O
 
-### Decision 5: RAG Tool Architecture
+### Decision 5: Vector Store with Enriched Water Data (Simplified)
 
-**What**: Create three specialized tools for water domain  
+**What**: Use existing vector_search tool with water management data indexed  
 **Why**:
 
-- LangGraph agents can choose appropriate tool
-- Clear separation of concerns
-- Easy to test independently
-- Extensible for future tools
+- Leverages existing RAG infrastructure without creating new tools
+- Single semantic search interface handles all water queries
+- Metadata filtering provides structured query capabilities
+- Simpler architecture, less code to maintain
+- Agent can handle complex queries with one tool
 
-**Tools**:
+**Implementation**:
 
-1. `search_water_objects(filters)` - SQL query wrapper
-2. `get_passport_content(object_id, sections)` - Text retrieval
-3. `explain_priority_logic(object_id)` - Priority breakdown
+- Index passport text sections with metadata: `{object_id, name, region, resource_type, section_type, text}`
+- Index water object data as documents: Format as searchable text including all attributes, priority explanation
+- Vector search returns relevant documents with metadata for citations
+- System prompts guide agent to use vector_search for all water queries
+
+**Data Format Example**:
+
+```
+Water Object: Озеро Балхаш
+Region: Алматинская область
+Type: lake (пресная вода)
+Fauna: Yes
+Technical Condition: 3 (удовлетворительное)
+Priority: 9 (MEDIUM) - расчет: (6-3)*3 + 2 года = 11
+Passport Date: 2023-01-15
+[... full passport text sections ...]
+```
 
 **Alternatives Considered**:
 
-- Single universal tool: Less precise, harder for agent to choose
-- Direct database access: No validation, security risk
-- Separate RAG chains: More complex orchestration
+- Three specialized tools (water_search, passport_retrieval, priority_explainer): More code, more complexity, harder for agent to choose between tools
+- Direct database access tool: No semantic search capability, requires exact matches
+- Separate RAG chains: Over-engineered for this use case
 
 ### Decision 6: Data Seeding from OSM
 

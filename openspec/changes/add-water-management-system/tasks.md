@@ -56,23 +56,23 @@
 
 ## 7. RAG System Customization
 
-- [ ] 7.1 Create `backend/rag_agent/tools/water_search.py` - search_water_objects tool
-- [ ] 7.2 Create `backend/rag_agent/tools/passport_retrieval.py` - get_passport_content tool
-- [ ] 7.3 Create `backend/rag_agent/tools/priority_explainer.py` - explain_priority_logic tool
-- [ ] 7.4 Update `backend/rag_agent/config/orchestrator.py` system prompts to hydro-engineering domain
-- [ ] 7.5 Modify `backend/rag_agent/utils/vector_store.py` to index passport documents
-- [ ] 7.6 Update `backend/rag_agent/tools/web_search.py` to adapt Tavily for water management context (or disable if not needed)
-- [ ] 7.7 Register new tools in orchestrator configuration
+- [x] 7.1 Update `backend/rag_agent/config/orchestrator.py` system prompts to hydro-engineering domain (water resources of Kazakhstan)
+- [x] 7.2 Modify `backend/rag_agent/utils/vector_store.py` to index water management data (passport documents + object metadata)
+- [x] 7.3 Create water object document formatter for vector indexing (structured data → searchable text with metadata)
+- [x] 7.4 Index passport text sections with metadata (object_id, name, region, resource_type, section_type)
+- [x] 7.5 Index water object information with priority explanations
+- [x] 7.6 Update vector_search tool usage to leverage water-specific metadata filtering
+- [x] 7.7 Test semantic search for water queries ("озера с высоким приоритетом в Алматинской области")
 
 ## 8. RAG Endpoint Enhancements
 
-- [ ] 8.1 Update existing `POST /api/rag/query` endpoint to handle water management queries
+- [ ] 8.1 Update existing `POST /api/rag/query` endpoint to handle water management queries with updated system context
 - [ ] 8.2 Add `POST /api/rag/explain-priority/{object_id}` convenience endpoint in `backend/rag_agent/routes/router.py`
-- [ ] 8.3 Update `QueryRequest` schema to support water domain context (object_id, region, priority_level filters)
-- [ ] 8.4 Enhance `QueryResponse` schema to include water-specific sources (object references)
-- [ ] 8.5 Integrate new tools (water_search, passport_retrieval, priority_explainer) into existing orchestrator workflow
-- [ ] 8.6 Test RAG query with water management scenarios ("показать озера с высоким приоритетом")
-- [ ] 8.7 Update RAG system initialization to load water domain configuration
+- [ ] 8.3 Update `QueryRequest` schema to support water domain context (optional object_id, region, priority_level filters for query context)
+- [ ] 8.4 Enhance `QueryResponse` schema to include water-specific sources (object references from vector metadata)
+- [ ] 8.5 Test RAG query with water management scenarios ("показать озера с высоким приоритетом", "объясни приоритет объекта", "каково состояние водоемов в Алматинской области")
+- [ ] 8.6 Verify vector_search returns properly formatted water data with citations
+- [ ] 8.7 Update RAG system initialization to load water domain configuration and verify vector store contains water data
 
 ## 9. Data Seeding & Import
 

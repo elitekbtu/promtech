@@ -5,6 +5,7 @@ from pathlib import Path
 import os
 from pypdf import PdfReader
 from io import BytesIO
+from datetime import datetime
 from models import WaterObject, PassportText
 from .schemas import PassportTextResponse
 
@@ -12,6 +13,7 @@ from .schemas import PassportTextResponse
 # File storage configuration from environment
 PASSPORT_STORAGE_PATH = os.getenv("PASSPORT_STORAGE_PATH", "uploads/passports")
 PASSPORT_BASE_URL = os.getenv("PASSPORT_BASE_URL", "/uploads/passports")
+MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", 10485760))  # 10MB default
 
 # Create storage directory if it doesn't exist
 Path(PASSPORT_STORAGE_PATH).mkdir(parents=True, exist_ok=True)
@@ -171,21 +173,52 @@ class PassportService:
                 detail=f"Water object with ID {object_id} not found"
             )
         
-        # Validate file type
+        # Validate file type (content-type header)
         if not file.content_type == "application/pdf":
             raise HTTPException(
                 status_code=400,
-                detail="Only PDF files are accepted"
+                detail="Only PDF files are accepted. Content-Type must be application/pdf"
+            )
+        
+        # Validate filename extension
+        if file.filename and not file.filename.lower().endswith('.pdf'):
+            raise HTTPException(
+                status_code=400,
+                detail="Only PDF files are accepted. File must have .pdf extension"
             )
         
         # Read file data
         file_data = await file.read()
         
+        # Validate file size
+        if len(file_data) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum size is {MAX_FILE_SIZE / 1024 / 1024:.1f}MB"
+            )
+        
+        # Validate PDF magic number (file signature)
+        if not file_data.startswith(b'%PDF'):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid PDF file. File does not have valid PDF signature"
+            )
+        
         # Save PDF file
         pdf_url = PassportService.save_pdf_file(file_data, object_id)
         
-        # Update water object with PDF URL
+        # Update water object with PDF URL and passport date
         water_object.pdf_url = pdf_url
+        water_object.passport_date = datetime.now().date()
+        
+        # Recalculate priority based on new passport date
+        from services.objects.service import WaterObjectService
+        water_object.priority = WaterObjectService.calculate_priority(
+            technical_condition=water_object.technical_condition,
+            passport_date=water_object.passport_date
+        )
+        water_object.priority_level = WaterObjectService.get_priority_level(water_object.priority)
+        
         db.commit()
         
         # Extract text from PDF

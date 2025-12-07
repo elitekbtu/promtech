@@ -19,7 +19,7 @@ The RAG system SHALL use water management and hydro-engineering domain knowledge
 
 - **GIVEN** a query requiring water object data
 - **WHEN** RAG agent analyzes query
-- **THEN** agent SHALL know it has access to: search_water_objects, get_passport_content, explain_priority_logic tools
+- **THEN** agent SHALL know it has access to existing vector_search and web_search tools with water-specific indexed content
 
 #### Scenario: RAG stays within domain knowledge
 
@@ -29,93 +29,39 @@ The RAG system SHALL use water management and hydro-engineering domain knowledge
 
 ## ADDED Requirements
 
-### Requirement: Water Object Search Tool
+### Requirement: Vector Store with Water Management Data
 
-The RAG system SHALL provide a tool for searching and filtering water objects.
-
-#### Scenario: Search by region
-
-- **GIVEN** a RAG query mentioning a specific region
-- **WHEN** agent invokes search_water_objects tool with region filter
-- **THEN** matching water objects SHALL be returned with key attributes
-
-#### Scenario: Search by resource type
-
-- **GIVEN** a query about "озера" (lakes)
-- **WHEN** agent invokes search_water_objects with resource_type="lake"
-- **THEN** only lake objects SHALL be returned
-
-#### Scenario: Search by priority level
-
-- **GIVEN** a query about high-priority objects
-- **WHEN** agent invokes search_water_objects with priority_level="high"
-- **THEN** objects with high priority SHALL be returned sorted by priority score
-
-#### Scenario: Limit search results
-
-- **GIVEN** a broad search query
-- **WHEN** agent invokes search_water_objects
-- **THEN** at most 10 results SHALL be returned by default to avoid context overflow
-
-### Requirement: Passport Content Retrieval Tool
-
-The RAG system SHALL provide a tool for retrieving passport document text.
-
-#### Scenario: Get full passport content
-
-- **GIVEN** a query about specific water object characteristics
-- **WHEN** agent invokes get_passport_content for that object
-- **THEN** all passport sections SHALL be returned as structured text
-
-#### Scenario: Get specific sections
-
-- **GIVEN** a query about biological characteristics
-- **WHEN** agent invokes get_passport_content with sections=["biological"]
-- **THEN** only biological section text SHALL be returned
-
-#### Scenario: Handle missing passport
-
-- **GIVEN** a water object without passport
-- **WHEN** agent invokes get_passport_content
-- **THEN** tool SHALL return indication that no passport exists
-
-### Requirement: Priority Explanation Tool
-
-The RAG system SHALL provide a tool for explaining inspection priority calculations.
-
-#### Scenario: Explain priority components
-
-- **GIVEN** a query about why an object has specific priority
-- **WHEN** agent invokes explain_priority_logic
-- **THEN** response SHALL include: technical_condition value, passport_age_years, priority formula breakdown, final score and level
-
-#### Scenario: Generate human-readable explanation
-
-- **GIVEN** priority calculation components
-- **WHEN** formatting explanation
-- **THEN** response SHALL be in natural Russian language explaining urgency factors
-
-### Requirement: Vector Store with Passport Documents
-
-The RAG system SHALL index passport document text in vector database for semantic search.
+The RAG system SHALL index water management data including passport documents, object metadata, and priority information in the vector database for semantic search.
 
 #### Scenario: Index passport on upload
 
 - **GIVEN** a passport PDF is uploaded and text extracted
 - **WHEN** saving to database
-- **THEN** text SHALL be embedded and indexed in ChromaDB/FAISS
+- **THEN** text SHALL be embedded and indexed in ChromaDB/FAISS with metadata (object_id, object_name, region, resource_type, sections)
 
-#### Scenario: Semantic search across passports
+#### Scenario: Index water object structured data
 
-- **GIVEN** a natural language query about water characteristics
-- **WHEN** performing vector search
-- **THEN** relevant passport sections SHALL be retrieved by semantic similarity
+- **GIVEN** water objects with all attributes
+- **WHEN** initializing vector store
+- **THEN** object information SHALL be formatted as searchable text documents including: name, region, resource type, water type, fauna, technical condition, priority level, passport date
 
-#### Scenario: Combine vector and SQL search
+#### Scenario: Semantic search across all water data
 
-- **GIVEN** a query with both structured filters and semantic content
-- **WHEN** agent processes query
-- **THEN** both search_water_objects (SQL) and vector_search (semantic) tools SHALL be used together
+- **GIVEN** a natural language query about water characteristics or priorities
+- **WHEN** performing vector_search
+- **THEN** relevant content SHALL be retrieved from both passport text and structured object data by semantic similarity
+
+#### Scenario: Priority explanation via vector search
+
+- **GIVEN** a query about why an object has specific priority
+- **WHEN** performing vector_search
+- **THEN** indexed documents SHALL include priority calculation explanation text with formula breakdown and factors
+
+#### Scenario: Regional and type-specific search
+
+- **GIVEN** a query about specific region or resource type
+- **WHEN** vector_search retrieves results
+- **THEN** metadata filtering SHALL narrow results to relevant objects before semantic ranking
 
 ### Requirement: Context Management for Water Queries
 
@@ -135,19 +81,19 @@ The RAG system SHALL maintain conversation context relevant to water management.
 
 ### Requirement: Source Citation for Water Data
 
-The RAG system SHALL cite sources when providing information about water objects.
+The RAG system SHALL cite sources when providing information about water objects using metadata from vector search results.
 
-#### Scenario: Cite water object database
+#### Scenario: Cite water object from vector search
 
-- **GIVEN** information from water_objects table
+- **GIVEN** information retrieved via vector_search
 - **WHEN** generating response
-- **THEN** response SHALL include object IDs and names as sources
+- **THEN** response SHALL include object IDs, names, and regions from document metadata
 
-#### Scenario: Cite passport documents
+#### Scenario: Cite passport documents from vector search
 
-- **GIVEN** information from passport text
+- **GIVEN** information from passport text via vector_search
 - **WHEN** generating response
-- **THEN** response SHALL indicate information came from passport and which section
+- **THEN** response SHALL indicate information came from passport with object name and section (from metadata)
 
 ### Requirement: Confidence Scoring for Water Queries
 
@@ -155,7 +101,7 @@ The RAG system SHALL provide confidence scores for responses about water managem
 
 #### Scenario: High confidence with direct data
 
-- **GIVEN** a query answered directly from water_objects table
+- **GIVEN** a query answered directly from indexed water object data
 - **WHEN** generating response
 - **THEN** confidence score SHALL be >= 0.9
 
@@ -177,6 +123,6 @@ The RAG system SHALL handle queries in Russian and provide Russian responses.
 
 #### Scenario: Generate Russian response
 
-- **GIVEN** query results from tools
+- **GIVEN** query results from vector_search
 - **WHEN** generating final response
 - **THEN** response SHALL be in fluent Russian matching domain terminology

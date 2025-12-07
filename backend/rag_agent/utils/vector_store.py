@@ -1322,6 +1322,252 @@ Generate {num_queries} variations, one per line, no numbering. Each variation sh
         
         logger.info("Vector store initialization pipeline completed successfully!")
         return True
+    
+    def format_water_object_document(self, water_object: Any) -> Document:
+        """
+        Format a water object into a searchable document with metadata.
+        
+        Args:
+            water_object: WaterObject model instance
+            
+        Returns:
+            Document: Formatted document for vector indexing
+        """
+        from datetime import datetime
+        
+        # Calculate priority explanation
+        passport_age = 0
+        if water_object.passport_date:
+            current_year = datetime.now().year
+            passport_year = water_object.passport_date.year if hasattr(water_object.passport_date, 'year') else datetime.fromisoformat(str(water_object.passport_date)).year
+            passport_age = current_year - passport_year
+        
+        priority_calculation = f"(6 - {water_object.technical_condition}) * 3 + {passport_age} лет = {water_object.priority}"
+        
+        # Technical condition names in Russian
+        condition_names = {
+            1: "отличное",
+            2: "хорошее", 
+            3: "удовлетворительное",
+            4: "плохое",
+            5: "критическое"
+        }
+        condition_name = condition_names.get(water_object.technical_condition, "неизвестно")
+        
+        # Resource type names
+        resource_types = {
+            "lake": "озеро",
+            "canal": "канал",
+            "reservoir": "водохранилище"
+        }
+        resource_type_ru = resource_types.get(water_object.resource_type, water_object.resource_type)
+        
+        # Water type names
+        water_types = {
+            "fresh": "пресная вода",
+            "non_fresh": "непресная вода"
+        }
+        water_type_ru = water_types.get(water_object.water_type, water_object.water_type)
+        
+        # Format document content
+        content = f"""Водный объект: {water_object.name}
+
+Географическое расположение:
+- Регион: {water_object.region}
+- Координаты: {water_object.latitude}° с.ш., {water_object.longitude}° в.д.
+
+Характеристики:
+- Тип ресурса: {resource_type_ru} ({water_object.resource_type})
+- Тип воды: {water_type_ru}
+- Наличие фауны: {'Да' if water_object.fauna else 'Нет'}
+
+Техническое состояние:
+- Состояние: {water_object.technical_condition}/5 ({condition_name})
+- Дата паспорта: {water_object.passport_date or 'Не указана'}
+- Возраст паспорта: {passport_age} лет
+
+Приоритет обследования:
+- Уровень: {water_object.priority_level or 'N/A'}
+- Оценка: {water_object.priority} баллов
+- Расчет: {priority_calculation}
+- Пояснение: Чем хуже техническое состояние и старее паспорт, тем выше приоритет обследования.
+"""
+        
+        if passport_age > 5:
+            content += f"\n⚠️ ВНИМАНИЕ: Паспорт устарел (возраст {passport_age} лет). Рекомендуется обновление."
+        
+        if water_object.priority_level == "high":
+            content += "\n🔴 ВЫСОКИЙ ПРИОРИТЕТ: Требуется срочное обследование объекта."
+        elif water_object.priority_level == "medium":
+            content += "\n🟡 СРЕДНИЙ ПРИОРИТЕТ: Рекомендуется плановое обследование."
+        
+        # Create document with rich metadata
+        doc = Document(
+            page_content=content,
+            metadata={
+                "object_id": water_object.id,
+                "object_name": water_object.name,
+                "region": water_object.region,
+                "resource_type": water_object.resource_type,
+                "water_type": water_object.water_type,
+                "fauna": water_object.fauna,
+                "technical_condition": water_object.technical_condition,
+                "priority": water_object.priority,
+                "priority_level": water_object.priority_level or "N/A",
+                "passport_date": str(water_object.passport_date) if water_object.passport_date else None,
+                "passport_age_years": passport_age,
+                "latitude": float(water_object.latitude),
+                "longitude": float(water_object.longitude),
+                "document_type": "water_object",
+                "source": "water_objects_database",
+                "content_type": "structured_data"
+            }
+        )
+        
+        return doc
+    
+    def format_passport_text_document(self, passport_text: Any, water_object: Any) -> List[Document]:
+        """
+        Format passport text sections into searchable documents with metadata.
+        
+        Args:
+            passport_text: PassportText model instance
+            water_object: Associated WaterObject model instance
+            
+        Returns:
+            List[Document]: List of documents for each passport section
+        """
+        documents = []
+        
+        # Section configurations
+        sections = [
+            ("full_text", "Полный текст паспорта", passport_text.full_text),
+            ("general_info", "Общая информация", passport_text.general_info),
+            ("technical_params", "Технические параметры", passport_text.technical_params),
+            ("ecological_state", "Экологическое состояние", passport_text.ecological_state),
+            ("recommendations", "Рекомендации", passport_text.recommendations)
+        ]
+        
+        for section_key, section_name, section_content in sections:
+            if section_content and section_content.strip():
+                # Format section content
+                content = f"""Паспорт водного объекта: {water_object.name}
+
+Раздел: {section_name}
+Регион: {water_object.region}
+Дата паспорта: {water_object.passport_date or 'Не указана'}
+
+{section_content}
+"""
+                
+                # Create document with metadata
+                doc = Document(
+                    page_content=content,
+                    metadata={
+                        "object_id": water_object.id,
+                        "object_name": water_object.name,
+                        "region": water_object.region,
+                        "resource_type": water_object.resource_type,
+                        "section_type": section_key,
+                        "section_name": section_name,
+                        "passport_id": passport_text.id,
+                        "document_type": "passport_text",
+                        "source": "passport_database",
+                        "content_type": "passport_section",
+                        "passport_date": str(water_object.passport_date) if water_object.passport_date else None
+                    }
+                )
+                
+                documents.append(doc)
+        
+        return documents
+    
+    def index_water_management_data(self, db_session: Any) -> bool:
+        """
+        Index water objects and passport texts into the vector store.
+        
+        Args:
+            db_session: SQLAlchemy database session
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            from models import WaterObject, PassportText
+            
+            logger.info("Starting water management data indexing...")
+            
+            # Initialize embeddings if not already done
+            if not self.embeddings:
+                if not self.initialize_embeddings():
+                    return False
+            
+            all_documents = []
+            
+            # Get all water objects
+            water_objects = db_session.query(WaterObject).filter(
+                WaterObject.deleted_at.is_(None)
+            ).all()
+            
+            logger.info(f"Found {len(water_objects)} water objects to index")
+            
+            # Index water objects
+            for water_object in water_objects:
+                try:
+                    doc = self.format_water_object_document(water_object)
+                    all_documents.append(doc)
+                except Exception as e:
+                    logger.error(f"Error formatting water object {water_object.id}: {e}")
+            
+            # Index passport texts
+            passport_texts = db_session.query(PassportText).all()
+            logger.info(f"Found {len(passport_texts)} passport texts to index")
+            
+            for passport_text in passport_texts:
+                try:
+                    # Get associated water object
+                    water_object = db_session.query(WaterObject).filter(
+                        WaterObject.id == passport_text.water_object_id
+                    ).first()
+                    
+                    if water_object:
+                        docs = self.format_passport_text_document(passport_text, water_object)
+                        all_documents.extend(docs)
+                except Exception as e:
+                    logger.error(f"Error formatting passport text {passport_text.id}: {e}")
+            
+            logger.info(f"Total documents to index: {len(all_documents)}")
+            
+            if not all_documents:
+                logger.warning("No documents to index")
+                return False
+            
+            # Create or update vector store
+            if self.vector_store is None:
+                logger.info("Creating new vector store with water management data...")
+                self.vector_store = FAISS.from_documents(
+                    documents=all_documents,
+                    embedding=self.embeddings
+                )
+                self.all_chunks = all_documents
+            else:
+                logger.info("Adding water management data to existing vector store...")
+                self.vector_store.add_documents(all_documents)
+                self.all_chunks.extend(all_documents)
+            
+            # Save vector store
+            if self.save_vector_store():
+                logger.info(f"Successfully indexed {len(all_documents)} water management documents")
+                return True
+            else:
+                logger.error("Failed to save vector store")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error indexing water management data: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
 
 
 def create_vector_store_from_documents(

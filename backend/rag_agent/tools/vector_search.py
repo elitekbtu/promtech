@@ -151,6 +151,15 @@ class VectorSearchTool:
                 document_type = metadata.get('document_type', 'text')
                 is_pdf = document_type == 'pdf'
                 
+                # Water management specific metadata
+                object_id = metadata.get('object_id')
+                object_name = metadata.get('object_name')
+                region = metadata.get('region')
+                resource_type = metadata.get('resource_type')
+                priority_level = metadata.get('priority_level')
+                section_type = metadata.get('section_type')
+                content_type = metadata.get('content_type')
+                
                 # Check for merged chunks (contextual compression)
                 merged_count = result.get('merged_chunks', 0)
                 has_parent_context = 'parent_context' in result
@@ -200,26 +209,67 @@ class VectorSearchTool:
                     similarity_percent = max(0, min(100, (1 - min(sim_score, 1.0)) * 100))
                     score_display = f"Similarity: {similarity_percent:.0f}% (distance: {sim_score:.3f})"
                 
-                doc_type_indicator = "📄 PDF" if is_pdf else "📝 Text"
-                
-                # Check for merged chunks and parent context
-                merged_count = result.get('merged_chunks', 0)
-                has_parent_context = 'parent_context' in result
-                
-                # Show more content for better context (увеличено для merged chunks)
-                content_length = 800 if merged_count > 1 or has_parent_context else 500
-                content_preview = content[:content_length] if len(content) > content_length else content
+                # Document type indicator with water management awareness
+                if document_type == 'water_object':
+                    doc_type_indicator = "💧 Водный объект"
+                elif document_type == 'passport_text':
+                    doc_type_indicator = "📋 Паспорт объекта"
+                elif is_pdf:
+                    doc_type_indicator = "📄 PDF"
+                else:
+                    doc_type_indicator = "📝 Text"
                 
                 # Build result entry
                 result_lines = [
                     f"{confidence_emoji} **Result {i}** ({confidence_level}) {doc_type_indicator}",
-                    f"📁 Source: {filename}"
                 ]
                 
+                # Add water management specific metadata
+                if object_name:
+                    result_lines.append(f"🏷️  Объект: {object_name}")
+                if region:
+                    result_lines.append(f"📍 Регион: {region}")
+                if resource_type:
+                    resource_types = {
+                        "lake": "Озеро",
+                        "canal": "Канал",
+                        "reservoir": "Водохранилище"
+                    }
+                    type_name = resource_types.get(resource_type, resource_type.title())
+                    result_lines.append(f"🌊 Тип: {type_name}")
+                if priority_level and priority_level != "N/A":
+                    priority_emojis = {
+                        "high": "🔴 ВЫСОКИЙ",
+                        "medium": "🟡 СРЕДНИЙ",
+                        "low": "🟢 НИЗКИЙ"
+                    }
+                    priority_display = priority_emojis.get(priority_level.lower(), priority_level.upper())
+                    result_lines.append(f"⚡ Приоритет: {priority_display}")
+                if section_type and section_type != "full_text":
+                    section_names = {
+                        "general_info": "Общая информация",
+                        "technical_params": "Технические параметры",
+                        "ecological_state": "Экологическое состояние",
+                        "recommendations": "Рекомендации"
+                    }
+                    section_name = section_names.get(section_type, section_type.replace('_', ' ').title())
+                    result_lines.append(f"📑 Раздел: {section_name}")
+                if object_id:
+                    result_lines.append(f"🔗 ID объекта: {object_id}")
+                
+                # Source file info (if not water management data)
+                if not object_name:
+                    result_lines.append(f"📁 Source: {filename}")
+                
+                # Add context indicators
                 if merged_count > 1:
                     result_lines.append(f"🔗 Merged {merged_count} related chunks for comprehensive context")
                 if has_parent_context:
                     result_lines.append(f"📚 Includes parent document context")
+                
+                # Add score and content
+                content_length = 800 if merged_count > 1 or has_parent_context else 500
+                content_preview = content[:content_length] if len(content) > content_length else content
                 
                 result_lines.extend([
                     f"📊 {score_display}",
