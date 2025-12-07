@@ -398,6 +398,11 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     color: GidroAtlasColors.gray[800],
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      } as any,
+    }),
   },
   errorContainer: {
     flexDirection: 'row',

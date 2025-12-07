@@ -37,6 +37,7 @@ def require_expert(current_user = Depends(get_current_user)):
 )
 async def list_water_objects(
     # Filtering parameters
+    search: Optional[str] = Query(None, description="Search by name or region (case-insensitive)"),
     region: Optional[str] = Query(None, description="Filter by region"),
     resource_type: Optional[str] = Query(None, description="Filter by resource type"),
     water_type: Optional[str] = Query(None, description="Filter by water type"),
@@ -70,6 +71,7 @@ async def list_water_objects(
     
     # Build filter object
     filters = WaterObjectFilter(
+        search=search,
         region=region,
         resource_type=resource_type,
         water_type=water_type,

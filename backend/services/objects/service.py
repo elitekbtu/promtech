@@ -185,6 +185,16 @@ class WaterObjectService:
         if filters:
             filter_conditions = []
             
+            # Search by name or region (case-insensitive)
+            if filters.search:
+                search_pattern = f"%{filters.search}%"
+                filter_conditions.append(
+                    or_(
+                        func.lower(WaterObject.name).like(func.lower(search_pattern)),
+                        func.lower(WaterObject.region).like(func.lower(search_pattern))
+                    )
+                )
+            
             if filters.region:
                 filter_conditions.append(WaterObject.region == filters.region)
             
