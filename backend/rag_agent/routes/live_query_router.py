@@ -79,26 +79,20 @@ async def live_query(request: LiveQueryRequest):
         if tool_name == "vector_search":
             try:
                 vector_tool = get_vector_search_tool()
-                # Используем больше результатов для лучшего покрытия файлов
+                # Полноценный RAG поиск с максимальным качеством
                 response_text = vector_tool.search(
                     query=query,
-                    k=5,  # Увеличено для лучшего покрытия
-                    use_reranking=True,
-                    use_hyde=True,
-                    use_hybrid=True
+                    k=5,  # Больше результатов для полного покрытия
+                    use_reranking=True,  # Включено для качества
+                    use_hyde=True,  # Включено для качества
+                    use_hybrid=True  # Включено для качества
                 )
                 agents_used.append("vector_search")
-                
-                # Extract sources from response (if available)
-                # The response contains formatted results with source information
-                if "Result" in response_text:
-                    sources.append({
-                        "type": "internal_documents",
-                        "tool": "vector_search"
-                    })
-                    confidence = 0.85
-                else:
-                    confidence = 0.3
+                sources.append({
+                    "type": "internal_documents",
+                    "tool": "vector_search"
+                })
+                confidence = 0.85
                     
             except Exception as e:
                 logger.error(f"[Live Query] Vector search error: {e}")
